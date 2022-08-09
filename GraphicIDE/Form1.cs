@@ -19,39 +19,6 @@ using System.Drawing.Imaging;
 
 namespace GraphicIDE;
 
-
-
-/*
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  MAKE CUSTOM "TABS" with buttons
- *  cuz the flickering is annying 
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- */
-
-
-
-
-
-
-
 public partial class Form1: Form {
     private static readonly List<Button> linesButton = new();
     private static List<string> linesText = null!;
@@ -62,9 +29,11 @@ public partial class Form1: Form {
     private static Keys lastPressed;
     private static int? lastCol = null;
     private static (int line, int col)? selectedLine = null;
-    private static readonly Font boldFont = new(FontFamily.GenericMonospace, 15, FontStyle.Bold);
+    private static readonly Font 
+        boldFont = new(FontFamily.GenericMonospace, 15, FontStyle.Bold),
+        tabFont = new(FontFamily.GenericMonospace, 10, FontStyle.Bold);
     private static bool iChanged = false;
-    private const int LINE_HEIGHT = 30, WM_KEYDOWN = 0x100, TAB_HEIGHT = 20, TAB_WIDTH = 80;
+    private const int LINE_HEIGHT = 30, WM_KEYDOWN = 0x100, TAB_HEIGHT = 25, TAB_WIDTH = 80;
     private static readonly Graphics nullGraphics = Graphics.FromImage(new Bitmap(1,1));
     private static readonly int INDENT = MeasureWidth(nullGraphics, "    ", boldFont);
     private static readonly int 
@@ -84,37 +53,38 @@ public partial class Form1: Form {
     #region BrusesAndPens
     static readonly float[] dashes = new[] { 5f, 2f };
     static readonly Color
-        listRed = Color.FromArgb(255, 157, 59, 52),
-        redOpaqe = Color.FromArgb(100, 255, 000, 000),
-        blueOpaqe = Color.FromArgb(100, 75, 180, 245),
-        keyOrange = Color.FromArgb(255, 245, 190, 80),
-        greenOpaqe = Color.FromArgb(100, 000, 255, 000),
-        mathPurple = Color.FromArgb(255, 164, 128, 207),
-        orangeOpaqe = Color.FromArgb(100, 250, 200, 93);
+        listRed         = Color.FromArgb(255, 157, 59, 52),
+        redOpaqe        = Color.FromArgb(100, 255, 000, 000),
+        blueOpaqe       = Color.FromArgb(100, 75, 180, 245),
+        keyOrange       = Color.FromArgb(255, 245, 190, 80),
+        greenOpaqe      = Color.FromArgb(100, 000, 255, 000),
+        mathPurple      = Color.FromArgb(255, 164, 128, 207),
+        orangeOpaqe     = Color.FromArgb(100, 250, 200, 93);
     private static readonly SolidBrush
-        keyOrangeB = new(keyOrange),
-        whiteBrush = new(Color.White),
+        keyOrangeB  = new(keyOrange),
         mathPurpleB = new(mathPurple),
+        whiteBrush  = new(Color.White),
         curserBrush = new(Color.WhiteSmoke),
-        redBrush = new(Color.FromArgb(255, 200, 49, 45)),
-        intBrush = new(Color.FromArgb(255, 207, 255, 182)),
-        textBrush = new(Color.FromArgb(255, 160, 160, 160)),
-        greenBrush = new(Color.FromArgb(255, 110, 255, 130)),
-        selectBrush = new(Color.FromArgb(100, 000, 100, 255)),
-        stringBrush = new(Color.FromArgb(255, 255, 204, 116)),
-        parenthesiesBrush = new(Color.FromArgb(255, 76, 175, 104));
+        redBrush            = new(Color.FromArgb(255, 200, 049, 45)),
+        intBrush            = new(Color.FromArgb(255, 207, 255, 182)),
+        textBrush           = new(Color.FromArgb(255, 160, 160, 160)),
+        greenBrush          = new(Color.FromArgb(255, 110, 255, 130)),
+        selectBrush         = new(Color.FromArgb(100, 000, 100, 255)),
+        stringBrush         = new(Color.FromArgb(255, 255, 204, 116)),
+        tabBarBrush         = new(Color.FromArgb(255, 100, 100, 100)),
+        parenthesiesBrush   = new(Color.FromArgb(255, 076, 175, 104));
     static readonly Pen
-        redDashed = new(redOpaqe, 5){ DashPattern = dashes },
-        blueDashed = new(blueOpaqe, 5){ DashPattern = dashes },
-        greenDashed = new(greenOpaqe, 5){ DashPattern = dashes },
-        orangeDashed = new(orangeOpaqe, 5){ DashPattern = dashes },
-        redListP = new(listRed, 5),
-        redOpaqeP = new(redOpaqe, 5),
-        blueOpaqeP = new(blueOpaqe, 5),
-        keyOrangeP = new(keyOrange, 5),
-        greenOpaqeP = new(greenOpaqe, 5),
-        mathPurpleP = new(mathPurple, 5),
-        orangeOpaqeP = new(orangeOpaqe, 5);
+        redDashed       = new(redOpaqe, 5)      { DashPattern = dashes },
+        blueDashed      = new(blueOpaqe, 5)     { DashPattern = dashes },
+        greenDashed     = new(greenOpaqe, 5)    { DashPattern = dashes },
+        orangeDashed    = new(orangeOpaqe, 5)   { DashPattern = dashes },
+        redListP        = new(listRed, 5),
+        redOpaqeP       = new(redOpaqe, 5),
+        blueOpaqeP      = new(blueOpaqe, 5),
+        keyOrangeP      = new(keyOrange, 5),
+        greenOpaqeP     = new(greenOpaqe, 5),
+        mathPurpleP     = new(mathPurple, 5),
+        orangeOpaqeP    = new(orangeOpaqe, 5);
     #endregion
 
     #region Images
@@ -164,6 +134,7 @@ public partial class Form1: Form {
         Refresh();
     }
     private void Form1_Paint(object sender, PaintEventArgs e) {
+        e.Graphics.FillRectangle(tabBarBrush, 0, 0, Width, TAB_HEIGHT);
         e.Graphics.DrawImage(screen, 0, TAB_HEIGHT);
     }
     #endregion
@@ -669,11 +640,11 @@ public partial class Form1: Form {
                 endI = (start.Line - 1, start.Column - 1);
             }
             try {
-                var isAfterStart = startI.line < curLine || (startI.line == curLine && startI.col < curCol + 1);
+                /*var isAfterStart = startI.line < curLine || (startI.line == curLine && startI.col < curCol + 1);
                 var isBeforeEnd = endI.line > curLine || (endI.line == curLine && endI.col > curCol);
                 if(isAfterStart && isBeforeEnd) {
                     throw new Exception();
-                }
+                }*/
                 var img = MakeImg(statement).Item1;
                 if(img is null) {
                     throw new Exception();
@@ -704,7 +675,7 @@ public partial class Form1: Form {
                 var lenH = MeasureHeight(nullGraphics, st, boldFont);
                 Bitmap bm = new(len, lenH);
                 var bg = Graphics.FromImage(bm);
-                bg.DrawString(st.Replace("\t", "    "), boldFont, textBrush, 0, 0);
+                bg.DrawString(ReplaceTabs(st), boldFont, textBrush, 0, 0);
                 resses.Add(bm);
             }
             height += resses[^1].Size.Height;
@@ -852,7 +823,6 @@ public partial class Form1: Form {
     #endregion
 
     #region Tabs
-
     private void AddTab(string name, bool isFirst=false) {
         Function func = new() {    Name = name };
         if(isFirst) { curFunc = func; }
@@ -863,7 +833,9 @@ public partial class Form1: Form {
             BackColor = Color.WhiteSmoke,
             Location = new(tabButtonEnd, 0),
             Size = new(TAB_WIDTH, TAB_HEIGHT),
+            Font = tabFont
         };
+        func.Button = btn;
         ChangeTab(btn);
         btn.Click += new EventHandler(ChangeTab!);
         tabButtons.Add(btn);
@@ -873,11 +845,13 @@ public partial class Form1: Form {
     private void ChangeTab(object sender, EventArgs e) =>
         ChangeTab((Button)sender);
     private void ChangeTab(Button btn) {
+        curFunc.Button.BackColor = Color.WhiteSmoke;
         curFunc.CurLine = curLine;
         curFunc.CurCol = curCol;
         var func = nameToFunc[btn.Name];
+        func.Button.BackColor = Color.LightGray;
         curFunc = func;
-        linesText = func.linesText;
+        linesText = func.LinesText;
         curLine = func.CurLine;
         curCol = func.CurCol;
         textBox.Focus();
@@ -902,11 +876,35 @@ public partial class Form1: Form {
         if(e.KeyCode == Keys.Enter) {
             Controls.Remove((TextBox)sender);
             AddTab(((TextBox)sender).Text);
+        } else if(e.KeyCode == Keys.Escape) {
+            Controls.Remove((TextBox)sender);
         }
     }
     #endregion
 
+    #region DrawScreen
+    private static bool isPic = false, skipDrawNewScreen = false;
+    private void DrawPic() {
+        if(isPic) {
+            DrawNewScreen();
+            Refresh();
+        } else {
+            var img = MakeImg(ToAST()).img;
+            if(img != null) {
+                screen = img;
+                skipDrawNewScreen = true;
+                Refresh();
+            }
+        }
+        isPic = !isPic;
+    }
     private void DrawNewScreen() {
+        if(skipDrawNewScreen) {
+            skipDrawNewScreen = false;
+            return;
+        }
+        isPic = false;
+
         foreach(var b in linesButton) { // not efficient
             this.Controls.Remove(b);
         }
@@ -922,9 +920,7 @@ public partial class Form1: Form {
         int totalWidth = 0;
         int end = 0;
         for(int i = 0; i < linesText.Count; i++) {
-            var lineText = linesText[i];
-
-            lineText = lineText.Replace("\t", "    ");
+            var lineText = ReplaceTabs(linesText[i]);
             int width = MeasureWidth(nullGraphics, lineText, boldFont);
             totalWidth = Max(totalWidth, width);
 
@@ -933,7 +929,7 @@ public partial class Form1: Form {
             g.DrawString(lineText, boldFont, textBrush, 0, 0);
 
             if(i == curLine) {
-                var before = curCol == -1 ? "": lineText[..(curCol + 1)];
+                var before = curCol == -1 ? "": ReplaceTabs(linesText[i][..(curCol + 1)]);
                 g.FillRectangle(
                     curserBrush,
                     MeasureWidth(nullGraphics, before, boldFont) - 3,
@@ -958,8 +954,8 @@ public partial class Form1: Form {
                         sCol = i > line ? -1 : lineText.Length - 1;
                     }
                     var (smaller, bigger) = cCol < sCol ? (cCol, sCol) : (sCol, cCol);
-                    var startS = MeasureWidth(g, lineText[..(smaller + 1)], boldFont);
-                    var endS = MeasureWidth(g, lineText[..(bigger + 1)], boldFont);
+                    var startS = MeasureWidth(g, ReplaceTabs(linesText[i][..(smaller + 1)]), boldFont);
+                    var endS = MeasureWidth(g, ReplaceTabs(linesText[i][..Min(linesText[i].Length, bigger + 1)]), boldFont);
                     g.FillRectangle(selectBrush, 0 + startS, 0, endS - startS, LINE_HEIGHT);
                 }
             }
@@ -975,205 +971,7 @@ public partial class Form1: Form {
         }
         screen = newBitMap;
     }
-    
-    private static void GetClosestForCaret() {
-        if(lastCol is not null) {
-            curCol = Min((int)lastCol, linesText[curLine].Length - 1);
-        } else {
-            lastCol = curCol;
-            curCol = Min(curCol, linesText[curLine].Length - 1);
-        }
-    }
-    private Bitmap MakeEmptyLine(int? width = null) => new(width ?? this.Width, LINE_HEIGHT);
-    private void BtnClick(int i) {
-        curLine = i;
-        curCol = BinarySearch(linesText[curLine].Length, Cursor.Position.X);
-        textBox.Focus();
-        DrawNewScreen();
-        Refresh();
-    }
-    private static float GetDist(Graphics g, int i) {
-        return MeasureWidth(g, linesText[curLine][..(i + 1)], boldFont);
-    }
-    public static int BinarySearch(int len, float item) {
-        if(len == 0) { return -1; }
-        int first = 0, mid;
-        int last = len - 1;
-        do {
-            mid = first + (last - first) / 2;
-            var pos = GetDist(nullGraphics, mid);
-            if(item > pos)  {   first = mid + 1;    } 
-            else            {   last = mid - 1;     }
-            if(pos == item) {   return mid;         }
-        } while(first <= last);
-
-        var cur = Abs(item - GetDist(nullGraphics, mid));
-        if(mid > -1) {
-            if(Abs(item - GetDist(nullGraphics, mid - 1)) < cur) {
-                return mid - 1;
-            }
-        }
-        if(mid < len - 1) {
-            if(Abs(item - GetDist(nullGraphics, mid + 1)) < cur) {
-                return mid + 1;
-            }
-        }
-        return mid;
-    }
-    private void NewButton(int end, int i, Bitmap line) {
-        Button b = new() {
-            Location = new Point(0, end + TAB_HEIGHT),
-            Size = line.Size,
-            FlatStyle = FlatStyle.Flat,
-            BackColor = Color.Transparent,
-            ForeColor = Color.Transparent,
-        };
-        b.FlatAppearance.BorderSize = 0;
-        b.FlatAppearance.MouseOverBackColor = Color.Transparent;
-        b.FlatAppearance.MouseDownBackColor = Color.Transparent;
-        b.FlatAppearance.BorderColor = Color.Black;
-        b.MouseClick += new MouseEventHandler(((object sender, MouseEventArgs e) => BtnClick(i))!);
-        this.Controls.Add(b);
-        linesButton.Add(b);
-    }
-    private static void DeleteSelection() {
-        var selectedLine_ = ((int line, int col))selectedLine!;
-        selectedLine = null;
-        if(curLine == selectedLine_.line) {
-            (int bigger, int smaller) = MaxMin(curCol, selectedLine_.col);
-                
-            linesText[curLine] = string.Concat(
-                linesText[curLine].AsSpan(0, smaller + 1),
-                linesText[curLine].AsSpan(bigger + 1)
-            );
-            curCol = smaller;
-        } else {
-            ((int line, int col) smaller, (int line, int col) bigger) 
-                = curLine > selectedLine_.line 
-                    ? (selectedLine_, (curLine, curCol))
-                    : ((curLine, curCol), selectedLine_);
-            linesText[smaller.line] = string.Concat(
-                linesText[smaller.line].AsSpan(0, smaller.col + 1),
-                linesText[bigger.line].AsSpan(bigger.col + 1));
-            for(int i = smaller.line + 1; i <= bigger.line; i++) {
-                linesText.RemoveAt(smaller.line + 1);
-            }
-            (curLine, curCol) = smaller;
-        }
-    }
-    private (int line, int col, char val)? GetNextR() {
-        if(curCol != linesText[curLine].Length - 1) {
-            return (curLine, curCol + 1, linesText[curLine][curCol + 1]);
-        }
-        if(curLine == linesText.Count - 1) {
-            return null;
-        }
-        return (curLine + 1, -1, '\n');
-    }
-    private (int line, int col, char val)? GetNextL() {
-        if(curCol != - 1) {
-            return (curLine, curCol - 1, linesText[curLine][curCol]);
-        }
-        if(curLine == 0) {
-            return null;
-        }
-        return (curLine - 1, linesText[curLine - 1].Length - 1, '\n');
-    }
-    private static void GoInDirCtrl(Func<(int line, int col, char val)?> GetNext, bool isAlt) {
-        var next = GetNext();
-        char? cur = next?.val;
-        if(cur is null) { } 
-        else if(" \n\t".Contains(cur.Value)) {
-            Move(() => " \n\t".Contains(next!.Value.val));
-        } else if(IsNumeric(cur!.Value)) {
-            if(isAlt) {
-                Move(() => IsAltNumeric(next!.Value.val));
-            } else {
-                Move(() => IsNumeric(next!.Value.val));
-            }
-        } else {
-            Move(() => !" \n\t".Contains(next!.Value.val) && !IsNumeric(next!.Value.val));
-            while(next is not null && " \n\t".Contains(next.Value.val)) {
-                (curLine, curCol, _) = next!.Value;
-                next = GetNext();
-            }
-        }
-        void Move(Func<bool> Condition) {
-            do {
-                (curLine, curCol, _) = next!.Value;
-                next = GetNext();
-            } while(
-                next is not null && Condition()
-            );
-        }
-    }
-    private static string GetSelectedText() {
-        var res = new StringBuilder();
-        var selectedLine_ = ((int line, int col))selectedLine!;
-        selectedLine = null;
-        if(curLine == selectedLine_.line) {
-            (int bigger, int smaller) = MaxMin(curCol, selectedLine_.col);
-            return linesText[curLine].Substring(smaller + 1, bigger - smaller);
-        } else {
-            ((int line, int col) smaller, (int line, int col) bigger)
-                = curLine > selectedLine_.line
-                    ? (selectedLine_, (curLine, curCol))
-                    : ((curLine, curCol), selectedLine_);
-            res.AppendLine(linesText[smaller.line][(smaller.col + 1)..]);
-            for(int i = smaller.line + 1; i < bigger.line; i++) {
-                res.AppendLine(linesText[i]);
-            }
-            res.Append(linesText[bigger.line].AsSpan(0, bigger.col + 1));
-        }
-        return res.ToString();
-    }
-    private (int, int) AddString(ReadOnlySpan<char> change, (int line, int col) pos) {
-        if(change.Contains("\r\n", StringComparison.Ordinal)) { // todo but not the litteral
-            var newLines = change.ToString().Split("\r\n");
-            var newCol = newLines[^1].Length - 1;
-            if(pos.col != linesText[pos.line].Length - 1) {
-                newLines[^1] = string.Concat(newLines[^1], linesText[pos.line].AsSpan(pos.col + 1));    
-            }
-            linesText[pos.line] = string.Concat(linesText[pos.line].AsSpan(0, pos.col + 1), newLines[0]);
-            for(int i = 1; i < newLines.Length; i++) {
-                linesText.Insert(pos.line + 1, newLines[i]);
-                pos.line++;
-            }
-            pos.col = newCol;
-        } else {
-            var line = linesText[pos.line];
-            var start = pos.col == -1 ? "" : line.AsSpan(0, pos.col+1);
-            linesText[pos.line] = $"{start}{change}{line.AsSpan(pos.col + 1)}";
-            pos.col += change.Length;
-        }
-        return (pos.line, pos.col);
-    }
-    protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
-        var keyCode = (Keys) (msg.WParam.ToInt32() & Convert.ToInt32(Keys.KeyCode));
-        if(msg.Msg == WM_KEYDOWN && ModifierKeys == Keys.Control) {
-            bool isAltlKeyPressed = (ModifierKeys & Keys.Alt) == Keys.Alt;
-            bool isShift = (Control.ModifierKeys & Keys.Shift) == Keys.Shift;
-            ((Action)(keyCode switch {
-                Keys.End => () => EndKey(isShift, isAltlKeyPressed, true),
-                Keys.Home => () => HomeKey(isShift, isAltlKeyPressed, true),
-                Keys.Up => () => UpKey(isShift, isAltlKeyPressed, true),
-                Keys.Down => () => DownKey(isShift, isAltlKeyPressed, true),
-                Keys.Right => () => RightKey(isShift, isAltlKeyPressed, true),
-                Keys.Left => () => LeftKey(isShift, isAltlKeyPressed, true),
-                Keys.C => () => Copy(isAltlKeyPressed),
-                Keys.V => () => Paste(),
-                Keys.X => () => Cut(isAltlKeyPressed),
-                Keys.D => () => Duplicate(isAltlKeyPressed),
-                Keys.A => () => SelectAll(),
-                Keys.N => () => MakeNewTab(),
-                _ => () => _=1
-            }))();
-            DrawNewScreen();
-            Refresh();
-            return true;
-        }
-        return base.ProcessCmdKey(ref msg, keyData);
-    }
+    #endregion
 
     #region Python
     private PythonAst ToAST() {
@@ -1226,7 +1024,7 @@ public partial class Form1: Form {
             errs.AppendLine(e.Value);
     }
     #endregion
-
+     
     #region THE EVENTS
     private void Form1_KeyDown(object sender, KeyEventArgs e) {
         textBox.SelectionStart = 1;
@@ -1240,7 +1038,7 @@ public partial class Form1: Form {
         bool isCtrl = (ModifierKeys & Keys.Control) == Keys.Control;
         ((Action)(lastPressed switch {
             Keys.CapsLock => () => _=1, // todo display that caps is pressed \ not pressed
-            Keys.Insert => () => Execute(),
+            Keys.Insert => isShift? () => Execute(): () => DrawPic(),
             Keys.End => () => EndKey(isShift, isAltl, isCtrl),
             Keys.Home => () => HomeKey(isShift, isAltl, isCtrl),
             Keys.Up => () => UpKey(isShift, isAltl, isCtrl),
@@ -1252,7 +1050,6 @@ public partial class Form1: Form {
         DrawNewScreen();
         Refresh();
     }
-
     private void textBox_TextChanged(object sender, EventArgs e) {
         if(iChanged) {
             iChanged = false;
@@ -1280,9 +1077,36 @@ public partial class Form1: Form {
         DrawNewScreen();
         Refresh();
     }
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
+        var keyCode = (Keys) (msg.WParam.ToInt32() & Convert.ToInt32(Keys.KeyCode));
+        if(msg.Msg == WM_KEYDOWN && ModifierKeys == Keys.Control) {
+            bool isAltlKeyPressed = (ModifierKeys & Keys.Alt) == Keys.Alt;
+            bool isShift = (Control.ModifierKeys & Keys.Shift) == Keys.Shift;
+            ((Action)(keyCode switch {
+                Keys.End => () => EndKey(isShift, isAltlKeyPressed, true),
+                Keys.Home => () => HomeKey(isShift, isAltlKeyPressed, true),
+                Keys.Up => () => UpKey(isShift, isAltlKeyPressed, true),
+                Keys.Down => () => DownKey(isShift, isAltlKeyPressed, true),
+                Keys.Right => () => RightKey(isShift, isAltlKeyPressed, true),
+                Keys.Left => () => LeftKey(isShift, isAltlKeyPressed, true),
+                Keys.C => () => Copy(isAltlKeyPressed),
+                Keys.V => () => Paste(),
+                Keys.X => () => Cut(isAltlKeyPressed),
+                Keys.D => () => Duplicate(isAltlKeyPressed),
+                Keys.A => () => SelectAll(),
+                Keys.N => () => MakeNewTab(),
+                _ => () => _=1
+            }))();
+            DrawNewScreen();
+            Refresh();
+            return true;
+        }
+        return base.ProcessCmdKey(ref msg, keyData);
+    }
     #endregion
 
     #region Helpers
+    private static string ReplaceTabs(string st) => st.Replace("\t", "    ");
     private static (Bitmap img, int middle) MakeTxtBM(string txt, Brush? brush=null) {
         var width = MeasureWidth(nullGraphics, txt, boldFont);
         var height = MeasureHeight(nullGraphics, txt, boldFont);
@@ -1306,7 +1130,7 @@ public partial class Form1: Form {
         }
         // used || so that trailing\leading spaces get included too
         // you might wonder why theres an "a" in here... me too... it just doesn't work without it...
-        st = $"|a{st}|".Replace("\t", "    ");
+        st = ReplaceTabs($"|a{st}|");
         return (int) (g.MeasureString(st, ft).Width - g.MeasureString("|", ft).Width * 2);
     }
     private static int MeasureHeight(Graphics g, string st, Font ft) => (int)g.MeasureString(st, ft).Height;
@@ -1449,13 +1273,10 @@ public partial class Form1: Form {
         if(selectedLine is not null) {
             DeleteSelection();
             selectedLine = null;
-            return;
         }
         if(curCol == linesText[curLine].Length - 1) {
-            var map = MakeEmptyLine();
             linesText.Insert(curLine + 1, "");
         } else {
-            var map = MakeEmptyLine(); // todo
             linesText.Insert(curLine + 1, linesText[curLine][(curCol + 1)..]);
             linesText[curLine] = linesText[curLine][..(curCol + 1)];
         }
@@ -1570,16 +1391,190 @@ public partial class Form1: Form {
         SendMessage(textbox.Handle, EM_SETTABSTOPS, 1, new int[] { tabWidth * characterWidth });
     }
     #endregion
+
+    private static void GetClosestForCaret() {
+        if(lastCol is not null) {
+            curCol = Min((int)lastCol, linesText[curLine].Length - 1);
+        } else {
+            lastCol = curCol;
+            curCol = Min(curCol, linesText[curLine].Length - 1);
+        }
+    }
+    private Bitmap MakeEmptyLine(int? width = null) => new(width ?? this.Width, LINE_HEIGHT);
+    private void BtnClick(int i) {
+        curLine = i;
+        curCol = BinarySearch(linesText[curLine].Length, Cursor.Position.X);
+        textBox.Focus();
+        DrawNewScreen();
+        Refresh();
+    }
+    private static float GetDist(Graphics g, int i) {
+        return MeasureWidth(g, linesText[curLine][..(i + 1)], boldFont);
+    }
+    public static int BinarySearch(int len, float item) {
+        if(len == 0) { return -1; }
+        int first = 0, mid;
+        int last = len - 1;
+        do {
+            mid = first + (last - first) / 2;
+            var pos = GetDist(nullGraphics, mid);
+            if(item > pos)  {   first = mid + 1;    } 
+            else            {   last = mid - 1;     }
+            if(pos == item) {   return mid;         }
+        } while(first <= last);
+
+        var cur = Abs(item - GetDist(nullGraphics, mid));
+        if(mid > -1) {
+            if(Abs(item - GetDist(nullGraphics, mid - 1)) < cur) {
+                return mid - 1;
+            }
+        }
+        if(mid < len - 1) {
+            if(Abs(item - GetDist(nullGraphics, mid + 1)) < cur) {
+                return mid + 1;
+            }
+        }
+        return mid;
+    }
+    private void NewButton(int end, int i, Bitmap line) {
+        Button b = new() {
+            Location = new Point(0, end + TAB_HEIGHT),
+            Size = new(Width, line.Size.Height),
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Color.Transparent,
+            ForeColor = Color.Transparent,
+        };
+        b.FlatAppearance.BorderSize = 0;
+        b.FlatAppearance.MouseOverBackColor = Color.Transparent;
+        b.FlatAppearance.MouseDownBackColor = Color.Transparent;
+        b.FlatAppearance.BorderColor = Color.Black;
+        b.MouseClick += new MouseEventHandler(((object sender, MouseEventArgs e) => BtnClick(i))!);
+        this.Controls.Add(b);
+        linesButton.Add(b);
+    }
+    private static void DeleteSelection() {
+        var selectedLine_ = ((int line, int col))selectedLine!;
+        selectedLine = null;
+        if(curLine == selectedLine_.line) {
+            (int bigger, int smaller) = MaxMin(curCol, selectedLine_.col);
+                
+            linesText[curLine] = string.Concat(
+                linesText[curLine].AsSpan(0, smaller + 1),
+                linesText[curLine].AsSpan(bigger + 1)
+            );
+            curCol = smaller;
+        } else {
+            ((int line, int col) smaller, (int line, int col) bigger) 
+                = curLine > selectedLine_.line 
+                    ? (selectedLine_, (curLine, curCol))
+                    : ((curLine, curCol), selectedLine_);
+            linesText[smaller.line] = string.Concat(
+                linesText[smaller.line].AsSpan(0, smaller.col + 1),
+                linesText[bigger.line].AsSpan(bigger.col + 1));
+            for(int i = smaller.line + 1; i <= bigger.line; i++) {
+                linesText.RemoveAt(smaller.line + 1);
+            }
+            (curLine, curCol) = smaller;
+        }
+    }
+    private (int line, int col, char val)? GetNextR() {
+        if(curCol != linesText[curLine].Length - 1) {
+            return (curLine, curCol + 1, linesText[curLine][curCol + 1]);
+        }
+        if(curLine == linesText.Count - 1) {
+            return null;
+        }
+        return (curLine + 1, -1, '\n');
+    }
+    private (int line, int col, char val)? GetNextL() {
+        if(curCol != - 1) {
+            return (curLine, curCol - 1, linesText[curLine][curCol]);
+        }
+        if(curLine == 0) {
+            return null;
+        }
+        return (curLine - 1, linesText[curLine - 1].Length - 1, '\n');
+    }
+    private static void GoInDirCtrl(Func<(int line, int col, char val)?> GetNext, bool isAlt) {
+        var next = GetNext();
+        char? cur = next?.val;
+        if(cur is null) { } 
+        else if(" \n\t".Contains(cur.Value)) {
+            Move(() => " \n\t".Contains(next!.Value.val));
+        } else if(IsNumeric(cur!.Value)) {
+            if(isAlt) {
+                Move(() => IsAltNumeric(next!.Value.val));
+            } else {
+                Move(() => IsNumeric(next!.Value.val));
+            }
+        } else {
+            Move(() => !" \n\t".Contains(next!.Value.val) && !IsNumeric(next!.Value.val));
+            while(next is not null && " \n\t".Contains(next.Value.val)) {
+                (curLine, curCol, _) = next!.Value;
+                next = GetNext();
+            }
+        }
+        void Move(Func<bool> Condition) {
+            do {
+                (curLine, curCol, _) = next!.Value;
+                next = GetNext();
+            } while(
+                next is not null && Condition()
+            );
+        }
+    }
+    private static string GetSelectedText() {
+        var res = new StringBuilder();
+        var selectedLine_ = ((int line, int col))selectedLine!;
+        selectedLine = null;
+        if(curLine == selectedLine_.line) {
+            (int bigger, int smaller) = MaxMin(curCol, selectedLine_.col);
+            return linesText[curLine].Substring(smaller + 1, bigger - smaller);
+        } else {
+            ((int line, int col) smaller, (int line, int col) bigger)
+                = curLine > selectedLine_.line
+                    ? (selectedLine_, (curLine, curCol))
+                    : ((curLine, curCol), selectedLine_);
+            res.AppendLine(linesText[smaller.line][(smaller.col + 1)..]);
+            for(int i = smaller.line + 1; i < bigger.line; i++) {
+                res.AppendLine(linesText[i]);
+            }
+            res.Append(linesText[bigger.line].AsSpan(0, bigger.col + 1));
+        }
+        return res.ToString();
+    }
+    private static (int, int) AddString(ReadOnlySpan<char> change, (int line, int col) pos) {
+        if(change.Contains("\r\n", StringComparison.Ordinal)) { // todo but not the litteral
+            var newLines = change.ToString().Split("\r\n");
+            var newCol = newLines[^1].Length - 1;
+            if(pos.col != linesText[pos.line].Length - 1) {
+                newLines[^1] = string.Concat(newLines[^1], linesText[pos.line].AsSpan(pos.col + 1));    
+            }
+            linesText[pos.line] = string.Concat(linesText[pos.line].AsSpan(0, pos.col + 1), newLines[0]);
+            for(int i = 1; i < newLines.Length; i++) {
+                linesText.Insert(pos.line + 1, newLines[i]);
+                pos.line++;
+            }
+            pos.col = newCol;
+        } else {
+            var line = linesText[pos.line];
+            var start = pos.col == -1 ? "" : line.AsSpan(0, pos.col+1);
+            linesText[pos.line] = $"{start}{change}{line.AsSpan(pos.col + 1)}";
+            pos.col += change.Length;
+        }
+        return (pos.line, pos.col);
+    }
+
 }
 
 
-
 class Function {
-    public readonly List<string> linesText = new(){ "" };
+    public readonly List<string> LinesText = new(){ "" };
     public Bitmap? DisplayImage;
     public string Name = null!;
     public int CurLine = 0;
     public int CurCol = -1;
+    public Button Button = null!;
 }
 
 public class Walker: PythonWalker {
@@ -1614,33 +1609,19 @@ public class Walker: PythonWalker {
 }
 
 public class MyEvtArgs<T>: EventArgs {
-    public T Value {
-        get;
-        private set;
-    }
+    public T Value { get; private set; }
     public MyEvtArgs(T value) {
         this.Value = value;
     }
 }
 
 public class EventRaisingStreamWriter: StreamWriter {
-    #region Event
-    public event EventHandler<MyEvtArgs<string>> StringWritten;
-    #endregion
-
-    #region CTOR
+    public event EventHandler<MyEvtArgs<string>> StringWritten = null!;
     public EventRaisingStreamWriter(Stream s) : base(s) { }
-    #endregion
-
-    #region Private Methods
     private void LaunchEvent(string txtWritten) {
         // invoke just calls it. so this checks if its null and then calls it
         StringWritten?.Invoke(this, new MyEvtArgs<string>(txtWritten));
     }
-    #endregion
-
-    #region Overrides
-
     public override void Write(string? value) {
         base.Write(value);
         LaunchEvent(value!);
@@ -1650,7 +1631,4 @@ public class EventRaisingStreamWriter: StreamWriter {
         LaunchEvent(value.ToString());
     }
     // here override all writing methods...
-
-
-    #endregion
 }
