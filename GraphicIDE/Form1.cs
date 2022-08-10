@@ -20,27 +20,27 @@ using System.Drawing.Imaging;
 namespace GraphicIDE;
 
 public partial class Form1: Form {
-    private static readonly List<Button> linesButton = new();
-    private static List<string> linesText = null!;
     private Bitmap screen;
     private static int curLine = 0, curCol = -1;
+    private static (int line, int col)? selectedLine = null;
+    private static int? lastCol = null;
+    private static Keys lastPressed;
+    private static List<string> linesText = null!;
+    private static readonly List<Button> linesButton = new();
     private static readonly TextBox textBox = new();
     private static readonly StringFormat stringFormat = new();
-    private static Keys lastPressed;
-    private static int? lastCol = null;
-    private static (int line, int col)? selectedLine = null;
     private static readonly Font 
         boldFont = new(FontFamily.GenericMonospace, 15, FontStyle.Bold),
         tabFont = new(FontFamily.GenericMonospace, 10, FontStyle.Bold);
     private static bool iChanged = false;
-    private const int LINE_HEIGHT = 30, WM_KEYDOWN = 0x100, TAB_HEIGHT = 25, TAB_WIDTH = 80;
     private static readonly Graphics nullGraphics = Graphics.FromImage(new Bitmap(1,1));
-    private static readonly int INDENT = MeasureWidth(nullGraphics, "    ", boldFont);
+    private const int LINE_HEIGHT = 30, WM_KEYDOWN = 0x100, TAB_HEIGHT = 25, TAB_WIDTH = 80;
     private static readonly int 
-        qWidth = MeasureWidth(nullGraphics, "¿ ?", boldFont),
-        qHeight = MeasureHeight(nullGraphics, "¿?", boldFont),
-        upSideDownW = MeasureWidth(nullGraphics, "¿", boldFont),
-        txtHeight = MeasureHeight(nullGraphics, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", boldFont);
+        INDENT = MeasureWidth("    ", boldFont),
+        qWidth = MeasureWidth("¿ ?", boldFont),
+        qHeight = MeasureHeight("¿?", boldFont),
+        upSideDownW = MeasureWidth("¿", boldFont),
+        txtHeight = MeasureHeight("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", boldFont);
     
     #region Tabs
     private static int currentTab = 0;
@@ -225,7 +225,7 @@ public partial class Form1: Form {
         var condition = MakeImg(ast.Test).Item1;
         var body = MakeImg(ast.Body).Item1;
         Font bigFont = new(FontFamily.GenericMonospace, 30, FontStyle.Bold);
-        var infWidth = MeasureWidth(nullGraphics, "∞", bigFont);
+        var infWidth = MeasureWidth("∞", bigFont);
         Bitmap res = new(
                 width: Max(condition.Width + infWidth, body.Width + INDENT),
                 height: condition.Height + body.Height + 14
@@ -378,8 +378,8 @@ public partial class Form1: Form {
         };
         
         int gap = 5;
-        var opWidth = MeasureWidth(nullGraphics, op, boldFont);
-        var opHeight = MeasureHeight(nullGraphics, op, boldFont);
+        var opWidth = MeasureWidth(op, boldFont);
+        var opHeight = MeasureHeight(op, boldFont);
         var img = MakeImg(ast.Expression);
         (Bitmap bmap, int middle) = (img.Item1, img.Item2);
         var top = middle;
@@ -411,8 +411,8 @@ public partial class Form1: Form {
         };
         
         int gap = 5;
-        var opWidth = MeasureWidth(nullGraphics, op, boldFont) + gap * 2;
-        var opHeight = MeasureHeight(nullGraphics, op, boldFont);
+        var opWidth = MeasureWidth(op, boldFont) + gap * 2;
+        var opHeight = MeasureHeight(op, boldFont);
         var l = MakeImg(ast.Left);
         (Bitmap left, int lmiddle) = (l.Item1, l.Item2);
         var r = MakeImg(ast.Right);
@@ -464,8 +464,8 @@ public partial class Form1: Form {
         #endregion
         
         int gap = 5;
-        var opWidth = MeasureWidth(nullGraphics, op, boldFont) + gap * 2;
-        var opHeight = MeasureHeight(nullGraphics, op, boldFont);
+        var opWidth = MeasureWidth(op, boldFont) + gap * 2;
+        var opHeight = MeasureHeight(op, boldFont);
         var l = MakeImg(ast.Left);
         (Bitmap left, int lmiddle) = (l.Item1, l.Item2);
         var r = MakeImg(ast.Right);
@@ -671,8 +671,8 @@ public partial class Form1: Form {
                     if(i != endI.line) {    sb.Append('\n'); }
                 }
                 var st = sb.ToString();
-                var len = MeasureWidth(nullGraphics, st, boldFont);
-                var lenH = MeasureHeight(nullGraphics, st, boldFont);
+                var len = MeasureWidth(st, boldFont);
+                var lenH = MeasureHeight(st, boldFont);
                 Bitmap bm = new(len, lenH);
                 var bg = Graphics.FromImage(bm);
                 bg.DrawString(ReplaceTabs(st), boldFont, textBrush, 0, 0);
@@ -745,7 +745,7 @@ public partial class Form1: Form {
             width += resses[^1].Width;
             height = Max(height, resses[^1].Height);
         }
-        int commaLen = MeasureWidth(nullGraphics, ",", boldFont);
+        int commaLen = MeasureWidth(",", boldFont);
         var res = new Bitmap(width + commaLen * (resses.Count - 1), height);
 
         var g = Graphics.FromImage(res);
@@ -921,7 +921,7 @@ public partial class Form1: Form {
         int end = 0;
         for(int i = 0; i < linesText.Count; i++) {
             var lineText = ReplaceTabs(linesText[i]);
-            int width = MeasureWidth(nullGraphics, lineText, boldFont);
+            int width = MeasureWidth(lineText, boldFont);
             totalWidth = Max(totalWidth, width);
 
             Bitmap bm = new(width, txtHeight);
@@ -932,7 +932,7 @@ public partial class Form1: Form {
                 var before = curCol == -1 ? "": ReplaceTabs(linesText[i][..(curCol + 1)]);
                 g.FillRectangle(
                     curserBrush,
-                    MeasureWidth(nullGraphics, before, boldFont) - 3,
+                    MeasureWidth(before, boldFont) - 3,
                     5, 1, txtHeight - 10
                 );
             }
@@ -944,7 +944,7 @@ public partial class Form1: Form {
                 if((i < line && i > curLine) || (i > line && i < curLine)) {
                     g.FillRectangle(
                         selectBrush, 0, 0,
-                        MeasureWidth(g, lineText, boldFont), LINE_HEIGHT
+                        MeasureWidth(lineText, boldFont), LINE_HEIGHT
                     );
                 } else if(i == line || i == curLine) {
                     int cCol = curCol, sCol = col;
@@ -954,8 +954,8 @@ public partial class Form1: Form {
                         sCol = i > line ? -1 : lineText.Length - 1;
                     }
                     var (smaller, bigger) = cCol < sCol ? (cCol, sCol) : (sCol, cCol);
-                    var startS = MeasureWidth(g, ReplaceTabs(linesText[i][..(smaller + 1)]), boldFont);
-                    var endS = MeasureWidth(g, ReplaceTabs(linesText[i][..Min(linesText[i].Length, bigger + 1)]), boldFont);
+                    var startS = MeasureWidth(ReplaceTabs(linesText[i][..(smaller + 1)]), boldFont);
+                    var endS = MeasureWidth(ReplaceTabs(linesText[i][..Min(linesText[i].Length, bigger + 1)]), boldFont);
                     g.FillRectangle(selectBrush, 0 + startS, 0, endS - startS, LINE_HEIGHT);
                 }
             }
@@ -991,7 +991,7 @@ public partial class Form1: Form {
             new CompilerContext(unit, new PythonCompilerOptions(), ErrorSink.Null),
             new PythonOptions()
             );
-        
+
         return p.ParseFile(false);
     }
     private void Execute() {
@@ -1024,7 +1024,7 @@ public partial class Form1: Form {
             errs.AppendLine(e.Value);
     }
     #endregion
-     
+
     #region THE EVENTS
     private void Form1_KeyDown(object sender, KeyEventArgs e) {
         textBox.SelectionStart = 1;
@@ -1037,8 +1037,8 @@ public partial class Form1: Form {
         bool isAltl = (ModifierKeys & Keys.Alt) == Keys.Alt;
         bool isCtrl = (ModifierKeys & Keys.Control) == Keys.Control;
         ((Action)(lastPressed switch {
-            Keys.CapsLock => () => _=1, // todo display that caps is pressed \ not pressed
-            Keys.Insert => isShift? () => Execute(): () => DrawPic(),
+            Keys.CapsLock => () => _ = 1, // todo display that caps is pressed \ not pressed
+            Keys.Insert => isShift ? () => Execute() : () => DrawPic(),
             Keys.End => () => EndKey(isShift, isAltl, isCtrl),
             Keys.Home => () => HomeKey(isShift, isAltl, isCtrl),
             Keys.Up => () => UpKey(isShift, isAltl, isCtrl),
@@ -1095,7 +1095,7 @@ public partial class Form1: Form {
                 Keys.D => () => Duplicate(isAltlKeyPressed),
                 Keys.A => () => SelectAll(),
                 Keys.N => () => MakeNewTab(),
-                _ => () => _=1
+                _ => () => _ = 1
             }))();
             DrawNewScreen();
             Refresh();
@@ -1107,9 +1107,9 @@ public partial class Form1: Form {
 
     #region Helpers
     private static string ReplaceTabs(string st) => st.Replace("\t", "    ");
-    private static (Bitmap img, int middle) MakeTxtBM(string txt, Brush? brush=null) {
-        var width = MeasureWidth(nullGraphics, txt, boldFont);
-        var height = MeasureHeight(nullGraphics, txt, boldFont);
+    private static (Bitmap img, int middle) MakeTxtBM(string txt, Brush? brush = null) {
+        var width = MeasureWidth(txt, boldFont);
+        var height = MeasureHeight(txt, boldFont);
         var res = new Bitmap(width, height);
         brush = txt switch {
             "True" => greenBrush,
@@ -1122,18 +1122,18 @@ public partial class Form1: Form {
     }
     private static bool IsNumeric(char val) => val == '_' || char.IsLetter(val) || char.IsDigit(val);
     private static bool IsAltNumeric(char val) => char.IsLower(val) || char.IsDigit(val);
-    private static int MeasureWidth(Graphics g, string st, Font ft) {
+    private static int MeasureWidth(string st, Font ft) {
         if(st.Contains('\n', StringComparison.Ordinal)) {
             return st.Split("\n").Select(
-                (line) => MeasureWidth(g, line, boldFont)
+                (line) => MeasureWidth(line, boldFont)
             ).Max();
         }
         // used || so that trailing\leading spaces get included too
         // you might wonder why theres an "a" in here... me too... it just doesn't work without it...
         st = ReplaceTabs($"|a{st}|");
-        return (int) (g.MeasureString(st, ft).Width - g.MeasureString("|", ft).Width * 2);
+        return (int)(nullGraphics.MeasureString(st, ft).Width - nullGraphics.MeasureString("|", ft).Width * 2);
     }
-    private static int MeasureHeight(Graphics g, string st, Font ft) => (int)g.MeasureString(st, ft).Height;
+    private static int MeasureHeight(string st, Font ft) => (int)nullGraphics.MeasureString(st, ft).Height;
 
     #endregion
 
@@ -1400,7 +1400,6 @@ public partial class Form1: Form {
             curCol = Min(curCol, linesText[curLine].Length - 1);
         }
     }
-    private Bitmap MakeEmptyLine(int? width = null) => new(width ?? this.Width, LINE_HEIGHT);
     private void BtnClick(int i) {
         curLine = i;
         curCol = BinarySearch(linesText[curLine].Length, Cursor.Position.X);
@@ -1408,8 +1407,8 @@ public partial class Form1: Form {
         DrawNewScreen();
         Refresh();
     }
-    private static float GetDist(Graphics g, int i) {
-        return MeasureWidth(g, linesText[curLine][..(i + 1)], boldFont);
+    private static float GetDist(int i) {
+        return MeasureWidth(linesText[curLine][..(i + 1)], boldFont);
     }
     public static int BinarySearch(int len, float item) {
         if(len == 0) { return -1; }
@@ -1417,20 +1416,20 @@ public partial class Form1: Form {
         int last = len - 1;
         do {
             mid = first + (last - first) / 2;
-            var pos = GetDist(nullGraphics, mid);
+            var pos = GetDist(mid);
             if(item > pos)  {   first = mid + 1;    } 
             else            {   last = mid - 1;     }
             if(pos == item) {   return mid;         }
         } while(first <= last);
 
-        var cur = Abs(item - GetDist(nullGraphics, mid));
+        var cur = Abs(item - GetDist(mid));
         if(mid > -1) {
-            if(Abs(item - GetDist(nullGraphics, mid - 1)) < cur) {
+            if(Abs(item - GetDist(mid - 1)) < cur) {
                 return mid - 1;
             }
         }
         if(mid < len - 1) {
-            if(Abs(item - GetDist(nullGraphics, mid + 1)) < cur) {
+            if(Abs(item - GetDist(mid + 1)) < cur) {
                 return mid + 1;
             }
         }
@@ -1566,7 +1565,6 @@ public partial class Form1: Form {
     }
 
 }
-
 
 class Function {
     public readonly List<string> LinesText = new(){ "" };
