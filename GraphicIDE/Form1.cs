@@ -43,9 +43,10 @@ public partial class Form1: Form {
     private static int screenWidth = 0, screenHeight = 0, screenX = 0, screenY = 0;
     private static List<Window> windows = new();
     private static (string txt, ConsoleTxtType typ) consoleTxt = ("", ConsoleTxtType.text);
-    private static Window console;
+    private static Window console = null!;
     private static string executedTime = "";
     private static bool isConsoleVisible = false;
+    private static Button? closeConsoleBtn;
     #region Tabs
     private static int currentTab = 0;
     private static readonly List<Button> tabButtons = new();
@@ -98,7 +99,8 @@ public partial class Form1: Form {
         passImg = new(Resources.pass),
         sumImg = new(Resources.sum),
         emptyListImg = new(Resources.emptyList),
-        playImg = new(Resources.play);
+        playImg = new(Resources.play),
+        xImg = new(Resources.red_X);
     #endregion
 
     #region Start
@@ -134,9 +136,9 @@ public partial class Form1: Form {
     async void Start() {
         await Task.Delay(10);
         (screenHeight, screenWidth) = (Height - TAB_HEIGHT, Width / 2);
-        AddTab("Main", size: (screenWidth, screenHeight), pos: (0, TAB_HEIGHT), isFirst: true);
-        AddTab("Main2", size: (screenWidth, screenHeight), pos: (screenWidth, TAB_HEIGHT));
-        curWindow = windows[0];
+        AddTab("Main2", size: (screenWidth, screenHeight), pos: (screenWidth, TAB_HEIGHT), isFirst: true);
+        AddTab("Main", size: (screenWidth, screenHeight), pos: (0, TAB_HEIGHT));
+        curWindow = windows[1];
 
         AddRunBtn();
         AddConsole();
@@ -156,9 +158,10 @@ public partial class Form1: Form {
             run.FlatAppearance.BorderColor = Color.White;
             run.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
             Bitmap b = new(run.Size.Width, run.Size.Height);
-            var g = Graphics.FromImage(b);
-            Bitmap scaled = new(playImg, run.Size.Width - gap * 2, run.Size.Height - gap * 2);
-            g.DrawImage(scaled, gap, gap);
+            using(var g = Graphics.FromImage(b)) {
+                Bitmap scaled = new(playImg, run.Size.Width - gap * 2, run.Size.Height - gap * 2);
+                g.DrawImage(scaled, gap, gap);
+            }
             run.BackgroundImage = b;
             run.Location = new(Width - 2 * run.Size.Width, 0);
             run.Click += new EventHandler(ExecuteBtn!);
@@ -213,8 +216,9 @@ public partial class Form1: Form {
             }
             Bitmap emptyList = new(emptyListImg, (int)(emptyListImg.Width / (emptyListImg.Height / (txtHeight + 15))), txtHeight + 15);
             Bitmap padded = new(emptyList.Width + 5, emptyList.Height);
-            var pg = Graphics.FromImage(padded);
-            pg.DrawImage(emptyList, 5, 0);
+            using(var pg = Graphics.FromImage(padded)) {
+                pg.DrawImage(emptyList, 5, 0);
+            }
             emptyListScaled = (padded, (int)(padded.Height / 2));
             return emptyListScaled;
         }
@@ -231,19 +235,20 @@ public partial class Form1: Form {
             heightB = Max(heightB, img.Item1.Height - middle);
         }
         Bitmap res = new(width, heightB + heightT + 20);
-        var g = Graphics.FromImage(res);
-        var end = 2;
-        foreach(var (img, _) in elements) {
+        using(var g = Graphics.FromImage(res)) {
+            var end = 2;
+            foreach(var (img, _) in elements) {
+                end += gap;
+                g.DrawLine(redListP, end, 5, end, res.Height - 5);
+                end += lineLen;
+                g.DrawImage(img, end, (int)(res.Height / 2 - img.Height / 2));
+                end += img.Width + gap;
+            }
             end += gap;
             g.DrawLine(redListP, end, 5, end, res.Height - 5);
-            end += lineLen;
-            g.DrawImage(img, end, (int)(res.Height/2 - img.Height/2));
-            end += img.Width + gap;
+            g.DrawLine(redListP, 5, 5, res.Width, 5);
+            g.DrawLine(redListP, 5, res.Height - 5, res.Width, res.Height - 5);
         }
-        end += gap;
-        g.DrawLine(redListP, end, 5, end, res.Height - 5);
-        g.DrawLine(redListP, 5, 5, res.Width, 5);
-        g.DrawLine(redListP, 5, res.Height - 5, res.Width, res.Height - 5);
         return (res, (int)(res.Height / 2));
 
     }
@@ -265,16 +270,17 @@ public partial class Form1: Form {
                 width: Max(condition.Width + infWidth, body.Width + INDENT),
                 height: condition.Height + body.Height + 14
             );
-        var g = Graphics.FromImage(res);
-        g.DrawString(
-            "∞", bigFont, keyOrangeB, 0, 
-            (int)(condition.Height / 2 - qHeight / 2) - 10
-        );
-        g.DrawImage(condition, infWidth, 0);
-        g.DrawLine(blueOpaqeP, 1, 0, 1, res.Height - 5);
-        g.DrawImage(body, INDENT, condition.Height);
-        g.DrawLine(blueDashed, 4, 1, res.Width, 1);
-        g.DrawLine(blueDashed, 4, res.Height - 8, res.Width, res.Height - 8);
+        using(var g = Graphics.FromImage(res)) {
+            g.DrawString(
+                "∞", bigFont, keyOrangeB, 0,
+                (int)(condition.Height / 2 - qHeight / 2) - 10
+            );
+            g.DrawImage(condition, infWidth, 0);
+            g.DrawLine(blueOpaqeP, 1, 0, 1, res.Height - 5);
+            g.DrawImage(body, INDENT, condition.Height);
+            g.DrawLine(blueDashed, 4, 1, res.Width, 1);
+            g.DrawLine(blueDashed, 4, res.Height - 8, res.Width, res.Height - 8);
+        }
         return (res, (int)(res.Height/2));
     }
     private (Bitmap img, int middle) IfExpression(dynamic ast) {
@@ -282,7 +288,7 @@ public partial class Form1: Form {
             var (prevH, prevW) = (res.Height, res.Width);
             var prevImg = res;
             res = new(Max(res.Width, img.Width), res.Height + img.Height);
-            Graphics resG = Graphics.FromImage(res);
+            var resG = Graphics.FromImage(res);
             resG.DrawImage(prevImg, 0, 0);
             resG.DrawLine(lastColor, 4, prevH + 1, prevW, prevH + 1);
             resG.DrawImage(img, 0, prevH);
@@ -332,16 +338,18 @@ public partial class Form1: Form {
                 width: elseBody.Width + INDENT,
                 height: elseBody.Height + 7
             );
-            var eg = Graphics.FromImage(elseImg);
-            eg.DrawLine(redOpaqeP, 1, 0, 1, elseImg.Height);
-            eg.DrawImage(elseBody, INDENT, 0);
+            using(var eg = Graphics.FromImage(elseImg)) {
+                eg.DrawLine(redOpaqeP, 1, 0, 1, elseImg.Height);
+                eg.DrawImage(elseBody, INDENT, 0);
+            }
             resG = JoinIfAndElse(lastColor, ref res, elseImg);
             lastColor = redDashed;
         }
         resG.DrawLine(lastColor, 4, res.Height - 3, res.Width, res.Height - 3);
         Bitmap addPad = new(res.Width, res.Height + 5);
-        var g = Graphics.FromImage(addPad);
-        g.DrawImage(res, 0, 0);
+        using(var g = Graphics.FromImage(addPad)) {
+            g.DrawImage(res, 0, 0);
+        }
         return (addPad, (int)(res.Height/2));
     }
     private (Bitmap? img, int middle) FunctionCall(dynamic ast) {
@@ -352,11 +360,12 @@ public partial class Form1: Form {
                 width: inside.Width + 30, 
                 height: inside.Height + 15
             );
-            var g = Graphics.FromImage(res);
-            g.DrawImage(inside, 20, 15);
-            g.DrawLine(mathPurpleP, 15, 5, res.Width, 5);
-            g.DrawLine(mathPurpleP, 15, 5, 15, res.Height);
-            g.DrawLine(mathPurpleP, 5, res.Height - 15, 15, res.Height);
+            using(var g = Graphics.FromImage(res)) {
+                g.DrawImage(inside, 20, 15);
+                g.DrawLine(mathPurpleP, 15, 5, res.Width, 5);
+                g.DrawLine(mathPurpleP, 15, 5, 15, res.Height);
+                g.DrawLine(mathPurpleP, 5, res.Height - 15, 15, res.Height);
+            }
             return (res, (int)(res.Height / 2));
         }
         else if(ast.Target.Name == "sum") {
@@ -367,10 +376,11 @@ public partial class Form1: Form {
                 width: inside.Width + sum.Width + 10,
                 height: inside.Height
             );
-            var g = Graphics.FromImage(res);
-            g.FillRectangle(new SolidBrush(Color.FromArgb(100, 255, 255, 255)), 0, 0, res.Width, res.Height);
-            g.DrawImage(sum, 5, 0);
-            g.DrawImage(inside, sum.Width + 5, 0);
+            using(var g = Graphics.FromImage(res)) {
+                g.FillRectangle(new SolidBrush(Color.FromArgb(100, 255, 255, 255)), 0, 0, res.Width, res.Height);
+                g.DrawImage(sum, 5, 0);
+                g.DrawImage(inside, sum.Width + 5, 0);
+            }
             return (res, (int)(res.Height / 2));
         }
         else if(ast.Target.Name == "len") {
@@ -381,10 +391,11 @@ public partial class Form1: Form {
                 width: inside.Width + ruler.Width + 10,
                 height: inside.Height
             );
-            var g = Graphics.FromImage(res);
-            g.FillRectangle(new SolidBrush(Color.FromArgb(100, 215, 206, 180)), 5 + ruler.Width, 0, res.Width, res.Height);
-            g.DrawImage(ruler, 5, 0);
-            g.DrawImage(inside, ruler.Width + 5, 0);
+            using(var g = Graphics.FromImage(res)) {
+                g.FillRectangle(new SolidBrush(Color.FromArgb(100, 215, 206, 180)), 5 + ruler.Width, 0, res.Width, res.Height);
+                g.DrawImage(ruler, 5, 0);
+                g.DrawImage(inside, ruler.Width + 5, 0);
+            }
             return (res, (int)(res.Height / 2));
         }
         else if(ast.Target.Name == "abs") {
@@ -394,10 +405,11 @@ public partial class Form1: Form {
                 width: inside.Width + 30,
                 height: inside.Height + 10
             );
-            var g = Graphics.FromImage(res);
-            g.DrawLine(mathPurpleP, 10, 0, 10, res.Height);
-            g.DrawLine(mathPurpleP, res.Width - 5, 0, res.Width - 5, res.Height);
-            g.DrawImage(inside, 15, 5);
+            using(var g = Graphics.FromImage(res)) {
+                g.DrawLine(mathPurpleP, 10, 0, 10, res.Height);
+                g.DrawLine(mathPurpleP, res.Width - 5, 0, res.Width - 5, res.Height);
+                g.DrawImage(inside, 15, 5);
+            }
             return (res, (int)(res.Height / 2));
         }
         return (null, 0);
@@ -422,10 +434,10 @@ public partial class Form1: Form {
             width: bmap.Width + opWidth + gap,
             height: bmap.Height
         );
-        var g = Graphics.FromImage(res);
-        
-        g.DrawString(op, boldFont, mathPurpleB, x: gap, y: (int)(middle - opHeight / 2));
-        g.DrawImage(bmap, x: opWidth + gap, y: (int)(middle - top));
+        using(var g = Graphics.FromImage(res)) {
+            g.DrawString(op, boldFont, mathPurpleB, x: gap, y: (int)(middle - opHeight / 2));
+            g.DrawImage(bmap, x: opWidth + gap, y: (int)(middle - top));
+        }
         return (res, middle);
     }
     private (Bitmap img, int middle) Comparison(dynamic ast) {
@@ -469,11 +481,11 @@ public partial class Form1: Form {
             height: Max(lTop, rTop) + Max(lBottom, rBottom)
         );
         var resMiddle = Max(lTop, rTop);
-        var g = Graphics.FromImage(res);
-        
-        g.DrawImage(left, 0, y: (int)(resMiddle - lTop));
-        g.DrawString(op, boldFont, mathPurpleB, x: left.Width + gap, y: (int)(resMiddle - opHeight / 2));
-        g.DrawImage(right, x: left.Width + opWidth, y: (int)(resMiddle - rTop));
+        using(var g = Graphics.FromImage(res)) {
+            g.DrawImage(left, 0, y: (int)(resMiddle - lTop));
+            g.DrawString(op, boldFont, mathPurpleB, x: left.Width + gap, y: (int)(resMiddle - opHeight / 2));
+            g.DrawImage(right, x: left.Width + opWidth, y: (int)(resMiddle - rTop));
+        }
         return (res, resMiddle);
     }
     private (Bitmap img, int middle) Operator(dynamic ast) {
@@ -522,11 +534,11 @@ public partial class Form1: Form {
             height: Max(lTop, rTop) + Max(lBottom, rBottom)
         );
         var resMiddle = Max(lTop, rTop);
-        var g = Graphics.FromImage(res);
-        
-        g.DrawImage(left, 0, y: (int)(resMiddle - lTop));
-        g.DrawString(op, boldFont, mathPurpleB, x: left.Width + gap, y: (int)(resMiddle - opHeight / 2));
-        g.DrawImage(right, x: left.Width + opWidth, y: (int)(resMiddle - rTop));
+        using(var g = Graphics.FromImage(res)) {
+            g.DrawImage(left, 0, y: (int)(resMiddle - lTop));
+            g.DrawString(op, boldFont, mathPurpleB, x: left.Width + gap, y: (int)(resMiddle - opHeight / 2));
+            g.DrawImage(right, x: left.Width + opWidth, y: (int)(resMiddle - rTop));
+        }
         return (res, resMiddle);
     }
     private static (Bitmap img, int middle) Power(Bitmap bottom, Bitmap top) {
@@ -535,9 +547,10 @@ public partial class Form1: Form {
             width: top.Width + bottom.Width - 5,
             height: Max(bottomGap, top.Height) + bottomGap
         );
-        var g = Graphics.FromImage(res);
-        g.DrawImage(bottom, 0, y: res.Height - bottom.Height);
-        g.DrawImage(top, x: bottom.Width - 5, y: 0);
+        using(var g = Graphics.FromImage(res)) {
+            g.DrawImage(bottom, 0, y: res.Height - bottom.Height);
+            g.DrawImage(top, x: bottom.Width - 5, y: 0);
+        }
         return (res, res.Height - bottomGap);
     }
     private static (Bitmap img, int middle) FloorDivide(Bitmap bottom, Bitmap top) {
@@ -545,11 +558,12 @@ public partial class Form1: Form {
             width: Max(top.Width, bottom.Width),
             height: top.Height + bottom.Height + 22
         );
-        var g = Graphics.FromImage(res);
-        g.DrawImage(top, x: (int)((res.Width - top.Width) / 2), y: 0);
-        g.DrawLine(mathPurpleP, 5, top.Height + 5, res.Width, top.Height + 5);
-        g.DrawLine(mathPurpleP, 5, top.Height + 11, res.Width, top.Height + 11);
-        g.DrawImage(bottom, x: (int)((res.Width - bottom.Width) / 2), y: top.Height + 22);
+        using(var g = Graphics.FromImage(res)) {
+            g.DrawImage(top, x: (int)((res.Width - top.Width) / 2), y: 0);
+            g.DrawLine(mathPurpleP, 5, top.Height + 5, res.Width, top.Height + 5);
+            g.DrawLine(mathPurpleP, 5, top.Height + 11, res.Width, top.Height + 11);
+            g.DrawImage(bottom, x: (int)((res.Width - bottom.Width) / 2), y: top.Height + 22);
+        }
         return (res, top.Height + 11);
     }
     private static (Bitmap img, int middle) Divide(Bitmap bottom, Bitmap top) {
@@ -557,10 +571,11 @@ public partial class Form1: Form {
             width: Max(top.Width, bottom.Width),
             height: top.Height + bottom.Height + 15
         );
-        var g = Graphics.FromImage(res);
-        g.DrawImage(top, x: (int)((res.Width - top.Width) / 2), y: 0);
-        g.DrawLine(mathPurpleP, 5, top.Height + 5, res.Width, top.Height + 5);
-        g.DrawImage(bottom, x: (int)((res.Width - bottom.Width) / 2), y: top.Height + 15);
+        using(var g = Graphics.FromImage(res)) {
+            g.DrawImage(top, x: (int)((res.Width - top.Width) / 2), y: 0);
+            g.DrawLine(mathPurpleP, 5, top.Height + 5, res.Width, top.Height + 5);
+            g.DrawImage(bottom, x: (int)((res.Width - bottom.Width) / 2), y: top.Height + 15);
+        }
         return (res, top.Height + 7);
     }
     private (Bitmap img, int middle) Literal(dynamic ast) =>
@@ -584,10 +599,11 @@ public partial class Form1: Form {
         }
         var end = 20;
         var res = new Bitmap(width, height + end);
-        var g = Graphics.FromImage(res);
-        foreach(var item in resses) {
-            g.DrawImage(item, 0, end);
-            end += item.Height;
+        using(var g = Graphics.FromImage(res)) {
+            foreach(var item in resses) {
+                g.DrawImage(item, 0, end);
+                end += item.Height;
+            }
         }
         return (res, (int)(res.Height / 2));
     }
@@ -651,8 +667,9 @@ public partial class Form1: Form {
                 var len = MeasureWidth(st, boldFont);
                 var lenH = MeasureHeight(st, boldFont);
                 Bitmap bm = new(len, lenH);
-                var bg = Graphics.FromImage(bm);
-                bg.DrawString(ReplaceTabs(st), boldFont, textBrush, 0, 0);
+                using(var bg = Graphics.FromImage(bm)) {
+                    bg.DrawString(ReplaceTabs(st), boldFont, textBrush, 0, 0);
+                }
                 resses.Add(bm);
             }
             height += resses[^1].Size.Height;
@@ -660,10 +677,11 @@ public partial class Form1: Form {
         }
         var end = 20;
         var res = new Bitmap(width, height + end);
-        var g = Graphics.FromImage(res);
-        foreach(var item in resses) {
-            g.DrawImage(item, 0, end);
-            end += item.Height;
+        using(var g = Graphics.FromImage(res)) {
+            foreach(var item in resses) {
+                g.DrawImage(item, 0, end);
+                end += item.Height;
+            }
         }
         return (res, (int)(res.Height / 2));
     }
@@ -681,15 +699,16 @@ public partial class Form1: Form {
         }
         var printer = new Bitmap(printerImg, new Size(printerImg.Width / (printerImg.Height / (height + 20)), height + 20));
         var res = new Bitmap(width + printer.Width + 20, printer.Height);
-        var g = Graphics.FromImage(res);
-        g.DrawImage(printer, 0, 0);
-        var end = printer.Width;
-        g.DrawRectangle(new Pen(Color.White, 5), end, 2.5f, res.Width - printer.Width - 10, res.Height - 5);
+        using(var g = Graphics.FromImage(res)) {
+            g.DrawImage(printer, 0, 0);
+            var end = printer.Width;
+            g.DrawRectangle(new Pen(Color.White, 5), end, 2.5f, res.Width - printer.Width - 10, res.Height - 5);
 
-        end += 5;
-        foreach(var item in resses) {
-            g.DrawImage(item, end, 12);
-            end += item.Width;
+            end += 5;
+            foreach(var item in resses) {
+                g.DrawImage(item, end, 12);
+                end += item.Width;
+            }
         }
         return (res, (int)(res.Height / 2));
     }
@@ -704,14 +723,15 @@ public partial class Form1: Form {
             height + 20
         );
 
-        var g = Graphics.FromImage(res);
-        var end = 10;
-        g.DrawArc(mathPurpleP, new Rectangle(end, 5, parWidth, parHeight), 90, 180);
-        end += parWidth + 5;
-        g.DrawImage(inside, end, 10);
-        g.DrawArc(mathPurpleP, new Rectangle(
-            end + width + 5, 5, parWidth, parHeight
-        ), 270, 180);
+        using(var g = Graphics.FromImage(res)) {
+            var end = 10;
+            g.DrawArc(mathPurpleP, new Rectangle(end, 5, parWidth, parHeight), 90, 180);
+            end += parWidth + 5;
+            g.DrawImage(inside, end, 10);
+            g.DrawArc(mathPurpleP, new Rectangle(
+                end + width + 5, 5, parWidth, parHeight
+            ), 270, 180);
+        }
         return (res, (int)(res.Height / 2));
     }
     private (Bitmap img, int middle) TupleExpression(dynamic ast) {
@@ -725,16 +745,17 @@ public partial class Form1: Form {
         int commaLen = MeasureWidth(",", boldFont);
         var res = new Bitmap(width + commaLen * (resses.Count - 1), height);
 
-        var g = Graphics.FromImage(res);
-        bool putComma = false;
-        var end = 0;
-        foreach(var item in resses) {
-            if(putComma) {
-                g.DrawString(",", boldFont, textBrush, end, 0);
-                end += commaLen;
-            } else { putComma = true; }
-            g.DrawImage(item, end, 0);
-            end += item.Width;
+        using(var g = Graphics.FromImage(res)) {
+            bool putComma = false;
+            var end = 0;
+            foreach(var item in resses) {
+                if(putComma) {
+                    g.DrawString(",", boldFont, textBrush, end, 0);
+                    end += commaLen;
+                } else { putComma = true; }
+                g.DrawImage(item, end, 0);
+                end += item.Width;
+            }
         }
         return (res, (int)(res.Height / 2));
     }
@@ -982,11 +1003,6 @@ public partial class Form1: Form {
     }
     private void ShowConsole() {
         int consolePos = Height - (Height / 4);
-        foreach(var window in windows) {
-            if(window.Pos.y + window.Size.height > consolePos) {
-                window.Size.height -= (window.Pos.y + window.Size.height) - consolePos;
-            }
-        }
         Bitmap img = new(Width, Height - consolePos);
         var g = Graphics.FromImage(img);
         if(consoleTxt.typ == ConsoleTxtType.text) {
@@ -998,13 +1014,37 @@ public partial class Form1: Form {
         }
         console.Function.DisplayImage = img;
         isConsoleVisible = true;
+
+        if(closeConsoleBtn is null) {            
+            closeConsoleBtn = new() {
+                Size = new(20, 20),
+                Location = new(console.Pos.x + console.Size.width - 40, console.Pos.y + 5),
+                BackColor = Color.Transparent,
+                BackgroundImage = xImg,
+                FlatStyle = FlatStyle.Flat,
+                BackgroundImageLayout = ImageLayout.Zoom,
+            };
+            closeConsoleBtn.FlatAppearance.BorderSize = 0;
+            closeConsoleBtn.FlatAppearance.BorderColor = Color.White;
+            closeConsoleBtn.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
+            closeConsoleBtn.Click += new EventHandler(HideConsole!);
+            Controls.Add(closeConsoleBtn);
+        }
+        Refresh();
+    }
+    private void HideConsole(object sender, EventArgs e) {
+        isConsoleVisible = false;
+        Controls[Controls.IndexOf(closeConsoleBtn)].Dispose();
+        closeConsoleBtn = null;
         Refresh();
     }
     private void Form1_Paint(object sender, PaintEventArgs e) {
         e.Graphics.FillRectangle(tabBarBrush, 0, 0, Width, TAB_HEIGHT);
         foreach(var item in windows) {
             e.Graphics.FillRectangle(blackBrush, item.Pos.x, item.Pos.y, item.Size.width, item.Size.height);
-            e.Graphics.DrawImage(item.Function.DisplayImage!, item.Pos.x, item.Pos.y);
+            Bitmap bm = new(item.Size.width, item.Size.height);
+            Graphics.FromImage(bm).DrawImage(item.Function.DisplayImage!, 0, item.Offset);
+            e.Graphics.DrawImage(bm, item.Pos.x, item.Pos.y);
         }
         e.Graphics.FillRectangle(whiteBrush, (int)(Width / 2 - 1), TAB_HEIGHT, 2, Height - TAB_HEIGHT);
 
@@ -1014,7 +1054,6 @@ public partial class Form1: Form {
             e.Graphics.FillRectangle(whiteBrush, 0, console.Pos.y - 2, console.Size.width, 2);
         }
     }
-
     #endregion
 
     #region Python
@@ -1078,6 +1117,7 @@ public partial class Form1: Form {
         void errSWr_StringWritten(object sender, MyEvtArgs<string> e) =>
             errs.Append(e.Value);
     }
+
     #endregion
 
     #region THE EVENTS
@@ -1146,6 +1186,11 @@ public partial class Form1: Form {
         }
 
         base.OnMouseClick(e);
+    }
+    protected override void OnMouseWheel(MouseEventArgs e) {
+        curWindow.Offset = Math.Min(curWindow.Offset + e.Delta / 10, 0);
+        Refresh();
+        base.OnMouseWheel(e);
     }
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
         var keyCode = (Keys) (msg.WParam.ToInt32() & Convert.ToInt32(Keys.KeyCode));
@@ -1402,11 +1447,15 @@ public partial class Form1: Form {
 
     #region ShortCuts
     private void CtrlTab() {
-        /*foreach(var item in windows) {
+        for(int i = 0; i < windows.Count; i++) {
+            var item = windows[i];
             if(item.Function.Equals(curFunc)) {
-                return item;
+                curWindow = windows[(i + 1) % windows.Count];
+                (screenWidth, screenHeight) = curWindow.Size;
+                ChangeTab(curWindow.Function.Button);
+                return;
             }
-        }*/
+        }
     }
     private void SelectAll() {
         selectedLine = (0, -1);
@@ -1647,22 +1696,13 @@ public partial class Form1: Form {
         }
         return (pos.line, pos.col);
     }
-    
-    // complete hack..
-    /*private static Window GetWindowHACK(Function f) {
-        foreach(var item in windows) {
-            if(item.Function.Equals(f)) {
-                return item;
-            }
-        }
-        throw new Exception();
-    }*/
 }
 
 class Window {
     public Function Function;
     public (int width, int height) Size;
     public (int x, int y) Pos;
+    public int Offset = 0;
     public Window(Function func) {  Function = func; }
 }
 class Function {
