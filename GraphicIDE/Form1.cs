@@ -107,6 +107,7 @@ public partial class Form1: Form {
         consoleImg = new(Resources.console),
         searchImg = new(Resources.search),
         rulerImg = new(Resources.ruler),
+        debugImg = new(Resources.bug),
         playImg = new(Resources.play),
         passImg = new(Resources.pass),
         sumImg = new(Resources.sum),
@@ -151,6 +152,7 @@ public partial class Form1: Form {
         curWindow = windows[1];
 
         AddRunBtn();
+        AddDebugBtn();
         AddConsole();
         MakeOpenConsoleBtn();
 
@@ -178,6 +180,26 @@ public partial class Form1: Form {
             run.Click += new EventHandler(ExecuteBtn!);
             Controls.Add(run);
         }
+        void AddDebugBtn() {
+            Button run = new(){
+                BackColor = Color.Transparent,
+                Size = new(TAB_HEIGHT, TAB_HEIGHT),
+                BackgroundImageLayout = ImageLayout.None,
+                FlatStyle = FlatStyle.Flat,
+            };
+            run.FlatAppearance.BorderSize = 0;
+            run.FlatAppearance.BorderColor = Color.White;
+            run.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
+            Bitmap b = new(run.Size.Width, run.Size.Height);
+            using(var g = Graphics.FromImage(b)) {
+                Bitmap scaled = new(debugImg, run.Size.Width, run.Size.Height);
+                g.DrawImage(scaled, 0, 0);
+            }
+            run.BackgroundImage = b;
+            run.Location = new(Width - 3 * run.Size.Width - 10, 0);
+            run.Click += new EventHandler(ExecuteBtn!);
+            Controls.Add(run);
+        }
         void AddConsole() {
             int consolePos = Height - (Height / 4);
             Bitmap img = new(Width, Height - consolePos);
@@ -190,11 +212,9 @@ public partial class Form1: Form {
     #endregion
 
     #region AST
-
-    readonly Dictionary<dynamic, ((int line, int col) Start, (int line, int col) End)> nodeToPos = new();
-    private (Bitmap? img, int middle) MakeImg(dynamic ast) {
+    private BM_Middle? MakeImg(dynamic ast) {
         try {
-            return ((Func<(Bitmap? img, int middle)>)(ast.NodeName switch {
+            return ((Func<BM_Middle?>)(ast.NodeName switch {
                 "PythonAst" => () => MainModule(ast),
                 "SuiteStatement" => () => SuiteStatement(ast),
                 "ExpressionStatement" => () => MakeImg(ast.Expression),
@@ -212,17 +232,17 @@ public partial class Form1: Form {
                 "WhileStatement" => () => WhileStatement(ast),
                 "EmptyStatement" => () => EmptyStatement(),
                 "ListExpression" => () => ListExpression(ast),
-                _ => () => (null, 0)
+                _ => () => null
             }))();
         } catch(Exception) { 
-            return (null, 0);
+            return null;
         }
     }
     
-    private static (Bitmap? img, int middle) emptyListScaled = (null, 0);
-    private (Bitmap img, int middle) ListExpression(dynamic ast) {
+    private static BM_Middle? emptyListScaled = null;
+    private BM_Middle ListExpression(dynamic ast) {
         if(ast.Items.Length == 0) {
-            if(emptyListScaled.img is not null) {
+            if(emptyListScaled is not null) {
                 return emptyListScaled!;
             }
             Bitmap emptyList = new(emptyListImg, (int)(emptyListImg.Width / (emptyListImg.Height / (txtHeight + 15))), txtHeight + 15);
@@ -230,20 +250,20 @@ public partial class Form1: Form {
             using(var pg = Graphics.FromImage(padded)) {
                 pg.DrawImage(emptyList, 5, 0);
             }
-            emptyListScaled = (padded, (int)(padded.Height / 2));
+            emptyListScaled = new(padded, (int)(padded.Height / 2));
             return emptyListScaled!;
         }
         int lineLen = 5;
         int gap = 5;
-        List<(Bitmap img, int middle)> elements = new();
+        List<BM_Middle> elements = new();
         var (width, heightT, heightB) = (lineLen + gap, 0, 0);
         foreach(var item in ast.Items) {
             var img = MakeImg(item);
-            var middle = img.Item2;
-            elements.Add(((Bitmap, int)) img);
-            width += lineLen + img.Item1.Width + 2 * gap;
+            var middle = img.Middle;
+            elements.Add(img);
+            width += lineLen + img.Img.Width + 2 * gap;
             heightT = Max(heightT, middle);
-            heightB = Max(heightB, img.Item1.Height - middle);
+            heightB = Max(heightB, img.Img.Height - middle);
         }
         Bitmap res = new(width, heightB + heightT + 20);
         using(var g = Graphics.FromImage(res)) {
@@ -260,21 +280,21 @@ public partial class Form1: Form {
             g.DrawLine(redListP, 5, 5, res.Width, 5);
             g.DrawLine(redListP, 5, res.Height - 5, res.Width, res.Height - 5);
         }
-        return (res, (int)(res.Height / 2));
+        return new(res, (int)(res.Height / 2));
 
     }
-    private static (Bitmap? img, int middle) passPic = (null, 0);
-    private static (Bitmap img, int middle) EmptyStatement() {
-        if(passPic.img is not null) {   return passPic!; }
+    private static BM_Middle? passPic = null;
+    private static BM_Middle EmptyStatement() {
+        if(passPic is not null) {   return passPic!; }
         Bitmap img = new(passImg, (int)(passImg.Width / (passImg.Height / txtHeight)), txtHeight);
-        passPic = (img, (int)(img.Height / 2));
+        passPic = new(img, (int)(img.Height / 2));
         return passPic!;
     }
     
     // todo: while / until / forever
-    private (Bitmap img, int middle) WhileStatement(dynamic ast) {
-        var condition = MakeImg(ast.Test).Item1;
-        var body = MakeImg(ast.Body).Item1;
+    private BM_Middle WhileStatement(dynamic ast) {
+        var condition = MakeImg(ast.Test).Img;
+        var body = MakeImg(ast.Body).Img;
         Font bigFont = new(FontFamily.GenericMonospace, 30, FontStyle.Bold);
         var infWidth = MeasureWidth("∞", bigFont);
         Bitmap res = new(
@@ -292,9 +312,10 @@ public partial class Form1: Form {
             g.DrawLine(blueDashed, 4, 1, res.Width, 1);
             g.DrawLine(blueDashed, 4, res.Height - 8, res.Width, res.Height - 8);
         }
-        return (res, (int)(res.Height/2));
+        return new(res, (int)(res.Height/2));
     }
-    private (Bitmap img, int middle) IfExpression(dynamic ast) {
+    /*private BM_Middle */
+    private BM_Middle IfExpression(dynamic ast) {
         static Graphics JoinIfAndElse(Pen lastColor, ref Bitmap res, Bitmap img) {
             var (prevH, prevW) = (res.Height, res.Width);
             var prevImg = res;
@@ -326,8 +347,8 @@ public partial class Form1: Form {
         
         var mainIf = ast.Tests[0];
         Pen lastColor = greenDashed;
-        var ifCond = MakeImg(mainIf.Test).Item1;
-        var ifBody = MakeImg(mainIf.Body).Item1;
+        var ifCond = MakeImg(mainIf.Test).Img;
+        var ifBody = MakeImg(mainIf.Body).Img;
         var res = MakeIfOrElif(ifCond, ifBody, greenOpaqeP);
         var resG = Graphics.FromImage(res);
         resG.DrawLine(lastColor, 4, 1, res.Width, 1);
@@ -336,15 +357,15 @@ public partial class Form1: Form {
             lastColor = orangeDashed;
             for(int i = 1; i < ast.Tests.Length; i++) {
                 var item = ast.Tests[i];
-                var cond = MakeImg(item.Test).Item1;
-                var body = MakeImg(item.Body).Item1;
+                var cond = MakeImg(item.Test).Img;
+                var body = MakeImg(item.Body).Img;
                 var img = MakeIfOrElif(cond, body, orangeOpaqeP);
                 resG = JoinIfAndElse(lastColor, ref res, img);
             }
         }
 
         if(ast.ElseStatement is not null) {
-            var elseBody = MakeImg(ast.ElseStatement).Item1;
+            var elseBody = MakeImg(ast.ElseStatement).Img;
             Bitmap elseImg = new(
                 width: elseBody.Width + INDENT,
                 height: elseBody.Height + 7
@@ -361,12 +382,12 @@ public partial class Form1: Form {
         using(var g = Graphics.FromImage(addPad)) {
             g.DrawImage(res, 0, 0);
         }
-        return (addPad, (int)(res.Height/2));
+        return new(addPad, (int)(res.Height/2));
     }
-    private (Bitmap? img, int middle) FunctionCall(dynamic ast) {
+    private BM_Middle? FunctionCall(dynamic ast) {
         if(ast.Target.Name == "sqrt" && ast.Target.Target.Name == "math") {
             var val = ast.Args[0].Expression;
-            var inside = MakeImg(val).Item1;
+            var inside = MakeImg(val).Img;
             Bitmap res = new(
                 width: inside.Width + 30, 
                 height: inside.Height + 15
@@ -377,11 +398,11 @@ public partial class Form1: Form {
                 g.DrawLine(mathPurpleP, 15, 5, 15, res.Height);
                 g.DrawLine(mathPurpleP, 5, res.Height - 15, 15, res.Height);
             }
-            return (res, (int)(res.Height / 2));
+            return new(res, (int)(res.Height / 2));
         }
         else if(ast.Target.Name == "sum") {
             var val = ast.Args[0].Expression;
-            var inside = MakeImg(val).Item1;
+            var inside = MakeImg(val).Img;
             Bitmap sum = new(sumImg, sumImg.Width / (sumImg.Height / inside.Height), inside.Height);
             Bitmap res = new(
                 width: inside.Width + sum.Width + 10,
@@ -392,11 +413,11 @@ public partial class Form1: Form {
                 g.DrawImage(sum, 5, 0);
                 g.DrawImage(inside, sum.Width + 5, 0);
             }
-            return (res, (int)(res.Height / 2));
+            return new(res, (int)(res.Height / 2));
         }
         else if(ast.Target.Name == "len") {
             var val = ast.Args[0].Expression;
-            var inside = MakeImg(val).Item1;
+            var inside = MakeImg(val).Img;
             Bitmap ruler = new(rulerImg, rulerImg.Width / (rulerImg.Height / inside.Height), inside.Height);
             Bitmap res = new(
                 width: inside.Width + ruler.Width + 10,
@@ -407,11 +428,11 @@ public partial class Form1: Form {
                 g.DrawImage(ruler, 5, 0);
                 g.DrawImage(inside, ruler.Width + 5, 0);
             }
-            return (res, (int)(res.Height / 2));
+            return new(res, (int)(res.Height / 2));
         }
         else if(ast.Target.Name == "abs") {
             var val = ast.Args[0].Expression;
-            var inside = MakeImg(val).Item1;
+            var inside = MakeImg(val).Img;
             Bitmap res = new(
                 width: inside.Width + 30,
                 height: inside.Height + 10
@@ -421,11 +442,11 @@ public partial class Form1: Form {
                 g.DrawLine(mathPurpleP, res.Width - 5, 0, res.Width - 5, res.Height);
                 g.DrawImage(inside, 15, 5);
             }
-            return (res, (int)(res.Height / 2));
+            return new(res, (int)(res.Height / 2));
         }
-        return (null, 0);
+        return null;
     }
-    private (Bitmap img, int middle) UnaryExpression(dynamic ast) {
+    private BM_Middle UnaryExpression(dynamic ast) {
          var op = ast.Op switch {
             PythonOperator.Not => "not",
             PythonOperator.Negate => "-",
@@ -439,7 +460,7 @@ public partial class Form1: Form {
         var opWidth = MeasureWidth(op, boldFont);
         var opHeight = MeasureHeight(op, boldFont);
         var img = MakeImg(ast.Expression);
-        (Bitmap bmap, int middle) = (img.Item1, img.Item2);
+        (Bitmap bmap, int middle) = (img.Img, img.Middle);
         var top = middle;
         Bitmap res = new(
             width: bmap.Width + opWidth + gap,
@@ -449,9 +470,9 @@ public partial class Form1: Form {
             g.DrawString(op, boldFont, mathPurpleB, x: gap, y: (int)(middle - opHeight / 2));
             g.DrawImage(bmap, x: opWidth + gap, y: (int)(middle - top));
         }
-        return (res, middle);
+        return new(res, middle);
     }
-    private (Bitmap img, int middle) Comparison(dynamic ast) {
+    private BM_Middle Comparison(dynamic ast) {
         var op = ast.Operator switch {
             PythonOperator.In => "in",
             PythonOperator.Is => "is",
@@ -472,12 +493,12 @@ public partial class Form1: Form {
         var opWidth = MeasureWidth(op, boldFont) + gap * 2;
         var opHeight = MeasureHeight(op, boldFont);
         var l = MakeImg(ast.Left);
-        (Bitmap left, int lmiddle) = (l.Item1, l.Item2);
+        (Bitmap left, int lmiddle) = (l.Img, l.Middle);
         var r = MakeImg(ast.Right);
-        (Bitmap right, int rmiddle) = (r.Item1, r.Item2);
+        (Bitmap right, int rmiddle) = (r.Img, r.Middle);
         switch(op){
             case "**":
-                return Power(left, right);
+                return Power(l, r);
             case "/":
                 return Divide(right, left);
             case "//":
@@ -497,9 +518,9 @@ public partial class Form1: Form {
             g.DrawString(op, boldFont, mathPurpleB, x: left.Width + gap, y: (int)(resMiddle - opHeight / 2));
             g.DrawImage(right, x: left.Width + opWidth, y: (int)(resMiddle - rTop));
         }
-        return (res, resMiddle);
+        return new(res, resMiddle);
     }
-    private (Bitmap img, int middle) Operator(dynamic ast) {
+    private BM_Middle Operator(dynamic ast) {
         #region OperatorSwitch
         var op = ast.Operator switch {
             PythonOperator.Add => "+",
@@ -525,12 +546,12 @@ public partial class Form1: Form {
         var opWidth = MeasureWidth(op, boldFont) + gap * 2;
         var opHeight = MeasureHeight(op, boldFont);
         var l = MakeImg(ast.Left);
-        (Bitmap left, int lmiddle) = (l.Item1, l.Item2);
+        (Bitmap left, int lmiddle) = (l.Img, l.Middle);
         var r = MakeImg(ast.Right);
-        (Bitmap right, int rmiddle) = (r.Item1, r.Item2);
+        (Bitmap right, int rmiddle) = (r.Img, r.Middle);
         switch(op){
             case "**":
-                return Power(left, right);
+                return Power(l, r);
             case "/":
                 return Divide(right, left);
             case "//":
@@ -550,21 +571,21 @@ public partial class Form1: Form {
             g.DrawString(op, boldFont, mathPurpleB, x: left.Width + gap, y: (int)(resMiddle - opHeight / 2));
             g.DrawImage(right, x: left.Width + opWidth, y: (int)(resMiddle - rTop));
         }
-        return (res, resMiddle);
+        return new(res, resMiddle);
     }
-    private static (Bitmap img, int middle) Power(Bitmap bottom, Bitmap top) {
-        int bottomGap =  (int)(bottom.Height / 2);
+    private static BM_Middle Power(BM_Middle bottom, BM_Middle top) {
+        int topGap = top.Img.Height - top.Middle;
         Bitmap res = new(
-            width: top.Width + bottom.Width - 5,
-            height: Max(bottomGap, top.Height) + bottomGap
+            width: top.Img.Width + bottom.Img.Width - 5,
+            height: Max(topGap, bottom.Img.Height) + top.Middle
         );
         using(var g = Graphics.FromImage(res)) {
-            g.DrawImage(bottom, 0, y: res.Height - bottom.Height);
-            g.DrawImage(top, x: bottom.Width - 5, y: 0);
+            g.DrawImage(bottom.Img, 0, y: res.Height - bottom.Img.Height);
+            g.DrawImage(top.Img, x: bottom.Img.Width - 5, y: 0);
         }
-        return (res, res.Height - bottomGap);
+        return new(res, res.Height - (int)(bottom.Img.Height / 2));
     }
-    private static (Bitmap img, int middle) FloorDivide(Bitmap bottom, Bitmap top) {
+    private static BM_Middle FloorDivide(Bitmap bottom, Bitmap top) {
         Bitmap res = new(
             width: Max(top.Width, bottom.Width),
             height: top.Height + bottom.Height + 22
@@ -575,9 +596,9 @@ public partial class Form1: Form {
             g.DrawLine(mathPurpleP, 5, top.Height + 11, res.Width, top.Height + 11);
             g.DrawImage(bottom, x: (int)((res.Width - bottom.Width) / 2), y: top.Height + 22);
         }
-        return (res, top.Height + 11);
+        return new(res, top.Height + 11);
     }
-    private static (Bitmap img, int middle) Divide(Bitmap bottom, Bitmap top) {
+    private static BM_Middle Divide(Bitmap bottom, Bitmap top) {
         Bitmap res = new(
             width: Max(top.Width, bottom.Width),
             height: top.Height + bottom.Height + 15
@@ -587,20 +608,20 @@ public partial class Form1: Form {
             g.DrawLine(mathPurpleP, 5, top.Height + 5, res.Width, top.Height + 5);
             g.DrawImage(bottom, x: (int)((res.Width - bottom.Width) / 2), y: top.Height + 15);
         }
-        return (res, top.Height + 7);
+        return new(res, top.Height + 7);
     }
-    private (Bitmap img, int middle) Literal(dynamic ast) =>
+    private BM_Middle Literal(dynamic ast) =>
         MakeTxtBM(ast.Value.ToString(), ast.Type.Name switch {
             "String" => stringBrush,
             "Int32" or "Double" => intBrush,
             _ => textBrush
         });
-    private (Bitmap img, int middle) SuiteStatement(dynamic ast) {
+    private BM_Middle SuiteStatement(dynamic ast) {
         List<Bitmap> resses = new();
         var (height, width) = (0, 0);
         foreach(var statement in ast.Statements) {
             try {
-                resses.Add(MakeImg(statement).Item1);
+                resses.Add(MakeImg(statement).Img);
             } catch(Exception) {
                 // put just the text in this line
                 throw;
@@ -616,9 +637,9 @@ public partial class Form1: Form {
                 end += item.Height;
             }
         }
-        return (res, (int)(res.Height / 2));
+        return new(res, (int)(res.Height / 2));
     }
-    private (Bitmap img, int middle) MainModule(dynamic ast) {
+    private BM_Middle MainModule(dynamic ast) {
         List<Bitmap> resses = new();
         var (height, width) = (0, 0);
         var statements = ast.Body.Statements;
@@ -644,7 +665,7 @@ public partial class Form1: Form {
                 endI = (start.Line - 1, start.Column - 1);
             }
             try {
-                var img = MakeImg(statement).Item1;
+                var img = MakeImg(statement).Img;
                 if(img is null) {
                     throw new Exception();
                 }
@@ -689,16 +710,16 @@ public partial class Form1: Form {
                 end += item.Height;
             }
         }
-        return (res, (int)(res.Height / 2));
+        return new(res, (int)(res.Height / 2));
     }
-    private (Bitmap img, int middle) PrintStatement(dynamic ast) {
+    private BM_Middle PrintStatement(dynamic ast) {
         List<Bitmap> resses = new();
         var (width, height) = (0, 0);
         foreach(var statement in ast.Expressions) {
             if(statement.NodeName == "TupleExpression") {
-                resses.Add(MakeImg(statement).Item1);
+                resses.Add(MakeImg(statement).Img);
             } else {
-                resses.Add(MakeImg(statement.Expression).Item1);
+                resses.Add(MakeImg(statement.Expression).Img);
             }
             width += resses[^1].Width;
             height = Max(height, resses[^1].Height);
@@ -716,10 +737,10 @@ public partial class Form1: Form {
                 end += item.Width;
             }
         }
-        return (res, (int)(res.Height / 2));
+        return new(res, (int)(res.Height / 2));
     }
-    private (Bitmap img, int middle) ParenthesisExpression(dynamic ast) {
-        Bitmap inside = MakeImg(ast.Expression).Item1;
+    private BM_Middle ParenthesisExpression(dynamic ast) {
+        Bitmap inside = MakeImg(ast.Expression).Img;
         var width = inside.Width;
         var height = inside.Height;
         var parHeight = height + 10;
@@ -738,13 +759,13 @@ public partial class Form1: Form {
                 end + width + 5, 5, parWidth, parHeight
             ), 270, 180);
         }
-        return (res, (int)(res.Height / 2));
+        return new(res, (int)(res.Height / 2));
     }
-    private (Bitmap img, int middle) TupleExpression(dynamic ast) {
+    private BM_Middle TupleExpression(dynamic ast) {
         List<Bitmap> resses = new();
         var (width, height) = (0, 0);
         foreach(var statement in ast.Items) {
-            resses.Add(MakeImg(statement).Item1);
+            resses.Add(MakeImg(statement).Img);
             width += resses[^1].Width;
             height = Max(height, resses[^1].Height);
         }
@@ -763,9 +784,9 @@ public partial class Form1: Form {
                 end += item.Width;
             }
         }
-        return (res, (int)(res.Height / 2));
+        return new(res, (int)(res.Height / 2));
     }
-    private (Bitmap img, int middle) AssignmentStatement(dynamic ast) {
+    private BM_Middle AssignmentStatement(dynamic ast) {
         List<Bitmap> assignmentNames = new();
         var (h1, w1) = (0, 0);
         int lineWidth = 5;
@@ -781,12 +802,12 @@ public partial class Form1: Form {
             leftVal = new List<dynamic> { leftVal };
         }
         foreach(var item in leftVal) {
-            assignmentNames.Add(MakeImg(item).Item1);
+            assignmentNames.Add(MakeImg(item).Img);
             if(h1 != 0) { h1 += gap; }
             h1 += assignmentNames[^1].Height;
             w1 = Max(w1, assignmentNames[^1].Width);
         }
-        Bitmap valueName = MakeImg(ast.Right).Item1;
+        Bitmap valueName = MakeImg(ast.Right).Img;
         var (h2, w2) = (valueName.Height, valueName.Width);
 
         var height = Max(h1, h2) + lineWidth * 2 + gap * 2;
@@ -822,7 +843,7 @@ public partial class Form1: Form {
             width: w1 + w2 + gap * 4 + lineWidth * 3,
             height: height - lineWidth * 2
         );
-        return (res, (int)(res.Height / 2));
+        return new(res, (int)(res.Height / 2));
     }
     #endregion
 
@@ -926,9 +947,9 @@ public partial class Form1: Form {
             isPic = false;
         } else {
             try {
-                var img = MakeImg(ToAST()).img;
-                if(img != null) {
-                    curFunc.DisplayImage = img;
+                var bm = MakeImg(ToAST());
+                if(bm is not null) {
+                    curFunc.DisplayImage = bm.Img;
                     skipDrawNewScreen = true;
                     Refresh();
                     isPic = true;
@@ -1386,7 +1407,7 @@ public partial class Form1: Form {
 
     #region Helpers
     private static string ReplaceTabs(string st) => st.Replace("\t", "    ");
-    private static (Bitmap img, int middle) MakeTxtBM(string txt, Brush? brush = null) {
+    private static BM_Middle MakeTxtBM(string txt, Brush? brush = null) {
         var width = MeasureWidth(txt, boldFont);
         var height = MeasureHeight(txt, boldFont);
         var res = new Bitmap(width, height);
@@ -1397,7 +1418,7 @@ public partial class Form1: Form {
         };
         var g = Graphics.FromImage(res);
         g.DrawString(txt, boldFont, brush, 0, 0);
-        return (res, (int)(height / 2));
+        return new(res, (int)(height / 2));
     }
     private static bool IsNumeric(char val) => val == '_' || char.IsLetter(val) || char.IsDigit(val);
     private static bool IsAltNumeric(char val) => char.IsLower(val) || char.IsDigit(val);
@@ -1734,7 +1755,7 @@ public partial class Form1: Form {
         }
     }
     #endregion
-
+    
     #region SetTabSize
     private const int EM_SETTABSTOPS = 0x00CB;
     [DllImport("User32.dll", CharSet = CharSet.Auto)]
@@ -1930,6 +1951,8 @@ public partial class Form1: Form {
     #endregion
 }
 
+enum ConsoleTxtType {   text, error }
+record class BM_Middle(Bitmap Img, int Middle);
 class Window {
     public Function Function;
     public (int width, int height) Size;
@@ -1946,45 +1969,12 @@ class Function {
     public Button Button = null!;
     public bool isPic = false;
 }
-enum ConsoleTxtType {   text, error }
-public class Walker: PythonWalker {
-    readonly int mIndex;
-    Stack<string>? mResult = null;
-    public Walker(int index) {
-        mIndex = index;
-    }
-
-    public Stack<string>? GetResult() {
-        return mResult;
-    }
-
-    public override bool Walk(MemberExpression node) {
-        if(mIndex == node.Span.End.Index) {
-            mResult = new Stack<string>();
-            MemberExpression curr = node;
-
-            while(curr.Target is MemberExpression expression) {
-                curr = expression;
-                mResult.Push(curr.Name.ToString());
-            }
-
-            if(curr.Target is NameExpression expression1)
-                mResult.Push(expression1.Name.ToString());
-
-            return false;
-        }
-
-        return true;
-    }
-}
-
 public class MyEvtArgs<T>: EventArgs {
     public T Value { get; private set; }
     public MyEvtArgs(T value) {
         this.Value = value;
     }
 }
-
 public class EventRaisingStreamWriter: StreamWriter {
     public event EventHandler<MyEvtArgs<string>> StringWritten = null!;
     public EventRaisingStreamWriter(Stream s) : base(s) { }
