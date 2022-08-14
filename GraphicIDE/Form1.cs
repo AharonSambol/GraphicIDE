@@ -53,7 +53,7 @@ public partial class Form1: Form {
     private static string executedTime = "";
     private static bool isConsoleVisible = false;
     private static Button? closeConsoleBtn, openConsoleBtn, errOpenButton;
-    private static bool dragging = false;
+    private static bool dragging = false, doubleClick = false;
     private static string? errLink = null;
     #region Tabs
     private static readonly List<Button> tabButtons = new();
@@ -865,7 +865,7 @@ public partial class Form1: Form {
         }
 
         if(selectedLine is not null) {
-            if((Control.ModifierKeys & Keys.Shift) != Keys.Shift) {
+            if(!isShiftPressed()) {
                 selectedLine = null;
             }
         }
@@ -1220,16 +1220,17 @@ public partial class Form1: Form {
     #endregion
 
     #region THE EVENTS
+    
     private void Form1_KeyDown(object? sender, KeyEventArgs e) {
         textBox.SelectionStart = 1;
         textBox.SelectionLength = 0;
         lastPressed = e.KeyCode;
-        bool isShift = (Control.ModifierKeys & Keys.Shift) == Keys.Shift;
+        bool isShift = isShiftPressed();
         if(selectedLine is null && isShift) {
             selectedLine = (curLine, curCol);
         }
-        bool isAltl = (ModifierKeys & Keys.Alt) == Keys.Alt;
-        bool isCtrl = (ModifierKeys & Keys.Control) == Keys.Control;
+        bool isAltl = isAltlPressed();
+        bool isCtrl = isCtrlPressed();
         ((Action)(lastPressed switch {
             Keys.CapsLock => () => _ = 1, // todo display that caps is pressed \ not pressed
             Keys.Insert => () => DrawPicScreen(),
@@ -1272,27 +1273,6 @@ public partial class Form1: Form {
         DrawTextScreen();
         Refresh();
     }
-    protected override void OnMouseClick(MouseEventArgs e) {
-        if(e.Button == MouseButtons.Left) {
-            (int x, int y) mousePos = (Cursor.Position.X, Cursor.Position.Y);
-            foreach(var window in windows) {
-                bool inX = mousePos.x >= window.Pos.x && mousePos.x <= window.Pos.x + window.Size.width;
-                bool inY = mousePos.y >= window.Pos.y && mousePos.y <= window.Pos.y + window.Size.height;
-                if(inX && inY) {
-                    if(window.Function.Equals(curFunc)) {
-                        BtnClick();
-                        continue;
-                    }
-                    curWindow = window;
-                    (screenWidth, screenHeight) = window.Size;
-                    ChangeTab(window.Function.Button);
-                }
-            }
-        } else if(e.Button == MouseButtons.Middle) {
-            Execute();
-        }
-        base.OnMouseClick(e);
-    }
     protected override void OnMouseWheel(MouseEventArgs e) {
         if(curWindow.Function.DisplayImage!.Height > 40) {
             curWindow.Offset = Math.Clamp(
@@ -1304,21 +1284,88 @@ public partial class Form1: Form {
         Refresh();
         base.OnMouseWheel(e);
     }
+    protected override void OnMouseClick(MouseEventArgs e) {
+        
+        base.OnMouseClick(e);
+    }
     protected override void OnMouseDown(MouseEventArgs e) {
         dragging = true;
-        Drag();
+        Drag(e);
         base.OnMouseDown(e);
     }
     protected override void OnMouseUp(MouseEventArgs e) {
         dragging = false;
         base.OnMouseUp(e);
     }
-    async void Drag() {
-        await Task.Delay(5);
-        if(!dragging) { return; }
-        if(selectedLine is null) {
-            BtnClick();
+    protected override void OnMouseDoubleClick(MouseEventArgs e) {
+        dragging = false;
+        doubleClick = true;
+
+        GoInDirCtrl(GetNextL, isAltlPressed());
+        selectedLine = (curLine, curCol);
+        GoInDirCtrl(GetNextR, isAltlPressed());
+
+        DrawTextScreen();
+        Refresh();
+        base.OnMouseDoubleClick(e);
+    }
+    private void ClickedSelected((int line, int col) pos, (int,int) sel) {
+        var newSelectedLine = (curLine, -1);
+        var newCurCol = linesText[curLine].Length - 1;
+        if(newCurCol == pos.col && newSelectedLine == sel) {
+            GoInDirCtrl(GetNextL, isAltlPressed());
             selectedLine = (curLine, curCol);
+            GoInDirCtrl(GetNextR, isAltlPressed());
+        } else {
+            curCol = newCurCol;
+            selectedLine = newSelectedLine;
+        }
+        DrawTextScreen();
+        Refresh();
+    }
+    async void Drag(MouseEventArgs e) {
+        (int line, int col)? tempSelectedLine = null;
+        if(e.Button == MouseButtons.Left) {
+            (int x, int y) mousePos = (Cursor.Position.X, Cursor.Position.Y);
+            foreach(var window in windows) {
+                bool inX = mousePos.x >= window.Pos.x && mousePos.x <= window.Pos.x + window.Size.width;
+                bool inY = mousePos.y >= window.Pos.y && mousePos.y <= window.Pos.y + window.Size.height;
+                if(inX && inY) {
+                    if(window.Function.Equals(curFunc)) {
+                        var prev = (curLine, curCol);
+                        var prevSel = selectedLine;
+                        BtnClick(refresh: false);
+                        if(prevSel is not null && InBetween((curLine, curCol), prev, ((int, int))prevSel)) {
+                            ClickedSelected(prev, ((int, int))prevSel);
+                            return;
+                        }
+                        tempSelectedLine = (curLine, curCol);
+                        break;
+                    }
+                    curWindow = window;
+                    (screenWidth, screenHeight) = window.Size;
+                    ChangeTab(window.Function.Button);
+                    break;
+                }
+            }
+        } else if(e.Button == MouseButtons.Middle) {
+            Execute();
+            return;
+        } else if(e.Button == MouseButtons.Right) {
+            // TODO todo 
+            return;
+        }
+
+        for(int i = 0; i < 10; i++) {
+            await Task.Delay(1);
+            if(!dragging) {
+                if(doubleClick) {   doubleClick = false; } 
+                else            {   BtnClick(); }
+                return; 
+            }
+        }
+        if(!isShiftPressed() || selectedLine is null) {
+            selectedLine = tempSelectedLine!;
         }
         while(dragging) {
             BtnClick();
@@ -1328,8 +1375,8 @@ public partial class Form1: Form {
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
         var keyCode = (Keys) (msg.WParam.ToInt32() & Convert.ToInt32(Keys.KeyCode));
         if(msg.Msg == WM_KEYDOWN && ModifierKeys == Keys.Control) {
-            bool isAltlKeyPressed = (ModifierKeys & Keys.Alt) == Keys.Alt;
-            bool isShift = (Control.ModifierKeys & Keys.Shift) == Keys.Shift;
+            bool isAltlKeyPressed = isAltlPressed();
+            bool isShift = isShiftPressed();
             ((Action)(keyCode switch {
                 Keys.End => () => EndKey(isShift, isAltlKeyPressed, true),
                 Keys.Home => () => HomeKey(isShift, isAltlKeyPressed, true),
@@ -1385,6 +1432,17 @@ public partial class Form1: Form {
     }
     private static int MeasureHeight(string st, Font ft) => (int)nullGraphics.MeasureString(st, ft).Height;
 
+    private static bool isShiftPressed() => (Control.ModifierKeys & Keys.Shift) == Keys.Shift;
+    private static bool isAltlPressed() => (ModifierKeys & Keys.Alt) == Keys.Alt;
+    private static bool isCtrlPressed() => (ModifierKeys & Keys.Control) == Keys.Control;
+
+    private static bool IsBefore((int line, int col) one, (int line, int col) two) {
+        return one.line < two.line || (one.line == two.line && one.col < two.col);
+    }
+    private static bool InBetween((int line, int col) cur, (int line, int col) one, (int line, int col) two) {
+        var (first, last) = IsBefore(one, two) ? (one, two) : (two, one);
+        return IsBefore(cur, last) && IsBefore(first, cur);
+    }
     #endregion
 
     #region Math
@@ -1626,7 +1684,9 @@ public partial class Form1: Form {
             DeleteSelection();
         }
         if(isAltlKeyPressed) { txt = txt.Trim(); }
-        Clipboard.SetText(txt);
+        if(!txt.Equals("")) {
+            Clipboard.SetText(txt);
+        }
     }
     private void Paste() {
         if(selectedLine is not null) {
@@ -1639,7 +1699,9 @@ public partial class Form1: Form {
         string txt;
         if(selectedLine is null) { txt = linesText[curLine]; } else { txt = GetSelectedText(); }
         if(isAltlKeyPressed) { txt = txt.Trim(); }
-        Clipboard.SetText(txt);
+        if(!txt.Equals("")) {
+            Clipboard.SetText(txt);
+        }
     }
     #endregion
 
@@ -1662,23 +1724,25 @@ public partial class Form1: Form {
             curCol = Min(curCol, linesText[curLine].Length - 1);
         }
     }
-    private void BtnClick() {
+    private void BtnClick(bool refresh=true) {
         if(selectedLine is not null) {
-            if((Control.ModifierKeys & Keys.Shift) != Keys.Shift && !dragging) {
+            if(!isShiftPressed() && !dragging) {
                 selectedLine = null;
             }
         }
         curLine = GetClickRow();
         curCol = BinarySearch(linesText[curLine].Length, Cursor.Position.X - curWindow.Pos.x, GetDistW);
         textBox.Focus();
-        DrawTextScreen();
-        Refresh();
+        if(refresh) {
+            DrawTextScreen();
+            Refresh();
+        }
     }
     private static float GetDistW(int i) {
         return MeasureWidth(linesText[curLine][..(i + 1)], boldFont);
     }
     private static int GetClickRow() {
-        int mouse = Cursor.Position.Y;
+        int mouse = Cursor.Position.Y - 7;
         float res = curWindow.Pos.y + curWindow.Offset;
         for(int i = 0; i < linesText.Count; i++) {
             var item = linesText[i];
