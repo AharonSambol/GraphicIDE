@@ -17,10 +17,13 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Hosting.Providers;
+using Microsoft.CSharp.RuntimeBinder;
 
 using GraphicIDE.Properties;
 
 using System.Net;
+
+
 namespace GraphicIDE;
 
 public partial class Form1: Form {
@@ -43,7 +46,7 @@ public partial class Form1: Form {
         qHeight = MeasureHeight("¿?", boldFont),
         upSideDownW = MeasureWidth("¿", boldFont),
         txtHeight = MeasureHeight("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", boldFont);
-    private static int screenWidth = 0, screenHeight = 0, screenX = 0, screenY = 0;
+    private static int screenWidth = 0, screenHeight = 0;
     private static List<Window> windows = new();
     private static (string txt, ConsoleTxtType typ) consoleTxt = ("", ConsoleTxtType.text);
     private static Window console = null!;
@@ -53,7 +56,6 @@ public partial class Form1: Form {
     private static bool dragging = false;
     private static string? errLink = null;
     #region Tabs
-    private static int currentTab = 0;
     private static readonly List<Button> tabButtons = new();
     private static int tabButtonEnd = 0;
     private static readonly Dictionary<string, Function> nameToFunc = new();
@@ -133,7 +135,7 @@ public partial class Form1: Form {
         SetTabWidth(textBox, 4);
 
         Controls.Add(textBox);
-        textBox.TextChanged += new EventHandler(textBox_TextChanged!);
+        textBox.TextChanged += new EventHandler(TextBox_TextChanged!);
         textBox.KeyDown += new KeyEventHandler(Form1_KeyDown!);
 
         stringFormat.SetTabStops(0, new float[] { 4 });
@@ -188,8 +190,8 @@ public partial class Form1: Form {
     #endregion
 
     #region AST
-    Dictionary<dynamic, ((int line, int col) Start, (int line, int col) End)> nodeToPos = new();
 
+    readonly Dictionary<dynamic, ((int line, int col) Start, (int line, int col) End)> nodeToPos = new();
     private (Bitmap? img, int middle) MakeImg(dynamic ast) {
         try {
             return ((Func<(Bitmap? img, int middle)>)(ast.NodeName switch {
@@ -221,7 +223,7 @@ public partial class Form1: Form {
     private (Bitmap img, int middle) ListExpression(dynamic ast) {
         if(ast.Items.Length == 0) {
             if(emptyListScaled.img is not null) {
-                return emptyListScaled;
+                return emptyListScaled!;
             }
             Bitmap emptyList = new(emptyListImg, (int)(emptyListImg.Width / (emptyListImg.Height / (txtHeight + 15))), txtHeight + 15);
             Bitmap padded = new(emptyList.Width + 5, emptyList.Height);
@@ -229,7 +231,7 @@ public partial class Form1: Form {
                 pg.DrawImage(emptyList, 5, 0);
             }
             emptyListScaled = (padded, (int)(padded.Height / 2));
-            return emptyListScaled;
+            return emptyListScaled!;
         }
         int lineLen = 5;
         int gap = 5;
@@ -263,10 +265,10 @@ public partial class Form1: Form {
     }
     private static (Bitmap? img, int middle) passPic = (null, 0);
     private static (Bitmap img, int middle) EmptyStatement() {
-        if(passPic.img is not null) {   return passPic; }
+        if(passPic.img is not null) {   return passPic!; }
         Bitmap img = new(passImg, (int)(passImg.Width / (passImg.Height / txtHeight)), txtHeight);
         passPic = (img, (int)(img.Height / 2));
-        return passPic;
+        return passPic!;
     }
     
     // todo: while / until / forever
@@ -1140,7 +1142,7 @@ public partial class Form1: Form {
     #endregion
 
     #region Python
-    private PythonAst ToAST() {
+    private static PythonAst ToAST() {
         StringBuilder theScript = new();
         foreach(var line in linesText) {
             theScript.AppendLine(line);
@@ -1169,6 +1171,7 @@ public partial class Form1: Form {
         foreach(var line in linesText) {
             theScript.AppendLine(line);
         }
+
         var engine = Python.CreateEngine();
         MemoryStream ms = new();
         EventRaisingStreamWriter outputWr = new(ms);
@@ -1182,7 +1185,7 @@ public partial class Form1: Form {
         engine.Runtime.IO.SetOutput(ms, outputWr);
         engine.Runtime.IO.SetErrorOutput(ems, errOutputWr);
         try {
-            var source = engine.CreateScriptSourceFromString(theScript.ToString());
+            var source = engine.CreateScriptSourceFromString(theScript.ToString(), SourceCodeKind.File);
             Stopwatch sw = new();
             sw.Start();
             source.Execute();
@@ -1191,7 +1194,17 @@ public partial class Form1: Form {
             consoleTxt = (res.ToString(), ConsoleTxtType.text);
             ShowConsole();
         } catch(Exception err) {
-            consoleTxt = (err.Message, ConsoleTxtType.error);
+            try {
+                consoleTxt = (
+                    $"Error in line {((dynamic)err).Line}:\n{(err.Message.Equals("unexpected EOF while parsing") ? "unclosed bracket\\parentheses\\quote" : err.Message)}",
+                    ConsoleTxtType.error
+                );
+            }catch(RuntimeBinderException) {
+                consoleTxt = (
+                    err.Message.Equals("unexpected EOF while parsing") ? "unclosed bracket\\parentheses\\quote" : err.Message,
+                    ConsoleTxtType.error
+                );
+            }
 
             errLink = @"https://www.google.com/search?q=Python" + WebUtility.UrlEncode(" " + err.Message);
             
@@ -1219,7 +1232,7 @@ public partial class Form1: Form {
         bool isCtrl = (ModifierKeys & Keys.Control) == Keys.Control;
         ((Action)(lastPressed switch {
             Keys.CapsLock => () => _ = 1, // todo display that caps is pressed \ not pressed
-            Keys.Insert => isShift ? () => Execute() : () => DrawPicScreen(),
+            Keys.Insert => () => DrawPicScreen(),
             Keys.End => () => EndKey(isShift, isAltl, isCtrl),
             Keys.Home => () => HomeKey(isShift, isAltl, isCtrl),
             Keys.Up => () => UpKey(isShift, isAltl, isCtrl),
@@ -1232,7 +1245,7 @@ public partial class Form1: Form {
         DrawTextScreen();
         Refresh();
     }
-    private void textBox_TextChanged(object? sender, EventArgs e) {
+    private void TextBox_TextChanged(object? sender, EventArgs e) {
         if(iChanged) {
             iChanged = false;
             return;
@@ -1666,7 +1679,7 @@ public partial class Form1: Form {
     }
     private static int GetClickRow() {
         int mouse = Cursor.Position.Y;
-        float res = curWindow.Pos.y;
+        float res = curWindow.Pos.y + curWindow.Offset;
         for(int i = 0; i < linesText.Count; i++) {
             var item = linesText[i];
             int h = MeasureHeight(item, boldFont);
@@ -1705,24 +1718,6 @@ public partial class Form1: Form {
         }
         return mid;
     }
-
-    /*private void NewButton() {
-        var window = curWindow.Pos;
-        Button b = new() {
-            Location = new Point(window.x, window.y),
-            Size = new(screenWidth, screenHeight),
-            FlatStyle = FlatStyle.Flat,
-            BackColor = Color.Transparent,
-            ForeColor = Color.Transparent,
-        };
-        b.FlatAppearance.BorderSize = 0;
-        b.FlatAppearance.MouseOverBackColor = Color.Transparent;
-        b.FlatAppearance.MouseDownBackColor = Color.Transparent;
-        b.FlatAppearance.BorderColor = Color.Black;
-        b.MouseClick += new MouseEventHandler(((object sender, MouseEventArgs e) => BtnClick())!);
-        this.Controls.Add(b);
-        linesButton.Add(b);
-    }*/
     private static void DeleteSelection() {
         var selectedLine_ = ((int line, int col))selectedLine!;
         selectedLine = null;
