@@ -75,9 +75,11 @@ public partial class Form1: Form {
     private static readonly SolidBrush
         keyOrangeB  = new(keyOrange),
         mathPurpleB = new(mathPurple),
+        yellowB     = new(Color.Wheat),
         whiteBrush  = new(Color.White),
         blackBrush  = new(Color.Black),
         curserBrush = new(Color.WhiteSmoke),
+        smokeWhiteBrush = new(Color.WhiteSmoke),
         redBrush            = new(Color.FromArgb(255, 200, 049, 45)),
         intBrush            = new(Color.FromArgb(255, 207, 255, 182)),
         timeBrush           = new(Color.FromArgb(255, 100, 100, 100)),
@@ -92,6 +94,7 @@ public partial class Form1: Form {
         blueDashed      = new(blueOpaqe, 5)     { DashPattern = dashes },
         greenDashed     = new(greenOpaqe, 5)    { DashPattern = dashes },
         orangeDashed    = new(orangeOpaqe, 5)   { DashPattern = dashes },
+        yellowP         = new(Color.Wheat, 5),
         redListP        = new(listRed, 5),
         redOpaqeP       = new(redOpaqe, 5),
         blueOpaqeP      = new(blueOpaqe, 5),
@@ -107,6 +110,7 @@ public partial class Form1: Form {
         consoleImg = new(Resources.console),
         searchImg = new(Resources.search),
         rulerImg = new(Resources.ruler),
+        truckImg = new(Resources.truck),
         debugImg = new(Resources.bug),
         playImg = new(Resources.play),
         passImg = new(Resources.pass),
@@ -153,6 +157,8 @@ public partial class Form1: Form {
 
         AddRunBtn();
         AddDebugBtn();
+        AddTabBtn();
+
         AddConsole();
         MakeOpenConsoleBtn();
 
@@ -200,6 +206,26 @@ public partial class Form1: Form {
             run.Click += new EventHandler(ExecuteBtn!);
             Controls.Add(run);
         }
+        void AddTabBtn() {
+            Button run = new(){
+                BackColor = Color.Transparent,
+                Size = new(TAB_HEIGHT, TAB_HEIGHT),
+                BackgroundImageLayout = ImageLayout.None,
+                FlatStyle = FlatStyle.Flat,
+            };
+            run.FlatAppearance.BorderSize = 0;
+            run.FlatAppearance.BorderColor = Color.White;
+            run.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
+            Bitmap b = new(run.Size.Width, run.Size.Height);
+            using(var g = Graphics.FromImage(b)) {
+                Bitmap scaled = new(xImg, run.Size.Width, run.Size.Height);
+                g.DrawImage(scaled, 0, 0);
+            }
+            run.BackgroundImage = b;
+            run.Location = new(Width - 4 * run.Size.Width - 20, 0);
+            run.Click += new EventHandler(AddTabEvent!);
+            Controls.Add(run);
+        }
         void AddConsole() {
             int consolePos = Height - (Height / 4);
             Bitmap img = new(Width, Height - consolePos);
@@ -232,12 +258,104 @@ public partial class Form1: Form {
                 "WhileStatement" => () => WhileStatement(ast),
                 "EmptyStatement" => () => EmptyStatement(),
                 "ListExpression" => () => ListExpression(ast),
+                "AndExpression" => () => AndExpression(ast),
+                "OrExpression" => () => OrExpression(ast),
+                "ImportStatement" => () => ImportStatement(ast),
+                "AugmentedAssignStatement" => () => AugmentedAssignStatement(ast),
                 _ => () => null
             }))();
         } catch(Exception) { 
             return null;
         }
     }
+    // TODO 
+    private BM_Middle ImportStatement(dynamic ast){
+        string name = ast.Names[0].Names[0];
+        int width = MeasureWidth(name, boldFont);
+        int gap = 7;
+        Bitmap truck = new(truckImg, txtHeight + gap * 2, txtHeight + gap * 2);
+        Bitmap res = new(gap * 2 + width + truck.Width, truck.Height);
+        using(var g = Graphics.FromImage(res)){
+            g.FillRectangle(whiteBrush, 0, 0, res.Width, res.Height);
+            g.DrawString(name, boldFont, blackBrush, gap, gap);
+            g.DrawImage(truck, res.Width - truck.Width, 0);
+        }
+        return new(res, res.Height / 2);
+
+    }
+    private BM_Middle AndExpression(dynamic ast){
+        var l = MakeImg(ast.Left);
+        var r = MakeImg(ast.Right);
+        int height = l.Img.Height + r.Img.Height + 5;
+        int andWidth = MeasureWidth("and", boldFont); 
+        int width = Max(l.Img.Width, r.Img.Width) + andWidth;
+        Bitmap bm = new(width + 20, height + 20);
+        using(var g = Graphics.FromImage(bm)){
+            g.DrawImage(l.Img, andWidth + 10, 10);
+            g.DrawImage(r.Img, andWidth + 10, l.Img.Height + 20);
+            int andPosY = (int)(l.Img.Height - txtHeight / 2);
+            g.DrawLine(yellowP, 2, l.Img.Height + 15, 10, l.Img.Height + 15);
+            g.DrawLine(yellowP, 10 + andWidth, l.Img.Height + 15, bm.Width - 2, l.Img.Height + 15);
+            
+            g.DrawString("and", boldFont, yellowB, 10, andPosY + 15);
+            // the twos are brush size / 2
+            g.DrawLine(yellowP, 2, 2, 2, bm.Height - 2);
+            g.DrawLine(yellowP, 2, 2, bm.Width - 2, 2);
+            g.DrawLine(yellowP, bm.Width - 2, bm.Height - 2, bm.Width - 2, 2);
+            g.DrawLine(yellowP, bm.Width - 2, bm.Height - 2, 2, bm.Height - 2);
+        }
+        return new(bm, bm.Height / 2);
+    }
+    private BM_Middle OrExpression(dynamic ast){
+        var l = MakeImg(ast.Left);
+        var r = MakeImg(ast.Right);
+        int height = l.Img.Height + r.Img.Height + 5;
+        int orWidth = MeasureWidth("or", boldFont); 
+        int width = Max(l.Img.Width, r.Img.Width) + orWidth;
+        Bitmap bm = new(width + 20, height + 20);
+        using(var g = Graphics.FromImage(bm)){
+            g.DrawImage(l.Img, orWidth + 10, 10);
+            g.DrawImage(r.Img, orWidth + 10, l.Img.Height + 20);
+            int andPosY = (int)(l.Img.Height - txtHeight / 2);
+            g.DrawLine(yellowP, 2, l.Img.Height + 15, 10, l.Img.Height + 15);
+            g.DrawLine(yellowP, 10 + orWidth, l.Img.Height + 15, bm.Width - 2, l.Img.Height + 15);
+            g.DrawString("or", boldFont, yellowB, 10, andPosY + 15);
+            // the twos are brush size / 2
+            g.DrawLine(yellowP, 2, 2, 2, bm.Height - 2);
+            g.DrawLine(yellowP, 2, 2, bm.Width - 2, 2);
+            g.DrawLine(yellowP, bm.Width - 2, bm.Height - 2, bm.Width - 2, 2);
+            g.DrawLine(yellowP, bm.Width - 2, bm.Height - 2, 2, bm.Height - 2);
+        }
+        return new(bm, bm.Height / 2);
+    }
+    // private BM_Middle AndExpression(dynamic ast){
+    //     var l = MakeImg(ast.Left);
+    //     var r = MakeImg(ast.Right);
+    //     int height = Max(l.Middle, r.Middle) + Max(l.Img.Height - l.Middle, r.Img.Height - r.Middle);
+    //     int andWidth = MeasureWidth(" and ", boldFont); 
+    //     int width = l.Img.Width + r.Img.Width + andWidth;
+    //     Bitmap bm = new(width, height);
+    //     using(var g = Graphics.FromImage(bm)){
+    //         g.DrawImage(l.Img, 0, bm.Height / 2 - l.Middle);
+    //         g.DrawImage(r.Img, l.Img.Width + andWidth, (int)(bm.Height / 2 - r.Middle));
+    //         g.DrawString(" and ", boldFont, mathPurpleB, l.Img.Width, (int)(bm.Height / 2 - txtHeight / 2));
+    //     }
+    //     return new(bm, bm.Height / 2);
+    // }
+    // private BM_Middle OrExpression(dynamic ast){
+    //     var l = MakeImg(ast.Left);
+    //     var r = MakeImg(ast.Right);
+    //     int height = Max(l.Middle, r.Middle) + Max(l.Img.Height - l.Middle, r.Img.Height - r.Middle);
+    //     int orWidth = MeasureWidth(" or ", boldFont); 
+    //     int width = l.Img.Width + r.Img.Width + orWidth;
+    //     Bitmap bm = new(width, height);
+    //     using(var g = Graphics.FromImage(bm)){
+    //         g.DrawImage(l.Img, 0, bm.Height / 2 - l.Middle);
+    //         g.DrawImage(r.Img, l.Img.Width + orWidth, (int)(bm.Height / 2 - r.Middle));
+    //         g.DrawString(" or ", boldFont, mathPurpleB, l.Img.Width, (int)(bm.Height / 2 - txtHeight / 2));
+    //     }
+    //     return new(bm, bm.Height / 2);
+    // }
     
     private static BM_Middle? emptyListScaled = null;
     private BM_Middle ListExpression(dynamic ast) {
@@ -447,14 +565,7 @@ public partial class Form1: Form {
         return null;
     }
     private BM_Middle UnaryExpression(dynamic ast) {
-         var op = ast.Op switch {
-            PythonOperator.Not => "not",
-            PythonOperator.Negate => "-",
-            PythonOperator.Invert => "~",
-            PythonOperator.Pos => "+",
-            PythonOperator.TrueDivide => "???? what is true divide???",
-            _ => "??I missed one???"
-        };
+        var op = PythonOperatorToString(ast.Op);
         
         int gap = 5;
         var opWidth = MeasureWidth(op, boldFont);
@@ -473,21 +584,7 @@ public partial class Form1: Form {
         return new(res, middle);
     }
     private BM_Middle Comparison(dynamic ast) {
-        var op = ast.Operator switch {
-            PythonOperator.In => "in",
-            PythonOperator.Is => "is",
-            PythonOperator.IsNot => "is not",
-            PythonOperator.Not => "not",
-            PythonOperator.NotIn => "not in",
-            PythonOperator.LessThan => "<",
-            PythonOperator.GreaterThan => ">",
-            PythonOperator.LessThanOrEqual => "<=",
-            PythonOperator.GreaterThanOrEqual => ">=",
-            PythonOperator.Equal => "==",
-            PythonOperator.NotEqual => "!=",
-            PythonOperator.TrueDivide => "???? what is true divide???",
-            _ => "??I missed one???"
-        };
+        var op = PythonOperatorToString(ast.Operator);
         
         int gap = 5;
         var opWidth = MeasureWidth(op, boldFont) + gap * 2;
@@ -522,24 +619,7 @@ public partial class Form1: Form {
     }
     private BM_Middle Operator(dynamic ast) {
         #region OperatorSwitch
-        var op = ast.Operator switch {
-            PythonOperator.Add => "+",
-            PythonOperator.Subtract => "-",
-            PythonOperator.Multiply => "*",
-            PythonOperator.Divide => "/",
-            PythonOperator.FloorDivide => "//",
-            PythonOperator.Power => "**",
-            PythonOperator.Mod => "%",
-            PythonOperator.BitwiseAnd => "&",
-            PythonOperator.BitwiseOr => "|",
-            PythonOperator.Xor => "^",
-            PythonOperator.LeftShift => "<<",
-            PythonOperator.RightShift => ">>",
-            PythonOperator.Negate => "-",
-            PythonOperator.None => "None",
-            PythonOperator.TrueDivide => "???? what is true divide???",
-            _ => "??I missed one???"
-        };
+        var op = PythonOperatorToString(ast.Operator);
         #endregion
         
         int gap = 5;
@@ -786,6 +866,7 @@ public partial class Form1: Form {
         }
         return new(res, (int)(res.Height / 2));
     }
+    //todo cleanup
     private BM_Middle AssignmentStatement(dynamic ast) {
         List<Bitmap> assignmentNames = new();
         var (h1, w1) = (0, 0);
@@ -814,40 +895,96 @@ public partial class Form1: Form {
         var width = w1 + w2 + lineWidth * 3 + gap * 4;
         Bitmap res = new(width, height);
 
-        var g = Graphics.FromImage(res);
-        var end = (height - h1) / 2  - lineWidth;
-        foreach(var item in assignmentNames) {
+        using(var g = Graphics.FromImage(res)){
+            var end = (height - h1) / 2  - lineWidth;
+            foreach(var item in assignmentNames) {
+                g.DrawImage(
+                    item,
+                    x: lineWidth + gap,
+                    y: end,
+                    item.Width, item.Height
+                );
+                end += item.Height + gap;
+            }
+
             g.DrawImage(
-                item,
-                x: lineWidth + gap,
-                y: end,
-                item.Width, item.Height
+                image: valueName,
+                x: w1 + lineWidth * 2 + gap * 3,
+                y: (height - h2) / 2 - lineWidth,
+                valueName.Width, valueName.Height
             );
-            end += item.Height + gap;
+
+            g.DrawRectangle(
+                new(Color.WhiteSmoke, lineWidth), 0, 0,
+                width: w1 + gap * 2 + lineWidth * 2,
+                height: height - lineWidth * 2
+            );
+            g.DrawRectangle(
+                new(Color.WhiteSmoke, lineWidth), 0, 0,
+                width: w1 + w2 + gap * 4 + lineWidth * 3,
+                height: height - lineWidth * 2
+            );
         }
+        return new(res, (int)(res.Height / 2));
+    }
+    private BM_Middle AugmentedAssignStatement(dynamic ast) {
+        int lineWidth = 4, gap = 4;
+        string op = PythonOperatorToString(ast.Operator);
+        int opHeight = MeasureHeight(op, boldFont);
+        int opWidth = MeasureWidth(op, boldFont);
+        var leftImg = MakeImg(ast.Left).Img;
+        var h1 = leftImg.Height;
+        var w1 = leftImg.Width;
+        
+        Bitmap valueName = MakeImg(ast.Right).Img;
+        var (h2, w2) = (valueName.Height, valueName.Width);
 
-        g.DrawImage(
-            image: valueName,
-            x: w1 + lineWidth * 2 + gap * 3,
-            y: (height - h2) / 2 - lineWidth,
-            valueName.Width, valueName.Height
-        );
+        var height = Max(h1, h2) + lineWidth * 2 + gap * 2;
+        var width = w1 + w2 + lineWidth * 3 + gap * 4 + opWidth;
+        Bitmap res = new(width, height);
 
-        g.DrawRectangle(
-            new(Color.WhiteSmoke, lineWidth), 0, 0,
-            width: w1 + gap * 2 + lineWidth * 2,
-            height: height - lineWidth * 2
-        );
-        g.DrawRectangle(
-            new(Color.WhiteSmoke, lineWidth), 0, 0,
-            width: w1 + w2 + gap * 4 + lineWidth * 3,
-            height: height - lineWidth * 2
-        );
+        using(var g = Graphics.FromImage(res)){
+            g.DrawRectangle(
+                new Pen(Color.WhiteSmoke, lineWidth), 
+                lineWidth/2, lineWidth/2,
+                width: (int)(w1 + gap * 2 + lineWidth + opWidth/2),
+                height: height - lineWidth
+            );
+
+            int opX = (int)(w1 + gap * 2 + lineWidth);
+            int opY = (int)(res.Height / 2 - opHeight / 2);
+            g.FillRectangle(blackBrush, opX, opY, opWidth, opHeight);
+            g.DrawString(op, boldFont, mathPurpleB, opX, opY);
+
+            g.DrawRectangle(
+                new Pen(Color.WhiteSmoke, lineWidth), 
+                lineWidth/2, lineWidth/2,
+                width: res.Width - lineWidth,
+                height: res.Height - lineWidth
+            );
+            g.DrawImage(
+                leftImg,
+                lineWidth + gap,
+                lineWidth + gap,
+                leftImg.Width, leftImg.Height
+            );
+
+            g.DrawImage(
+                image: valueName,
+                x: w1 + lineWidth + gap * 3 + opWidth,
+                y: lineWidth + gap,
+                width: valueName.Width, height: valueName.Height
+            );
+
+        }
         return new(res, (int)(res.Height / 2));
     }
     #endregion
 
     #region Tabs
+    private void AddTabEvent(object? sender, EventArgs e){
+        MakeNewTab();
+    }
 
     private void AddTab(string name, (int width, int height) size, (int x, int y) pos, bool isFirst=false) {
         Function func = new() {    Name = name };
@@ -1284,10 +1421,9 @@ public partial class Form1: Form {
         Refresh();
         base.OnMouseWheel(e);
     }
-    protected override void OnMouseClick(MouseEventArgs e) {
-        
-        base.OnMouseClick(e);
-    }
+    // protected override void OnMouseClick(MouseEventArgs e) {
+    //     base.OnMouseClick(e);
+    // }
     protected override void OnMouseDown(MouseEventArgs e) {
         dragging = true;
         Drag(e);
@@ -1406,6 +1542,37 @@ public partial class Form1: Form {
     #endregion
 
     #region Helpers
+    private static string PythonOperatorToString(PythonOperator po) => po switch{
+        PythonOperator.In => "in",
+        PythonOperator.Is => "is",
+        PythonOperator.IsNot => "is not",
+        PythonOperator.Not => "not",
+        PythonOperator.NotIn => "not in",
+        PythonOperator.LessThan => "<",
+        PythonOperator.GreaterThan => ">",
+        PythonOperator.LessThanOrEqual => "<=",
+        PythonOperator.GreaterThanOrEqual => ">=",
+        PythonOperator.Equal => "==",
+        PythonOperator.NotEqual => "!=",
+        PythonOperator.Add => "+",
+        PythonOperator.Subtract => "-",
+        PythonOperator.Multiply => "*",
+        PythonOperator.Divide => "/",
+        PythonOperator.FloorDivide => "//",
+        PythonOperator.Power => "**",
+        PythonOperator.Mod => "%",
+        PythonOperator.BitwiseAnd => "&",
+        PythonOperator.BitwiseOr => "|",
+        PythonOperator.Xor => "^",
+        PythonOperator.LeftShift => "<<",
+        PythonOperator.RightShift => ">>",
+        PythonOperator.Negate => "-",
+        PythonOperator.None => "None",
+        PythonOperator.Invert => "~",
+        PythonOperator.Pos => "+",
+        PythonOperator.TrueDivide => "???? what is true divide???",
+        _ => "??I missed one???"
+    };
     private static string ReplaceTabs(string st) => st.Replace("\t", "    ");
     private static BM_Middle MakeTxtBM(string txt, Brush? brush = null) {
         var width = MeasureWidth(txt, boldFont);
