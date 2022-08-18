@@ -24,6 +24,8 @@ using GraphicIDE.Properties;
 using System.Net;
 
 
+// todo when changing font size need to change pen sizes as well 
+
 namespace GraphicIDE;
 
 public partial class Form1: Form {
@@ -34,19 +36,15 @@ public partial class Form1: Form {
     private static List<string> linesText = null!;
     private static readonly TextBox textBox = new();
     private static readonly StringFormat stringFormat = new();
-    private static readonly Font
-        boldFont = new(FontFamily.GenericMonospace, 15, FontStyle.Bold),
+    private static Font
+        boldFont = null!,
         tabFont = new(FontFamily.GenericMonospace, 10, FontStyle.Bold);
     private static bool iChanged = false;
     private static readonly Graphics nullGraphics = Graphics.FromImage(new Bitmap(1,1));
     private const int LINE_HEIGHT = 30, WM_KEYDOWN = 0x100, TAB_HEIGHT = 25, TAB_WIDTH = 80;
-    private static readonly int
-        INDENT = MeasureWidth("    ", boldFont),
-        qWidth = MeasureWidth("¿ ?", boldFont),
-        qHeight = MeasureHeight("¿?", boldFont),
-        upSideDownW = MeasureWidth("¿", boldFont),
-        txtHeight = MeasureHeight("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", boldFont);
-    private static int screenWidth = 0, screenHeight = 0;
+    private static Dictionary<Font, float> fontToPipeSize = new();
+    private static int indentW, qWidth, qHeight, upSideDownW, txtHeight;
+    private static int screenWidth = 0, screenHeight = 0, prevHeight, prevWidth;
     private static List<Window> windows = new();
     private static (string txt, ConsoleTxtType typ) consoleTxt = ("", ConsoleTxtType.text);
     private static Window console = null!;
@@ -55,6 +53,8 @@ public partial class Form1: Form {
     private static Button? closeConsoleBtn, openConsoleBtn, errOpenButton;
     private static bool dragging = false, doubleClick = false;
     private static string? errLink = null;
+    private static List<(Button btn, Func<(int w, int h), (int x, int y)> calcPos)> buttonsOnScreen = new();
+
     #region Tabs
     private static readonly List<Button> tabButtons = new();
     private static int tabButtonEnd = 0;
@@ -118,7 +118,6 @@ public partial class Form1: Form {
         xImg = new(Resources.red_X);
     #endregion
 
-    #region Start
     public Form1() {
         InitializeComponent();
         this.WindowState = FormWindowState.Maximized;
@@ -139,17 +138,15 @@ public partial class Form1: Form {
         textBox.Focus();
         SetTabWidth(textBox, 4);
 
+        ChangeFontSize(15);
+
         Controls.Add(textBox);
         textBox.TextChanged += new EventHandler(TextBox_TextChanged!);
         textBox.KeyDown += new KeyEventHandler(Form1_KeyDown!);
 
         stringFormat.SetTabStops(0, new float[] { 4 });
-        ResumeLayout(false);
-        PerformLayout();
-        Start();
-    }
-    async void Start() {
-        await Task.Delay(10);
+
+        (prevHeight, prevWidth) = (Height, Width);
         (screenHeight, screenWidth) = (Height - TAB_HEIGHT, Width / 2);
         AddTab("Main2", size: (screenWidth, screenHeight), pos: (screenWidth, TAB_HEIGHT), isFirst: true);
         AddTab("Main", size: (screenWidth, screenHeight), pos: (0, TAB_HEIGHT));
@@ -160,9 +157,9 @@ public partial class Form1: Form {
         AddTabBtn();
 
         AddConsole();
-        MakeOpenConsoleBtn();
-
+        
         DrawTextScreen();
+
         Refresh();
 
         void AddRunBtn() {
@@ -185,6 +182,7 @@ public partial class Form1: Form {
             run.Location = new(Width - 2 * run.Size.Width, 0);
             run.Click += new EventHandler(ExecuteBtn!);
             Controls.Add(run);
+            buttonsOnScreen.Add((run, (size) => (size.w - 2 * run.Size.Width, 0)));
         }
         void AddDebugBtn() {
             Button run = new(){
@@ -205,6 +203,7 @@ public partial class Form1: Form {
             run.Location = new(Width - 3 * run.Size.Width - 10, 0);
             run.Click += new EventHandler(ExecuteBtn!);
             Controls.Add(run);
+            buttonsOnScreen.Add((run, (size) => (size.w - 3 * run.Size.Width - 10, 0)));
         }
         void AddTabBtn() {
             Button run = new(){
@@ -225,6 +224,7 @@ public partial class Form1: Form {
             run.Location = new(Width - 4 * run.Size.Width - 20, 0);
             run.Click += new EventHandler(AddTabEvent!);
             Controls.Add(run);
+            buttonsOnScreen.Add((run, (size) => (size.w - 4 * run.Size.Width - 20, 0)));
         }
         void AddConsole() {
             int consolePos = Height - (Height / 4);
@@ -235,7 +235,6 @@ public partial class Form1: Form {
             };
         }
     }
-    #endregion
 
     #region AST
     private BM_Middle? MakeImg(dynamic ast) {
@@ -360,8 +359,8 @@ public partial class Form1: Form {
     private static BM_Middle? emptyListScaled = null;
     private BM_Middle ListExpression(dynamic ast) {
         if(ast.Items.Length == 0) {
-            if(emptyListScaled is not null) {
-                return emptyListScaled!;
+            if(emptyListScaled is BM_Middle bm && bm.Img.Height == txtHeight + 15) {
+                return bm;
             }
             Bitmap emptyList = new(emptyListImg, (int)(emptyListImg.Width / (emptyListImg.Height / (txtHeight + 15))), txtHeight + 15);
             Bitmap padded = new(emptyList.Width + 5, emptyList.Height);
@@ -403,7 +402,7 @@ public partial class Form1: Form {
     }
     private static BM_Middle? passPic = null;
     private static BM_Middle EmptyStatement() {
-        if(passPic is not null) {   return passPic!; }
+        if(passPic is BM_Middle bm && bm.Img.Height == txtHeight) {   return bm; }
         Bitmap img = new(passImg, (int)(passImg.Width / (passImg.Height / txtHeight)), txtHeight);
         passPic = new(img, (int)(img.Height / 2));
         return passPic!;
@@ -416,7 +415,7 @@ public partial class Form1: Form {
         Font bigFont = new(FontFamily.GenericMonospace, 30, FontStyle.Bold);
         var infWidth = MeasureWidth("∞", bigFont);
         Bitmap res = new(
-                width: Max(condition.Width + infWidth, body.Width + INDENT),
+                width: Max(condition.Width + infWidth, body.Width + indentW),
                 height: condition.Height + body.Height + 14
             );
         using(var g = Graphics.FromImage(res)) {
@@ -426,13 +425,12 @@ public partial class Form1: Form {
             );
             g.DrawImage(condition, infWidth, 0);
             g.DrawLine(blueOpaqeP, 1, 0, 1, res.Height - 5);
-            g.DrawImage(body, INDENT, condition.Height);
+            g.DrawImage(body, indentW, condition.Height);
             g.DrawLine(blueDashed, 4, 1, res.Width, 1);
             g.DrawLine(blueDashed, 4, res.Height - 8, res.Width, res.Height - 8);
         }
         return new(res, (int)(res.Height/2));
     }
-    /*private BM_Middle */
     private BM_Middle IfExpression(dynamic ast) {
         static Graphics JoinIfAndElse(Pen lastColor, ref Bitmap res, Bitmap img) {
             var (prevH, prevW) = (res.Height, res.Width);
@@ -447,7 +445,7 @@ public partial class Form1: Form {
 
         static Bitmap MakeIfOrElif(Bitmap condition, Bitmap body, Pen pen) {
             Bitmap res = new(
-                width: Max(condition.Width + qWidth, body.Width + INDENT),
+                width: Max(condition.Width + qWidth, body.Width + indentW),
                 height: condition.Height + body.Height + 5
             );
             var g = Graphics.FromImage(res);
@@ -459,7 +457,7 @@ public partial class Form1: Form {
                 (int)(condition.Height / 2 - qHeight / 2)
             );
             g.DrawLine(pen, 1, 0, 1, res.Height);
-            g.DrawImage(body, INDENT, condition.Height);
+            g.DrawImage(body, indentW, condition.Height);
             return res;
         }
         
@@ -485,12 +483,12 @@ public partial class Form1: Form {
         if(ast.ElseStatement is not null) {
             var elseBody = MakeImg(ast.ElseStatement).Img;
             Bitmap elseImg = new(
-                width: elseBody.Width + INDENT,
+                width: elseBody.Width + indentW,
                 height: elseBody.Height + 7
             );
             using(var eg = Graphics.FromImage(elseImg)) {
                 eg.DrawLine(redOpaqeP, 1, 0, 1, elseImg.Height);
-                eg.DrawImage(elseBody, INDENT, 0);
+                eg.DrawImage(elseBody, indentW, 0);
             }
             resG = JoinIfAndElse(lastColor, ref res, elseImg);
             lastColor = redDashed;
@@ -691,11 +689,13 @@ public partial class Form1: Form {
         return new(res, top.Height + 7);
     }
     private BM_Middle Literal(dynamic ast) =>
-        MakeTxtBM(ast.Value.ToString(), ast.Type.Name switch {
-            "String" => stringBrush,
-            "Int32" or "Double" => intBrush,
-            _ => textBrush
-        });
+        MakeTxtBM(ast.Type.Name.Equals("String") ? $"'{ast.Value}'": ast.Value.ToString(), 
+            ast.Type.Name switch {
+                "String" => stringBrush,
+                "Int32" or "Double" or "BigInteger" => intBrush,
+                _ => textBrush
+            }
+        );
     private BM_Middle SuiteStatement(dynamic ast) {
         List<Bitmap> resses = new();
         var (height, width) = (0, 0);
@@ -1086,6 +1086,20 @@ public partial class Form1: Form {
             try {
                 var bm = MakeImg(ToAST());
                 if(bm is not null) {
+                    #region resize to fit screen
+                    if(bm.Img.Height > curWindow.Size.height || bm.Img.Width > curWindow.Size.width){
+                        var (newWidth, newHeight) = (bm.Img.Width, bm.Img.Height);
+                        if(newWidth > curWindow.Size.width){
+                            newWidth = (int)curWindow.Size.width;
+                            newHeight = newHeight / (newWidth / newWidth);
+                        }
+                        if(newHeight > curWindow.Size.height){
+                            newHeight = (int)curWindow.Size.height;
+                            newWidth = newWidth / (newHeight / newHeight);
+                        }
+                        bm = new(new(bm.Img, newWidth, newHeight), 0);
+                    }
+                    #endregion
                     curFunc.DisplayImage = bm.Img;
                     skipDrawNewScreen = true;
                     Refresh();
@@ -1160,15 +1174,19 @@ public partial class Form1: Form {
         }
     }
     private void Form1_Paint(object? sender, PaintEventArgs e) {
-        e.Graphics.FillRectangle(tabBarBrush, 0, 0, Width, TAB_HEIGHT);
         foreach(var item in windows) {
+            // make back black
             e.Graphics.FillRectangle(blackBrush, item.Pos.x, item.Pos.y, item.Size.width, item.Size.height);
-            Bitmap bm = new(item.Size.width, item.Size.height);
+            //draw the img
+            Bitmap bm = new((int)item.Size.width, (int)item.Size.height);
             Graphics.FromImage(bm).DrawImage(item.Function.DisplayImage!, 0, item.Offset);
             e.Graphics.DrawImage(bm, item.Pos.x, item.Pos.y);
+            //draw frame
+            e.Graphics.DrawRectangle(new(Color.White, 2), item.Pos.x-2, item.Pos.y-2, item.Size.width+2, item.Size.height+2);
         }
-        e.Graphics.FillRectangle(whiteBrush, (int)(Width / 2 - 1), TAB_HEIGHT, 2, Height - TAB_HEIGHT);
-
+        // tab bar
+        e.Graphics.FillRectangle(tabBarBrush, 0, 0, Width, TAB_HEIGHT);
+        
         if(isConsoleVisible) {
             e.Graphics.FillRectangle(blackBrush, console.Pos.x, console.Pos.y, console.Size.width, console.Size.height);
             e.Graphics.DrawImage(console.Function.DisplayImage!, console.Pos.x, console.Pos.y);
@@ -1182,11 +1200,15 @@ public partial class Form1: Form {
     private void ShowConsole() {
         int idx = Controls.IndexOf(openConsoleBtn);
         if(idx != -1) {
+            buttonsOnScreen.Remove(buttonsOnScreen.Find((x)=>x.btn.Equals(openConsoleBtn!)));
             Controls[idx].Dispose();
         }
         openConsoleBtn = null;
 
         int consolePos = Height - (Height / 4);
+        console.Pos.y = consolePos;
+        console.Size.height = Height - consolePos;
+        console.Size.width = Width;
         Bitmap img = new(Width - 20, Height - consolePos - 45);
         using(var g = Graphics.FromImage(img)) {
             if(consoleTxt.typ == ConsoleTxtType.text) {
@@ -1196,6 +1218,7 @@ public partial class Form1: Form {
                 int w = MeasureWidth(executedTime, tabFont);
                 g.DrawString(executedTime, tabFont, timeBrush, img.Width - w, img.Height - h);
                 if(errOpenButton is not null) {
+                    buttonsOnScreen.Remove(buttonsOnScreen.Find((x)=>x.btn.Equals(buttonsOnScreen)));
                     Controls[Controls.IndexOf(errOpenButton)].Dispose();
                     errOpenButton = null;
                 }
@@ -1204,7 +1227,7 @@ public partial class Form1: Form {
                 if(errOpenButton is null) {
                     errOpenButton = new() {
                         Size = new(20, 20),
-                        Location = new(console.Pos.x + console.Size.width - 40, console.Pos.y + 35),
+                        Location = new((int)(console.Pos.x + console.Size.width) - 40, (int)console.Pos.y + 35),
                         BackColor = Color.Transparent,
                         BackgroundImage = searchImg,
                         FlatStyle = FlatStyle.Flat,
@@ -1215,6 +1238,7 @@ public partial class Form1: Form {
                     errOpenButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
                     errOpenButton.Click += new EventHandler(OpenErrLink!);
                     Controls.Add(errOpenButton);
+                    buttonsOnScreen.Add((errOpenButton, (_)=>((int)(console.Pos.x + console.Size.width) - 40, (int)console.Pos.y + 35)));
                 }
             }
         }
@@ -1224,7 +1248,7 @@ public partial class Form1: Form {
         if(closeConsoleBtn is null) {
             closeConsoleBtn = new() {
                 Size = new(20, 20),
-                Location = new(console.Pos.x + console.Size.width - 40, console.Pos.y + 5),
+                Location = new((int)(console.Pos.x + console.Size.width) - 40, (int)console.Pos.y + 5),
                 BackColor = Color.Transparent,
                 BackgroundImage = xImg,
                 FlatStyle = FlatStyle.Flat,
@@ -1235,6 +1259,7 @@ public partial class Form1: Form {
             closeConsoleBtn.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
             closeConsoleBtn.Click += new EventHandler(HideConsole!);
             Controls.Add(closeConsoleBtn);
+            buttonsOnScreen.Add((closeConsoleBtn, (size)=>((int)(console.Pos.x + console.Size.width) - 40, (int)console.Pos.y + 5)));
         }
         Refresh();
     }
@@ -1242,11 +1267,13 @@ public partial class Form1: Form {
         isConsoleVisible = false;
         int idx = Controls.IndexOf(closeConsoleBtn);
         if(idx != -1) {
+            buttonsOnScreen.Remove(buttonsOnScreen.Find((x)=>x.btn.Equals(closeConsoleBtn!)));
             Controls[idx].Dispose();
         }
         closeConsoleBtn = null;
         idx = Controls.IndexOf(errOpenButton);
         if(idx != -1) {
+            buttonsOnScreen.Remove(buttonsOnScreen.Find((x)=>x.btn.Equals(errOpenButton!)));
             Controls[idx].Dispose();
         }
         errOpenButton = null;
@@ -1271,9 +1298,13 @@ public partial class Form1: Form {
         openConsoleBtn.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
         openConsoleBtn.Click += new EventHandler((object? s, EventArgs e) => ShowConsole());
         Controls.Add(openConsoleBtn);
+        buttonsOnScreen.Add((openConsoleBtn, (size) => (size.w - 60, size.h - 80)));
     }
     private void ToggleConsole() {
         if(isConsoleVisible) { HideConsole(null, new()); } else { ShowConsole(); }
+    }
+    private void RefreshConsole() {
+        if(isConsoleVisible) { ShowConsole(); } else { HideConsole(null, new()); }
     }
 
     #endregion
@@ -1357,7 +1388,26 @@ public partial class Form1: Form {
     #endregion
 
     #region THE EVENTS
-    
+    private void Resize_Event(object sender, EventArgs e){
+        try{
+            var (changeH, changeW) = ((float)(prevHeight-TAB_HEIGHT) / (Height-TAB_HEIGHT), (float)prevWidth / Width); 
+            foreach(var window in windows) {
+                window.Size.height /= changeH;
+                window.Size.width /= changeW;
+                window.Pos.x /= changeW;
+                window.Pos.y = TAB_HEIGHT + ((window.Pos.y - TAB_HEIGHT) / changeH);
+            }
+            RefreshConsole();
+            var WHTuple = (Width, Height);
+            foreach(var button in buttonsOnScreen) {
+                var newPos = button.calcPos(WHTuple);
+                button.btn.Location = new(newPos.x, newPos.y);
+            }
+
+            (prevHeight, prevWidth) = (Max(1, Height), Max(1, Width));
+            Refresh();
+        }catch(Exception){}
+    }
     private void Form1_KeyDown(object? sender, KeyEventArgs e) {
         textBox.SelectionStart = 1;
         textBox.SelectionLength = 0;
@@ -1479,7 +1529,7 @@ public partial class Form1: Form {
                         break;
                     }
                     curWindow = window;
-                    (screenWidth, screenHeight) = window.Size;
+                    (screenWidth, screenHeight) = ((int, int))window.Size;
                     ChangeTab(window.Function.Button);
                     break;
                 }
@@ -1531,6 +1581,8 @@ public partial class Form1: Form {
                 Keys.N => () => MakeNewTab(),
                 Keys.Tab => () => CtrlTab(),
                 Keys.Oemtilde => () => ToggleConsole(),
+                Keys.Oemplus => () => ChangeFontSize((int)boldFont.Size + 1),
+                Keys.OemMinus => () => ChangeFontSize((int)boldFont.Size - 1),
                 _ => () => _ = 1
             }))();
             DrawTextScreen();
@@ -1542,6 +1594,17 @@ public partial class Form1: Form {
     #endregion
 
     #region Helpers
+    private void ChangeFontSize(int size){
+        // MessageBox.Show(size.ToString());
+        boldFont = new(FontFamily.GenericMonospace, size, FontStyle.Bold);
+        indentW = MeasureWidth("    ", boldFont);
+        qWidth = MeasureWidth("¿ ?", boldFont);
+        qHeight = MeasureHeight("¿?", boldFont);
+        upSideDownW = MeasureWidth("¿", boldFont);
+        txtHeight = MeasureHeight("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", boldFont);
+        
+        Refresh();
+    }
     private static string PythonOperatorToString(PythonOperator po) => po switch{
         PythonOperator.In => "in",
         PythonOperator.Is => "is",
@@ -1598,11 +1661,20 @@ public partial class Form1: Form {
         // used || so that trailing\leading spaces get included too
         // you might wonder why theres an "a" in here... me too... it just doesn't work without it...
         st = ReplaceTabs($"|a{st}|");
-        return (int)(nullGraphics.MeasureString(st, ft).Width - nullGraphics.MeasureString("|", ft).Width * 2);
+        return (int)(nullGraphics.MeasureString(st, ft).Width - CachedWidthOfPipes(ft));
+    }
+    private static float CachedWidthOfPipes(Font ft){
+        if(fontToPipeSize.TryGetValue(ft, out float res)){
+            return res;
+        }
+        float w = nullGraphics.MeasureString("|", ft).Width * 2;
+        fontToPipeSize[ft] = w; 
+        return w;
     }
     private static int MeasureHeight(string st, Font ft) => (int)nullGraphics.MeasureString(st, ft).Height;
 
-    private static bool isShiftPressed() => (Control.ModifierKeys & Keys.Shift) == Keys.Shift;
+    private static bool isShiftPressed() => (ModifierKeys & Keys.Shift) == Keys.Shift;
+    private static bool isCapsPressed() => (ModifierKeys & Keys.CapsLock) == Keys.CapsLock;
     private static bool isAltlPressed() => (ModifierKeys & Keys.Alt) == Keys.Alt;
     private static bool isCtrlPressed() => (ModifierKeys & Keys.Control) == Keys.Control;
 
@@ -1862,7 +1934,7 @@ public partial class Form1: Form {
             var item = windows[i];
             if(item.Function.Equals(curFunc)) {
                 curWindow = windows[(i + 1) % windows.Count];
-                (screenWidth, screenHeight) = curWindow.Size;
+                (screenWidth, screenHeight) = ((int, int))curWindow.Size;
                 ChangeTab(curWindow.Function.Button);
                 return;
             }
@@ -2122,8 +2194,8 @@ enum ConsoleTxtType {   text, error }
 record class BM_Middle(Bitmap Img, int Middle);
 class Window {
     public Function Function;
-    public (int width, int height) Size;
-    public (int x, int y) Pos;
+    public (float width, float height) Size;
+    public (float x, float y) Pos;
     public int Offset = 0;
     public Window(Function func) {  Function = func; }
 }
