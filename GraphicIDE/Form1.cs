@@ -27,7 +27,6 @@ using System.Net;
 // todo when changing font size need to change pen sizes as well 
 // todo https://stackoverflow.com/questions/1264406/how-do-i-get-the-taskbars-position-and-size
 // todo cache some of the textline images
-// todo getting black screen sometimes
 
 
 namespace GraphicIDE;
@@ -123,6 +122,7 @@ public partial class Form1: Form {
         xImg = new(Resources.red_X);
     #endregion
 
+    #region Start
     public Form1() {
         InitializeComponent();
         this.MinimumSize = new(100, 100);
@@ -246,6 +246,8 @@ public partial class Form1: Form {
         textBox.Focus();
         CtrlTab();
     }
+    #endregion
+
     #region AST
     private BM_Middle? MakeImg(dynamic ast) {
         try {
