@@ -23,8 +23,12 @@ using GraphicIDE.Properties;
 
 using System.Net;
 
-
+// todo make terminal a window
 // todo when changing font size need to change pen sizes as well 
+// todo https://stackoverflow.com/questions/1264406/how-do-i-get-the-taskbars-position-and-size
+// todo cache some of the textline images
+// todo getting black screen sometimes
+
 
 namespace GraphicIDE;
 
@@ -71,6 +75,7 @@ public partial class Form1: Form {
         keyOrange       = Color.FromArgb(255, 245, 190, 80),
         greenOpaqe      = Color.FromArgb(100, 000, 255, 000),
         mathPurple      = Color.FromArgb(255, 164, 128, 207),
+        tabBarColor     = Color.FromArgb(255, 100, 100, 100),
         orangeOpaqe     = Color.FromArgb(100, 250, 200, 93);
     private static readonly SolidBrush
         keyOrangeB  = new(keyOrange),
@@ -87,7 +92,7 @@ public partial class Form1: Form {
         greenBrush          = new(Color.FromArgb(255, 110, 255, 130)),
         selectBrush         = new(Color.FromArgb(100, 000, 100, 255)),
         stringBrush         = new(Color.FromArgb(255, 255, 204, 116)),
-        tabBarBrush         = new(Color.FromArgb(255, 100, 100, 100)),
+        tabBarBrush         = new(tabBarColor),
         parenthesiesBrush   = new(Color.FromArgb(255, 076, 175, 104));
     static readonly Pen
         redDashed       = new(redOpaqe, 5)      { DashPattern = dashes },
@@ -120,6 +125,7 @@ public partial class Form1: Form {
 
     public Form1() {
         InitializeComponent();
+        this.MinimumSize = new(100, 100);
         this.WindowState = FormWindowState.Maximized;
         this.BackColor = Color.Black;
         this.DoubleBuffered = true;
@@ -148,8 +154,8 @@ public partial class Form1: Form {
 
         (prevHeight, prevWidth) = (Height, Width);
         (screenHeight, screenWidth) = (Height - TAB_HEIGHT, Width / 2);
-        AddTab("Main2", size: (screenWidth, screenHeight), pos: (screenWidth, TAB_HEIGHT), isFirst: true);
-        AddTab("Main", size: (screenWidth, screenHeight), pos: (0, TAB_HEIGHT));
+        AddTab("Main", size: (screenWidth, screenHeight), pos: (0, TAB_HEIGHT), isFirst: true);
+        AddTab("Main2", size: (screenWidth, screenHeight), pos: (screenWidth, TAB_HEIGHT));
         curWindow = windows[1];
 
         AddRunBtn();
@@ -159,13 +165,13 @@ public partial class Form1: Form {
         AddConsole();
         
         DrawTextScreen();
-
-        Refresh();
-
+        Invalidate();
+        FocusTB();
+        
         void AddRunBtn() {
             int gap = 5;
             Button run = new(){
-                BackColor = Color.Transparent,
+                BackColor = tabBarColor,
                 Size = new(TAB_HEIGHT, TAB_HEIGHT),
                 BackgroundImageLayout = ImageLayout.None,
                 FlatStyle = FlatStyle.Flat,
@@ -186,7 +192,7 @@ public partial class Form1: Form {
         }
         void AddDebugBtn() {
             Button run = new(){
-                BackColor = Color.Transparent,
+                BackColor = tabBarColor,
                 Size = new(TAB_HEIGHT, TAB_HEIGHT),
                 BackgroundImageLayout = ImageLayout.None,
                 FlatStyle = FlatStyle.Flat,
@@ -207,7 +213,7 @@ public partial class Form1: Form {
         }
         void AddTabBtn() {
             Button run = new(){
-                BackColor = Color.Transparent,
+                BackColor = tabBarColor,
                 Size = new(TAB_HEIGHT, TAB_HEIGHT),
                 BackgroundImageLayout = ImageLayout.None,
                 FlatStyle = FlatStyle.Flat,
@@ -235,7 +241,11 @@ public partial class Form1: Form {
             };
         }
     }
-
+    async void FocusTB(){
+        await Task.Delay(100);
+        textBox.Focus();
+        CtrlTab();
+    }
     #region AST
     private BM_Middle? MakeImg(dynamic ast) {
         try {
@@ -1028,7 +1038,7 @@ public partial class Form1: Form {
         if(!isPic) {    DrawPicScreen(); }
         if(!isPic) {
             try {
-                DrawTextScreen(false); Refresh();
+                DrawTextScreen(false); Invalidate();
             } catch(Exception) { }
         }
         curFunc.isPic = isPic;
@@ -1047,7 +1057,7 @@ public partial class Form1: Form {
             DrawPicScreen();
         } else {
             DrawTextScreen();
-            Refresh();
+            Invalidate();
         }
     }
     private void MakeNewTab() {
@@ -1080,7 +1090,7 @@ public partial class Form1: Form {
     private void DrawPicScreen() {
         if(isPic) {
             DrawTextScreen();
-            Refresh();
+            Invalidate();
             isPic = false;
         } else {
             try {
@@ -1102,7 +1112,7 @@ public partial class Form1: Form {
                     #endregion
                     curFunc.DisplayImage = bm.Img;
                     skipDrawNewScreen = true;
-                    Refresh();
+                    Invalidate();
                     isPic = true;
                 }
             } catch (Exception){}
@@ -1173,7 +1183,11 @@ public partial class Form1: Form {
             Process.Start(new ProcessStartInfo("cmd", $"/c start {errLink}") { CreateNoWindow = true });
         }
     }
+    private static Bitmap screen_bm = new(1, 1);
     private void Form1_Paint(object? sender, PaintEventArgs e) {
+        
+        // if(!changed){ e.Graphics.DrawImage(screen_bm, 0, 0); return; }
+
         foreach(var item in windows) {
             // make back black
             e.Graphics.FillRectangle(blackBrush, item.Pos.x, item.Pos.y, item.Size.width, item.Size.height);
@@ -1261,7 +1275,7 @@ public partial class Form1: Form {
             Controls.Add(closeConsoleBtn);
             buttonsOnScreen.Add((closeConsoleBtn, (size)=>((int)(console.Pos.x + console.Size.width) - 40, (int)console.Pos.y + 5)));
         }
-        Refresh();
+        Invalidate();
     }
     private void HideConsole(object? sender, EventArgs e) {
         isConsoleVisible = false;
@@ -1281,8 +1295,7 @@ public partial class Form1: Form {
         if(openConsoleBtn is null) {
             MakeOpenConsoleBtn();
         }
-
-        Refresh();
+        Invalidate();
     }
     private void MakeOpenConsoleBtn() {
         openConsoleBtn = new() {
@@ -1404,8 +1417,8 @@ public partial class Form1: Form {
                 button.btn.Location = new(newPos.x, newPos.y);
             }
 
-            (prevHeight, prevWidth) = (Max(1, Height), Max(1, Width));
-            Refresh();
+            (prevHeight, prevWidth) = (Height, Width);
+            Invalidate();
         }catch(Exception){}
     }
     private void Form1_KeyDown(object? sender, KeyEventArgs e) {
@@ -1418,8 +1431,9 @@ public partial class Form1: Form {
         }
         bool isAltl = isAltlPressed();
         bool isCtrl = isCtrlPressed();
+        var refresh = true;
         ((Action)(lastPressed switch {
-            Keys.CapsLock => () => _ = 1, // todo display that caps is pressed \ not pressed
+            Keys.CapsLock => () => refresh = false, // todo display that caps is pressed \ not pressed
             Keys.Insert => () => DrawPicScreen(),
             Keys.End => () => EndKey(isShift, isCtrl),
             Keys.Home => () => HomeKey(isShift, isCtrl),
@@ -1428,11 +1442,15 @@ public partial class Form1: Form {
             Keys.Right => () => RightKey(isShift, isAltl, isCtrl),
             Keys.Left => () => LeftKey(isShift, isAltl, isCtrl),
             Keys.F1 => () => OpenErrLink(null, new()),
-            _ => () => lastCol = null
+            _ => () => {lastCol = null; refresh = false;}
         }))();
-        DrawTextScreen();
-        Refresh();
+        
+        if(refresh){
+            DrawTextScreen();
+            Invalidate();
+        }
     }
+
     private void TextBox_TextChanged(object? sender, EventArgs e) {
         if(iChanged) {
             iChanged = false;
@@ -1458,8 +1476,9 @@ public partial class Form1: Form {
             _ => () => CharKey(changeSt)
         }))();
         DrawTextScreen();
-        Refresh();
+        Invalidate();
     }
+    
     protected override void OnMouseWheel(MouseEventArgs e) {
         if(curWindow.Function.DisplayImage!.Height > 40) {
             curWindow.Offset = Math.Clamp(
@@ -1468,7 +1487,7 @@ public partial class Form1: Form {
                 0
             );
         }
-        Refresh();
+        Invalidate();
         base.OnMouseWheel(e);
     }
     // protected override void OnMouseClick(MouseEventArgs e) {
@@ -1492,7 +1511,7 @@ public partial class Form1: Form {
         GoInDirCtrl(GetNextR, isAltlPressed());
 
         DrawTextScreen();
-        Refresh();
+        Invalidate();
         base.OnMouseDoubleClick(e);
     }
     private void ClickedSelected((int line, int col) pos, (int,int) sel) {
@@ -1507,8 +1526,9 @@ public partial class Form1: Form {
             selectedLine = newSelectedLine;
         }
         DrawTextScreen();
-        Refresh();
+        Invalidate();
     }
+    
     async void Drag(MouseEventArgs e) {
         (int line, int col)? tempSelectedLine = null;
         if(e.Button == MouseButtons.Left) {
@@ -1563,6 +1583,7 @@ public partial class Form1: Form {
         if(msg.Msg == WM_KEYDOWN && ModifierKeys == Keys.Control) {
             bool isAltlKeyPressed = isAltlPressed();
             bool isShift = isShiftPressed();
+            bool refresh = true;
             ((Action)(keyCode switch {
                 Keys.Delete => () => DeleteKey(isAltlKeyPressed, true),
                 Keys.Back => () => BackSpaceKey(isAltlKeyPressed, true),
@@ -1583,10 +1604,12 @@ public partial class Form1: Form {
                 Keys.Oemtilde => () => ToggleConsole(),
                 Keys.Oemplus => () => ChangeFontSize((int)boldFont.Size + 1),
                 Keys.OemMinus => () => ChangeFontSize((int)boldFont.Size - 1),
-                _ => () => _ = 1
+                _ => () => refresh = false
             }))();
-            DrawTextScreen();
-            Refresh();
+            if(refresh){
+                DrawTextScreen();
+                Invalidate();
+            }
             return true;
         }
         return base.ProcessCmdKey(ref msg, keyData);
@@ -1595,15 +1618,16 @@ public partial class Form1: Form {
 
     #region Helpers
     private void ChangeFontSize(int size){
-        // MessageBox.Show(size.ToString());
         boldFont = new(FontFamily.GenericMonospace, size, FontStyle.Bold);
         indentW = MeasureWidth("    ", boldFont);
         qWidth = MeasureWidth("¿ ?", boldFont);
         qHeight = MeasureHeight("¿?", boldFont);
         upSideDownW = MeasureWidth("¿", boldFont);
-        txtHeight = MeasureHeight("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", boldFont);
-        
-        Refresh();
+        txtHeight = MeasureHeight(
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`~!@#$%^&*()-_=+[]{};:'\"\\/?", 
+            boldFont
+        );
+        Invalidate();
     }
     private static string PythonOperatorToString(PythonOperator po) => po switch{
         PythonOperator.In => "in",
@@ -2026,27 +2050,17 @@ public partial class Form1: Form {
         textBox.Focus();
         if(refresh) {
             DrawTextScreen();
-            Refresh();
+            Invalidate();
         }
     }
     private static float GetDistW(int i) {
         return MeasureWidth(linesText[curLine][..(i + 1)], boldFont);
     }
-    private static int GetClickRow() {
-        int mouse = Cursor.Position.Y - 7;
-        float res = curWindow.Pos.y + curWindow.Offset;
-        for(int i = 0; i < linesText.Count; i++) {
-            var item = linesText[i];
-            int h = MeasureHeight(item, boldFont);
-            if(res + h > mouse) {
-                if(Abs(res-mouse) < Abs(res + h - mouse)) {
-                    return Max(0, i - 1);
-                }
-                return i;
-            }
-            res += h;
-        }
-        return linesText.Count - 1;
+    private int GetClickRow() {
+        float topBar = this.RectangleToScreen(this.ClientRectangle).Top - this.Top;
+        double mouse = Cursor.Position.Y - (curWindow.Pos.y + curWindow.Offset + topBar);
+        int i = (int)Math.Floor(mouse / txtHeight);
+        return Max(0, Min(linesText.Count - 1, i));
     }
     public static int BinarySearch(int len, float item, Func<int, float> Get) {
         if(len == 0) { return -1; }
