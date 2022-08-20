@@ -126,6 +126,7 @@ public partial class Form1: Form {
     public Form1() {
         InitializeComponent();
         this.MinimumSize = new(100, 100);
+        // this.FormBorderStyle = FormBorderStyle.None;
         this.WindowState = FormWindowState.Maximized;
         this.BackColor = Color.Black;
         this.DoubleBuffered = true;
@@ -152,8 +153,14 @@ public partial class Form1: Form {
 
         stringFormat.SetTabStops(0, new float[] { 4 });
 
+        
         (prevHeight, prevWidth) = (Height, Width);
-        (screenHeight, screenWidth) = (Height - TAB_HEIGHT, Width / 2);
+
+        (screenHeight, screenWidth) = (
+            Height - TAB_HEIGHT, 
+            Width / 2
+        );
+
         AddTab("Main", size: (screenWidth, screenHeight), pos: (0, TAB_HEIGHT), isFirst: true);
         AddTab("Main2", size: (screenWidth, screenHeight), pos: (screenWidth, TAB_HEIGHT));
         curWindow = windows[1];
@@ -166,6 +173,7 @@ public partial class Form1: Form {
         
         DrawTextScreen();
         Invalidate();
+        
         FocusTB();
         
         void AddRunBtn() {
@@ -240,9 +248,15 @@ public partial class Form1: Form {
                 Size = (Width, Height - consolePos),
             };
         }
+    
     }
     async void FocusTB(){
         await Task.Delay(100);
+        // (screenHeight, screenWidth) = (
+        //     Screen.PrimaryScreen.WorkingArea.Height - TAB_HEIGHT, 
+        //     Screen.PrimaryScreen.WorkingArea.Width / 2
+        // );
+
         textBox.Focus();
         CtrlTab();
     }
@@ -1185,21 +1199,22 @@ public partial class Form1: Form {
             Process.Start(new ProcessStartInfo("cmd", $"/c start {errLink}") { CreateNoWindow = true });
         }
     }
-    private static Bitmap screen_bm = new(1, 1);
     private void Form1_Paint(object? sender, PaintEventArgs e) {
         foreach(var item in windows) {
-            // make back black
-            e.Graphics.FillRectangle(blackBrush, item.Pos.x, item.Pos.y, item.Size.width, item.Size.height);
-            //draw the img
-            Bitmap bm = new((int)item.Size.width, (int)item.Size.height);
-            Graphics.FromImage(bm).DrawImage(item.Function.DisplayImage!, 0, item.Offset);
-            e.Graphics.DrawImage(bm, item.Pos.x, item.Pos.y);
-            //draw frame
-            e.Graphics.DrawRectangle(new(Color.White, 2), item.Pos.x-2, item.Pos.y-2, item.Size.width+2, item.Size.height+2);
+            if((int)item.Size.width > 0 && (int)item.Size.height > 0){
+                // make back black
+                e.Graphics.FillRectangle(blackBrush, item.Pos.x, item.Pos.y, item.Size.width, item.Size.height);
+                //draw the img
+                Bitmap bm = new((int)item.Size.width, (int)item.Size.height);
+                Graphics.FromImage(bm).DrawImage(item.Function.DisplayImage!, 0, item.Offset);
+                e.Graphics.DrawImage(bm, item.Pos.x, item.Pos.y);
+                //draw frame
+                e.Graphics.DrawRectangle(new(Color.White, 2), item.Pos.x-2, item.Pos.y-2, item.Size.width+2, item.Size.height+2);
+            }
         }
         // tab bar
         e.Graphics.FillRectangle(tabBarBrush, 0, 0, Width, TAB_HEIGHT);
-        
+
         if(isConsoleVisible) {
             e.Graphics.FillRectangle(blackBrush, console.Pos.x, console.Pos.y, console.Size.width, console.Size.height);
             e.Graphics.DrawImage(console.Function.DisplayImage!, console.Pos.x, console.Pos.y);
@@ -1222,6 +1237,9 @@ public partial class Form1: Form {
         console.Pos.y = consolePos;
         console.Size.height = Height - consolePos;
         console.Size.width = Width;
+        if(Width <= 20 || Height - consolePos <= 45){
+            return;
+        }
         Bitmap img = new(Width - 20, Height - consolePos - 45);
         using(var g = Graphics.FromImage(img)) {
             if(consoleTxt.typ == ConsoleTxtType.text) {
@@ -1299,7 +1317,7 @@ public partial class Form1: Form {
     private void MakeOpenConsoleBtn() {
         openConsoleBtn = new() {
             Size = new(30, 30),
-            Location = new(Width - 60, Height - 80),
+            Location = new(Width - 60, Height - 90),
             BackColor = Color.Transparent,
             BackgroundImage = consoleImg,
             FlatStyle = FlatStyle.Flat,
@@ -1310,7 +1328,7 @@ public partial class Form1: Form {
         openConsoleBtn.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
         openConsoleBtn.Click += new EventHandler((object? s, EventArgs e) => ShowConsole());
         Controls.Add(openConsoleBtn);
-        buttonsOnScreen.Add((openConsoleBtn, (size) => (size.w - 60, size.h - 80)));
+        buttonsOnScreen.Add((openConsoleBtn, (size) => (size.w - 60, size.h - 90)));
     }
     private void ToggleConsole() {
         if(isConsoleVisible) { HideConsole(null, new()); } else { ShowConsole(); }
@@ -1402,7 +1420,11 @@ public partial class Form1: Form {
     #region THE EVENTS
     private void Resize_Event(object sender, EventArgs e){
         try{
-            var (changeH, changeW) = ((float)(prevHeight-TAB_HEIGHT) / (Height-TAB_HEIGHT), (float)prevWidth / Width); 
+            var (changeH, changeW) = (
+                (float)(prevHeight) / (Height),
+                (float)prevWidth / Width
+            ); 
+            
             foreach(var window in windows) {
                 window.Size.height /= changeH;
                 window.Size.width /= changeW;
@@ -2210,8 +2232,8 @@ static class CursorPos {
         int pos = txtPos + Form1.curWindow.Offset; 
         if(pos < 0){
             Form1.curWindow.Offset = - txtPos;
-        } else if(pos > Form1.curWindow.Size.height){
-            Form1.curWindow.Offset = - (txtPos - (int)Form1.curWindow.Size.height);
+        } else if(pos >= Form1.curWindow.Size.height){
+            Form1.curWindow.Offset = - (txtPos + Form1.txtHeight - (int)Form1.curWindow.Size.height);
         }
         // TODO for col too
     }
