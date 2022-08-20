@@ -23,7 +23,8 @@ using GraphicIDE.Properties;
 
 using System.Net;
 
-// todo make terminal a window
+// todo print and exception
+// todo make terminal a Window
 // todo when changing font size need to change pen sizes as well 
 // todo https://stackoverflow.com/questions/1264406/how-do-i-get-the-taskbars-position-and-size
 // todo cache some of the textline images
@@ -32,7 +33,6 @@ using System.Net;
 namespace GraphicIDE;
 
 public partial class Form1: Form {
-    private static int curLine = 0, curCol = -1;
     private static (int line, int col)? selectedLine = null;
     private static int? lastCol = null;
     private static Keys lastPressed;
@@ -46,7 +46,7 @@ public partial class Form1: Form {
     private static readonly Graphics nullGraphics = Graphics.FromImage(new Bitmap(1,1));
     private const int LINE_HEIGHT = 30, WM_KEYDOWN = 0x100, TAB_HEIGHT = 25, TAB_WIDTH = 80;
     private static Dictionary<Font, float> fontToPipeSize = new();
-    private static int indentW, qWidth, qHeight, upSideDownW, txtHeight;
+    public static int indentW, qWidth, qHeight, upSideDownW, txtHeight;
     private static int screenWidth = 0, screenHeight = 0, prevHeight, prevWidth;
     private static List<Window> windows = new();
     private static (string txt, ConsoleTxtType typ) consoleTxt = ("", ConsoleTxtType.text);
@@ -63,7 +63,7 @@ public partial class Form1: Form {
     private static int tabButtonEnd = 0;
     private static readonly Dictionary<string, Function> nameToFunc = new();
     private static Function curFunc = null!;
-    private static Window curWindow = null!;
+    public static Window curWindow = null!;
     #endregion
     #region BrusesAndPens
     static readonly float[] dashes = new[] { 5f, 2f };
@@ -1035,8 +1035,8 @@ public partial class Form1: Form {
             }
         }
         curFunc.Button.BackColor = Color.LightGray;
-        curFunc.CurLine = curLine;
-        curFunc.CurCol = curCol;
+        curFunc.CurLine = CursorPos.Line;
+        curFunc.CurCol = CursorPos.Col;
         if(!isPic) {    DrawPicScreen(); }
         if(!isPic) {
             try {
@@ -1048,8 +1048,8 @@ public partial class Form1: Form {
         curFunc = func;
         curWindow.Function = func;
         linesText = func.LinesText;
-        curLine = func.CurLine;
-        curCol = func.CurCol;
+        CursorPos.ChangeLine(func.CurLine);
+        CursorPos.ChangeCol(func.CurCol);
         isPic = func.isPic;
         skipDrawNewScreen = false;
         textBox.Focus();
@@ -1139,8 +1139,8 @@ public partial class Form1: Form {
             var g = Graphics.FromImage(bm);
             g.DrawString(lineText, boldFont, textBrush, 0, 0);
 
-            if(i == curLine && withCurser) {
-                var before = curCol == -1 ? "": ReplaceTabs(linesText[i][..(curCol + 1)]);
+            if(i == CursorPos.Line && withCurser) {
+                var before = CursorPos.Col == -1 ? "": ReplaceTabs(linesText[i][..(CursorPos.Col + 1)]);
                 g.FillRectangle(
                     curserBrush,
                     MeasureWidth(before, boldFont) - 3,
@@ -1149,15 +1149,15 @@ public partial class Form1: Form {
             }
 
             if(selectedLine is (int, int) sl && withCurser) {
-                if((i < sl.line && i > curLine) || (i > sl.line && i < curLine)) {
+                if((i < sl.line && i > CursorPos.Line) || (i > sl.line && i < CursorPos.Line)) {
                     g.FillRectangle(
                         selectBrush, 0, 0,
                         MeasureWidth(lineText, boldFont), LINE_HEIGHT
                     );
-                } else if(i == sl.line || i == curLine) {
-                    int cCol = curCol, sCol = sl.col;
+                } else if(i == sl.line || i == CursorPos.Line) {
+                    int cCol = CursorPos.Col, sCol = sl.col;
                     if(i == sl.line) {
-                        cCol = i == curLine ? curCol : (i > curLine ? -1 : lineText.Length - 1);
+                        cCol = i == CursorPos.Line ? CursorPos.Col : (i > CursorPos.Line ? -1 : lineText.Length - 1);
                     } else {
                         sCol = i > sl.line ? -1 : lineText.Length - 1;
                     }
@@ -1187,9 +1187,6 @@ public partial class Form1: Form {
     }
     private static Bitmap screen_bm = new(1, 1);
     private void Form1_Paint(object? sender, PaintEventArgs e) {
-        
-        // if(!changed){ e.Graphics.DrawImage(screen_bm, 0, 0); return; }
-
         foreach(var item in windows) {
             // make back black
             e.Graphics.FillRectangle(blackBrush, item.Pos.x, item.Pos.y, item.Size.width, item.Size.height);
@@ -1429,7 +1426,7 @@ public partial class Form1: Form {
         lastPressed = e.KeyCode;
         bool isShift = isShiftPressed();
         if(selectedLine is null && isShift) {
-            selectedLine = (curLine, curCol);
+            selectedLine = (CursorPos.Line, CursorPos.Col);
         }
         bool isAltl = isAltlPressed();
         bool isCtrl = isCtrlPressed();
@@ -1439,8 +1436,8 @@ public partial class Form1: Form {
             Keys.Insert => () => DrawPicScreen(),
             Keys.End => () => EndKey(isShift, isCtrl),
             Keys.Home => () => HomeKey(isShift, isCtrl),
-            Keys.Up => () => UpKey(isShift, isAltl, isCtrl),
-            Keys.Down => () => DownKey(isShift, isAltl, isCtrl),
+            Keys.Up => () => UpKey(isShift, isAltl),
+            Keys.Down => () => DownKey(isShift, isAltl),
             Keys.Right => () => RightKey(isShift, isAltl, isCtrl),
             Keys.Left => () => LeftKey(isShift, isAltl, isCtrl),
             Keys.F1 => () => OpenErrLink(null, new()),
@@ -1467,7 +1464,7 @@ public partial class Form1: Form {
         textBox.SelectionStart = 1;
         textBox.SelectionLength = 0;
 
-        if(selectedLine == (curLine, curCol)) {
+        if(selectedLine == (CursorPos.Line, CursorPos.Col)) {
             selectedLine = null;
         }
         var changeSt = change.ToString();
@@ -1483,18 +1480,11 @@ public partial class Form1: Form {
     
     protected override void OnMouseWheel(MouseEventArgs e) {
         if(curWindow.Function.DisplayImage!.Height > 40) {
-            curWindow.Offset = Math.Clamp(
-                curWindow.Offset + e.Delta / 10,
-                40 - curWindow.Function.DisplayImage!.Height,
-                0
-            );
+            ChangeOffsetTo(curWindow.Offset + e.Delta / 10);
         }
         Invalidate();
         base.OnMouseWheel(e);
     }
-    // protected override void OnMouseClick(MouseEventArgs e) {
-    //     base.OnMouseClick(e);
-    // }
     protected override void OnMouseDown(MouseEventArgs e) {
         dragging = true;
         Drag(e);
@@ -1509,7 +1499,7 @@ public partial class Form1: Form {
         doubleClick = true;
 
         GoInDirCtrl(GetNextL, isAltlPressed());
-        selectedLine = (curLine, curCol);
+        selectedLine = (CursorPos.Line, CursorPos.Col);
         GoInDirCtrl(GetNextR, isAltlPressed());
 
         DrawTextScreen();
@@ -1517,14 +1507,14 @@ public partial class Form1: Form {
         base.OnMouseDoubleClick(e);
     }
     private void ClickedSelected((int line, int col) pos, (int,int) sel) {
-        var newSelectedLine = (curLine, -1);
-        var newCurCol = linesText[curLine].Length - 1;
+        var newSelectedLine = (CursorPos.Line, -1);
+        var newCurCol = linesText[CursorPos.Line].Length - 1;
         if(newCurCol == pos.col && newSelectedLine == sel) {
             GoInDirCtrl(GetNextL, isAltlPressed());
-            selectedLine = (curLine, curCol);
+            selectedLine = (CursorPos.Line, CursorPos.Col);
             GoInDirCtrl(GetNextR, isAltlPressed());
         } else {
-            curCol = newCurCol;
+            CursorPos.ChangeCol(newCurCol);
             selectedLine = newSelectedLine;
         }
         DrawTextScreen();
@@ -1540,14 +1530,14 @@ public partial class Form1: Form {
                 bool inY = mousePos.y >= window.Pos.y && mousePos.y <= window.Pos.y + window.Size.height;
                 if(inX && inY) {
                     if(window.Function.Equals(curFunc)) {
-                        var prev = (curLine, curCol);
+                        var prev = (CursorPos.Line, CursorPos.Col);
                         var prevSel = selectedLine;
                         BtnClick(refresh: false);
-                        if(prevSel is (int, int) ps && InBetween((curLine, curCol), prev, ps)) {
+                        if(prevSel is (int, int) ps && InBetween((CursorPos.Line, CursorPos.Col), prev, ps)) {
                             ClickedSelected(prev, ps);
                             return;
                         }
-                        tempSelectedLine = (curLine, curCol);
+                        tempSelectedLine = (CursorPos.Line, CursorPos.Col);
                         break;
                     }
                     curWindow = window;
@@ -1592,8 +1582,8 @@ public partial class Form1: Form {
                 Keys.Enter => () => EnterKey(true),
                 Keys.End => () => EndKey(isShift, true),
                 Keys.Home => () => HomeKey(isShift, true),
-                Keys.Up => () => UpKey(isShift, isAltlKeyPressed, true),
-                Keys.Down => () => DownKey(isShift, isAltlKeyPressed, true),
+                Keys.Up => () => ChangeOffsetTo(curWindow.Offset + txtHeight),
+                Keys.Down => () => ChangeOffsetTo(curWindow.Offset - txtHeight),
                 Keys.Right => () => RightKey(isShift, isAltlKeyPressed, true),
                 Keys.Left => () => LeftKey(isShift, isAltlKeyPressed, true),
                 Keys.C => () => Copy(isAltlKeyPressed),
@@ -1619,6 +1609,11 @@ public partial class Form1: Form {
     #endregion
 
     #region Helpers
+    private static void ChangeOffsetTo(int i){
+        curWindow.Offset = Math.Clamp(
+            i, txtHeight - curWindow.Function.DisplayImage!.Height, 0
+        );
+    }
     private void ChangeFontSize(int size){
         boldFont = new(FontFamily.GenericMonospace, size, FontStyle.Bold);
         indentW = MeasureWidth("    ", boldFont);
@@ -1727,11 +1722,12 @@ public partial class Form1: Form {
     private void LeftKey(bool isShift, bool isAltlKeyPressed, bool isCtrlKeyPressed) {
         if(!isShift) {
             if(selectedLine is not null &&
-                (selectedLine.Value.line < curLine ||
-                    (selectedLine.Value.line == curLine && selectedLine.Value.col < curCol)
+                (selectedLine.Value.line < CursorPos.Line ||
+                    (selectedLine.Value.line == CursorPos.Line && selectedLine.Value.col < CursorPos.Col)
                 )
             ) {
-                (curLine, curCol) = selectedLine.Value;
+                CursorPos.ChangeCol(selectedLine.Value.col);
+                CursorPos.ChangeLine(selectedLine.Value.line);
                 lastCol = null;
                 return;
             }
@@ -1742,24 +1738,25 @@ public partial class Form1: Form {
             lastCol = null;
             return;
         }
-        if(curCol == -1) {
-            if(curLine != 0) {
-                curLine--;
-                curCol = linesText[curLine].Length - 1;
+        if(CursorPos.Col == -1) {
+            if(CursorPos.Line != 0) {
+                CursorPos.ChangeLine(CursorPos.Line-1);
+                CursorPos.ChangeCol(linesText[CursorPos.Line].Length - 1);
             }
         } else {
-            curCol--;
+            CursorPos.ChangeCol(CursorPos.Col-1);
         }
         lastCol = null;
     }
     private void RightKey(bool isShift, bool isAltlKeyPressed, bool isCtrlKeyPressed) {
         if(!isShift) {
             if(selectedLine is not null &&
-                (selectedLine.Value.line > curLine ||
-                    (selectedLine.Value.line == curLine && selectedLine.Value.col > curCol)
+                (selectedLine.Value.line > CursorPos.Line ||
+                    (selectedLine.Value.line == CursorPos.Line && selectedLine.Value.col > CursorPos.Col)
                 )
             ) {
-                (curLine, curCol) = selectedLine.Value;
+                CursorPos.ChangeLine(selectedLine.Value.line); 
+                CursorPos.ChangeCol(selectedLine.Value.col);
                 lastCol = null;
                 return;
             }
@@ -1770,20 +1767,20 @@ public partial class Form1: Form {
             lastCol = null;
             return;
         }
-        if(linesText[curLine].Length == curCol + 1) {
-            if(linesText.Count > curLine + 1) {
-                curLine++;
-                curCol = -1;
+        if(linesText[CursorPos.Line].Length == CursorPos.Col + 1) {
+            if(linesText.Count > CursorPos.Line + 1) {
+                CursorPos.ChangeLine(CursorPos.Line+1);
+                CursorPos.ChangeCol(-1);
             }
         } else {
-            curCol++;
+            CursorPos.ChangeCol(CursorPos.Col+1);
         }
         lastCol = null;
     }
-    private static void DownKey(bool isShift, bool isAltlKeyPressed, bool isCtrlKeyPressed) {
+    private static void DownKey(bool isShift, bool isAltlKeyPressed) {
         if(isAltlKeyPressed) {
             if(selectedLine is (int, int) sl) {
-                var (maxLine, minLine) = MaxMin(sl.line, curLine);
+                var (maxLine, minLine) = MaxMin(sl.line, CursorPos.Line);
                 if(maxLine == linesText.Count - 1) { return; }
                 var prev = linesText[maxLine + 1];
                 for(int i = maxLine; i >= minLine; i--) {
@@ -1792,32 +1789,29 @@ public partial class Form1: Form {
                 linesText[minLine] = prev;
                 selectedLine = (sl.line + 1, sl.col);
             } else {
-                if(curLine == linesText.Count - 1) { return; }
-                (linesText[curLine], linesText[curLine + 1]) = (linesText[curLine + 1], linesText[curLine]);
+                if(CursorPos.Line == linesText.Count - 1) { return; }
+                (linesText[CursorPos.Line], linesText[CursorPos.Line + 1]) = (linesText[CursorPos.Line + 1], linesText[CursorPos.Line]);
             }
-            curLine += 1;
+            CursorPos.ChangeLine(CursorPos.Line + 1);
             return;
         }
         if(!isShift) {
-            if(selectedLine is not null && selectedLine.Value.line > curLine) {
-                curLine = selectedLine.Value.line;
+            if(selectedLine is not null && selectedLine.Value.line > CursorPos.Line) {
+                CursorPos.ChangeLine(selectedLine.Value.line);
             }
             selectedLine = null;
         }
-        if(isCtrlKeyPressed) {
-            // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-        }
-        if(curLine == linesText.Count - 1) {
-            curCol = linesText[^1].Length - 1;
+        if(CursorPos.Line == linesText.Count - 1) {
+            CursorPos.ChangeCol(linesText[^1].Length - 1);
         } else {
-            curLine++;
+            CursorPos.ChangeLine(CursorPos.Line+1);
             GetClosestForCaret();
         }
     }
-    private static void UpKey(bool isShift, bool isAltlKeyPressed, bool isCtrlKeyPressed) {
+    private static void UpKey(bool isShift, bool isAltlKeyPressed) {
         if(isAltlKeyPressed) {
             if(selectedLine is (int, int) sl) {
-                var (maxLine, minLine) = MaxMin(sl.line, curLine);
+                var (maxLine, minLine) = MaxMin(sl.line, CursorPos.Line);
                 if(minLine == 0) { return; }
                 var prev = linesText[minLine - 1];
                 for(int i = minLine; i <= maxLine; i++) {
@@ -1826,46 +1820,45 @@ public partial class Form1: Form {
                 linesText[maxLine] = prev;
                 selectedLine = (sl.line - 1, sl.col);
             } else {
-                if(curLine == 0) {  return; }
-                (linesText[curLine], linesText[curLine - 1]) = (linesText[curLine - 1], linesText[curLine]);
+                if(CursorPos.Line == 0) {  return; }
+                (linesText[CursorPos.Line], linesText[CursorPos.Line - 1]) = (linesText[CursorPos.Line - 1], linesText[CursorPos.Line]);
             }
-            curLine -= 1;
+            CursorPos.ChangeLine(CursorPos.Line - 1);
             return;
         }
 
         if(!isShift) {
-            if(selectedLine is not null && selectedLine.Value.line < curLine) {
-                curLine = selectedLine.Value.line;
+            if(selectedLine is not null && selectedLine.Value.line < CursorPos.Line) {
+                CursorPos.ChangeLine(selectedLine.Value.line);
             }
             selectedLine = null;
         }
-        if(isCtrlKeyPressed) {
-            // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-        }
-        if(curLine == 0) {
-            curCol = -1;
+
+        if(CursorPos.Line == 0) {
+            CursorPos.ChangeCol(-1);
         } else {
-            curLine--;
+            CursorPos.ChangeLine(CursorPos.Line-1);
             GetClosestForCaret();
         }
     }
     private static void HomeKey(bool isShift, bool isCtrlKeyPressed) {
         if(!isShift) { selectedLine = null; }
         if(isCtrlKeyPressed) {
-            (curLine, curCol) = (0, -1);
+            CursorPos.ChangeLine(0);
+            CursorPos.ChangeCol(-1);
         } else {
-            int spaces = linesText[curLine].Length - linesText[curLine].TrimStart().Length;
-            if(curCol == spaces - 1) {
-                curCol = -1;
+            int spaces = linesText[CursorPos.Line].Length - linesText[CursorPos.Line].TrimStart().Length;
+            if(CursorPos.Col == spaces - 1) {
+                CursorPos.ChangeCol(-1);
             } else {
-                curCol = spaces - 1;
+                CursorPos.ChangeCol(spaces - 1);
             }
         }
     }
     private static void EndKey(bool isShift, bool isCtrlKeyPressed) {
         if(!isShift) { selectedLine = null; }
-        if(isCtrlKeyPressed) { curLine = linesText.Count - 1; }
-        curCol = linesText[curLine].Length - 1;
+        if(isCtrlKeyPressed) { CursorPos.ChangeLine(linesText.Count - 1); }
+        CursorPos.ChangeCol(linesText[CursorPos.Line].Length - 1);
     }
 
     private static void CharKey(ReadOnlySpan<char> change) {
@@ -1874,26 +1867,26 @@ public partial class Form1: Form {
             DeleteSelection();
             selectedLine = null;
         }
-        (curLine, curCol) = AddString(change, (curLine, curCol));
+        CursorPos.ChangeBoth(AddString(change, (CursorPos.Line, CursorPos.Col)));
     }
     private static void EnterKey(bool isCtrl=false) {
         if(isCtrl) {
-            curCol = -1;
+            CursorPos.ChangeCol(-1);
             selectedLine = null;
         }
         if(selectedLine is not null) {
             DeleteSelection();
             selectedLine = null;
         }
-        if(curCol == linesText[curLine].Length - 1) {
-            linesText.Insert(curLine + 1, "");
+        if(CursorPos.Col == linesText[CursorPos.Line].Length - 1) {
+            linesText.Insert(CursorPos.Line + 1, "");
         } else {
-            linesText.Insert(curLine + 1, linesText[curLine][(curCol + 1)..]);
-            linesText[curLine] = linesText[curLine][..(curCol + 1)];
+            linesText.Insert(CursorPos.Line + 1, linesText[CursorPos.Line][(CursorPos.Col + 1)..]);
+            linesText[CursorPos.Line] = linesText[CursorPos.Line][..(CursorPos.Col + 1)];
         }
         if(!isCtrl) {
-            curLine++;
-            curCol = -1;
+            CursorPos.ChangeLine(CursorPos.Line+1);
+            CursorPos.ChangeCol(-1);
         }
     }
     private void DeleteKey(bool isAlt=false, bool isCtrl=false) {
@@ -1901,22 +1894,22 @@ public partial class Form1: Form {
             if(selectedLine is not null) {
                 DeleteSelection();
             }
-            selectedLine = (curLine, curCol);
+            selectedLine = (CursorPos.Line, CursorPos.Col);
             GoInDirCtrl(GetNextR, isAlt);
         }
         if(selectedLine is not null) {
             DeleteSelection();
             return;
         }
-        var thisline = linesText[curLine];
-        if(curCol == thisline.Length - 1) {
-            if(curLine != linesText.Count - 1) {
-                var text = linesText[curLine+1];
-                linesText.RemoveAt(curLine + 1);
-                linesText[curLine] += text;
+        var thisline = linesText[CursorPos.Line];
+        if(CursorPos.Col == thisline.Length - 1) {
+            if(CursorPos.Line != linesText.Count - 1) {
+                var text = linesText[CursorPos.Line+1];
+                linesText.RemoveAt(CursorPos.Line + 1);
+                linesText[CursorPos.Line] += text;
             }
         } else {
-            linesText[curLine] = string.Concat(thisline.AsSpan(0, curCol + 1), thisline.AsSpan(curCol + 2));
+            linesText[CursorPos.Line] = string.Concat(thisline.AsSpan(0, CursorPos.Col + 1), thisline.AsSpan(CursorPos.Col + 2));
         }
     }
     private void BackSpaceKey(bool isAlt=false, bool isCtrl=false) {
@@ -1924,32 +1917,32 @@ public partial class Form1: Form {
             if(selectedLine is not null) {
                 DeleteSelection();
             }
-            selectedLine = (curLine, curCol);
+            selectedLine = (CursorPos.Line, CursorPos.Col);
             GoInDirCtrl(GetNextL, isAlt);
         }
         if(selectedLine is not null) {
             DeleteSelection();
             return;
         }
-        var thisline = linesText[curLine];
+        var thisline = linesText[CursorPos.Line];
         if(thisline.Length == 0) {
-            if(curLine != 0) {
-                linesText.RemoveAt(curLine);
-                curLine--;
-                curCol = linesText[curLine].Length - 1;
+            if(CursorPos.Line != 0) {
+                linesText.RemoveAt(CursorPos.Line);
+                CursorPos.ChangeLine(CursorPos.Line-1);
+                CursorPos.ChangeCol(linesText[CursorPos.Line].Length - 1);
             }
 
-        } else if(curCol == -1) {
-            if(curLine != 0) {
-                var text = linesText[curLine];
-                linesText.RemoveAt(curLine);
-                curLine--;
-                curCol = linesText[curLine].Length - 1;
-                linesText[curLine] += text;
+        } else if(CursorPos.Col == -1) {
+            if(CursorPos.Line != 0) {
+                var text = linesText[CursorPos.Line];
+                linesText.RemoveAt(CursorPos.Line);
+                CursorPos.ChangeLine(CursorPos.Line-1);
+                CursorPos.ChangeCol(linesText[CursorPos.Line].Length - 1);
+                linesText[CursorPos.Line] += text;
             }
         } else {
-            linesText[curLine] = string.Concat(thisline.AsSpan(0, curCol), thisline.AsSpan(curCol + 1));
-            curCol -= 1;
+            linesText[CursorPos.Line] = string.Concat(thisline.AsSpan(0, CursorPos.Col), thisline.AsSpan(CursorPos.Col + 1));
+            CursorPos.ChangeCol(CursorPos.Col - 1);
         }
     }
     #endregion
@@ -1968,30 +1961,31 @@ public partial class Form1: Form {
     }
     private void SelectAll() {
         selectedLine = (0, -1);
-        (curLine, curCol) = (linesText.Count - 1, linesText[^1].Length - 1);
+        CursorPos.ChangeLine(linesText.Count - 1);
+        CursorPos.ChangeCol(linesText[^1].Length - 1);
     }
     private void Duplicate(bool isAltlKeyPressed) {
         if(selectedLine is null) {
-            var txt = "\r\n" + linesText[curLine];
+            var txt = "\r\n" + linesText[CursorPos.Line];
             if(isAltlKeyPressed) { txt = txt.Trim(); }
-            AddString(txt, (curLine, linesText[curLine].Length - 1));
+            AddString(txt, (CursorPos.Line, linesText[CursorPos.Line].Length - 1));
         } else {
-            var caretPos = (curLine, curCol);
-            if(selectedLine.Value.line > curLine ||
-                    (selectedLine.Value.line == curLine && selectedLine.Value.col > curCol)
+            var caretPos = (CursorPos.Line, CursorPos.Col);
+            if(selectedLine.Value.line > CursorPos.Line ||
+                    (selectedLine.Value.line == CursorPos.Line && selectedLine.Value.col > CursorPos.Col)
                 ) {
                 caretPos = selectedLine.Value;
             }
             var txt = GetSelectedText();
             if(isAltlKeyPressed) { txt = txt.Trim(); }
-            (curLine, curCol) = AddString(txt, caretPos);
+            CursorPos.ChangeBoth(AddString(txt, caretPos));
         }
     }
     private void Cut(bool isAltlKeyPressed) {
         string txt;
         if(selectedLine is null) {
-            txt = linesText[curLine];
-            linesText.RemoveAt(curLine);
+            txt = linesText[CursorPos.Line];
+            linesText.RemoveAt(CursorPos.Line);
             GetClosestForCaret();
         } else {
             var select = selectedLine;
@@ -2009,11 +2003,11 @@ public partial class Form1: Form {
             DeleteSelection();
             selectedLine = null;
         }
-        (curLine, curCol) = AddString(Clipboard.GetText(), (curLine, curCol));
+        CursorPos.ChangeBoth(AddString(Clipboard.GetText(), (CursorPos.Line, CursorPos.Col)));
     }
     private void Copy(bool isAltlKeyPressed) {
         string txt;
-        if(selectedLine is null) { txt = linesText[curLine]; } else { txt = GetSelectedText(); }
+        if(selectedLine is null) { txt = linesText[CursorPos.Line]; } else { txt = GetSelectedText(); }
         if(isAltlKeyPressed) { txt = txt.Trim(); }
         if(!txt.Equals("")) {
             Clipboard.SetText(txt);
@@ -2035,10 +2029,10 @@ public partial class Form1: Form {
     #region Miscelaneuos
     private static void GetClosestForCaret() {
         if(lastCol is not null) {
-            curCol = Min((int)lastCol, linesText[curLine].Length - 1);
+            CursorPos.ChangeCol(Min((int)lastCol, linesText[CursorPos.Line].Length - 1));
         } else {
-            lastCol = curCol;
-            curCol = Min(curCol, linesText[curLine].Length - 1);
+            lastCol = CursorPos.Col;
+            CursorPos.ChangeCol(Min(CursorPos.Col, linesText[CursorPos.Line].Length - 1));
         }
     }
     private void BtnClick(bool refresh=true) {
@@ -2047,8 +2041,8 @@ public partial class Form1: Form {
                 selectedLine = null;
             }
         }
-        curLine = GetClickRow();
-        curCol = BinarySearch(linesText[curLine].Length, Cursor.Position.X - curWindow.Pos.x, GetDistW);
+        CursorPos.ChangeLine(GetClickRow());
+        CursorPos.ChangeCol(BinarySearch(linesText[CursorPos.Line].Length, Cursor.Position.X - curWindow.Pos.x, GetDistW));
         textBox.Focus();
         if(refresh) {
             DrawTextScreen();
@@ -2056,7 +2050,7 @@ public partial class Form1: Form {
         }
     }
     private static float GetDistW(int i) {
-        return MeasureWidth(linesText[curLine][..(i + 1)], boldFont);
+        return MeasureWidth(linesText[CursorPos.Line][..(i + 1)], boldFont);
     }
     private int GetClickRow() {
         float topBar = this.RectangleToScreen(this.ClientRectangle).Top - this.Top;
@@ -2092,45 +2086,45 @@ public partial class Form1: Form {
     private static void DeleteSelection() {
         var selectedLine_ = ((int line, int col))selectedLine!;
         selectedLine = null;
-        if(curLine == selectedLine_.line) {
-            (int bigger, int smaller) = MaxMin(curCol, selectedLine_.col);
+        if(CursorPos.Line == selectedLine_.line) {
+            (int bigger, int smaller) = MaxMin(CursorPos.Col, selectedLine_.col);
                 
-            linesText[curLine] = string.Concat(
-                linesText[curLine].AsSpan(0, smaller + 1),
-                linesText[curLine].AsSpan(bigger + 1)
+            linesText[CursorPos.Line] = string.Concat(
+                linesText[CursorPos.Line].AsSpan(0, smaller + 1),
+                linesText[CursorPos.Line].AsSpan(bigger + 1)
             );
-            curCol = smaller;
+            CursorPos.ChangeCol(smaller);
         } else {
             ((int line, int col) smaller, (int line, int col) bigger) 
-                = curLine > selectedLine_.line 
-                    ? (selectedLine_, (curLine, curCol))
-                    : ((curLine, curCol), selectedLine_);
+                = CursorPos.Line > selectedLine_.line 
+                    ? (selectedLine_, (CursorPos.Line, CursorPos.Col))
+                    : ((CursorPos.Line, CursorPos.Col), selectedLine_);
             linesText[smaller.line] = string.Concat(
                 linesText[smaller.line].AsSpan(0, smaller.col + 1),
                 linesText[bigger.line].AsSpan(bigger.col + 1));
             for(int i = smaller.line + 1; i <= bigger.line; i++) {
                 linesText.RemoveAt(smaller.line + 1);
             }
-            (curLine, curCol) = smaller;
+            CursorPos.ChangeBoth(smaller);
         }
     }
     private (int line, int col, char val)? GetNextR() {
-        if(curCol != linesText[curLine].Length - 1) {
-            return (curLine, curCol + 1, linesText[curLine][curCol + 1]);
+        if(CursorPos.Col != linesText[CursorPos.Line].Length - 1) {
+            return (CursorPos.Line, CursorPos.Col + 1, linesText[CursorPos.Line][CursorPos.Col + 1]);
         }
-        if(curLine == linesText.Count - 1) {
+        if(CursorPos.Line == linesText.Count - 1) {
             return null;
         }
-        return (curLine + 1, -1, '\n');
+        return (CursorPos.Line + 1, -1, '\n');
     }
     private (int line, int col, char val)? GetNextL() {
-        if(curCol != - 1) {
-            return (curLine, curCol - 1, linesText[curLine][curCol]);
+        if(CursorPos.Col != - 1) {
+            return (CursorPos.Line, CursorPos.Col - 1, linesText[CursorPos.Line][CursorPos.Col]);
         }
-        if(curLine == 0) {
+        if(CursorPos.Line == 0) {
             return null;
         }
-        return (curLine - 1, linesText[curLine - 1].Length - 1, '\n');
+        return (CursorPos.Line - 1, linesText[CursorPos.Line - 1].Length - 1, '\n');
     }
     private static void GoInDirCtrl(Func<(int line, int col, char val)?> GetNext, bool isAlt) {
         var next = GetNext();
@@ -2147,13 +2141,13 @@ public partial class Form1: Form {
         } else {
             Move(() => !" \n\t".Contains(next!.Value.val) && !IsNumeric(next!.Value.val));
             while(next is not null && " \n\t".Contains(next.Value.val)) {
-                (curLine, curCol, _) = next!.Value;
+                CursorPos.ChangeBoth((next!.Value.line, next!.Value.col));
                 next = GetNext();
             }
         }
         void Move(Func<bool> Condition) {
             do {
-                (curLine, curCol, _) = next!.Value;
+                CursorPos.ChangeBoth((next!.Value.line, next!.Value.col));
                 next = GetNext();
             } while(
                 next is not null && Condition()
@@ -2165,14 +2159,14 @@ public partial class Form1: Form {
         var res = new StringBuilder();
         var selectedLine_ = ((int line, int col))selectedLine!;
         selectedLine = null;
-        if(curLine == selectedLine_.line) {
-            (int bigger, int smaller) = MaxMin(curCol, selectedLine_.col);
-            return linesText[curLine].Substring(smaller + 1, bigger - smaller);
+        if(CursorPos.Line == selectedLine_.line) {
+            (int bigger, int smaller) = MaxMin(CursorPos.Col, selectedLine_.col);
+            return linesText[CursorPos.Line].Substring(smaller + 1, bigger - smaller);
         } else {
             ((int line, int col) smaller, (int line, int col) bigger)
-                = curLine > selectedLine_.line
-                    ? (selectedLine_, (curLine, curCol))
-                    : ((curLine, curCol), selectedLine_);
+                = CursorPos.Line > selectedLine_.line
+                    ? (selectedLine_, (CursorPos.Line, CursorPos.Col))
+                    : ((CursorPos.Line, CursorPos.Col), selectedLine_);
             res.AppendLine(linesText[smaller.line][(smaller.col + 1)..]);
             for(int i = smaller.line + 1; i < bigger.line; i++) {
                 res.AppendLine(linesText[i]);
@@ -2208,14 +2202,40 @@ public partial class Form1: Form {
 
 enum ConsoleTxtType {   text, error }
 record class BM_Middle(Bitmap Img, int Middle);
-class Window {
+static class CursorPos {
+    public static int Line{ get; private set; } = 0;
+    public static int Col{ get; private set; } = -1;
+    private static void RealignWondow(){
+        int txtPos = CursorPos.Line * Form1.txtHeight;
+        int pos = txtPos + Form1.curWindow.Offset; 
+        if(pos < 0){
+            Form1.curWindow.Offset = - txtPos;
+        } else if(pos > Form1.curWindow.Size.height){
+            Form1.curWindow.Offset = - (txtPos - (int)Form1.curWindow.Size.height);
+        }
+        // TODO for col too
+    }
+    public static void ChangeLine(int i){
+        CursorPos.Line = i;
+        RealignWondow();
+    }
+    public static void ChangeCol(int i){
+        CursorPos.Col = i;
+        RealignWondow();
+    }
+    public static void ChangeBoth((int line, int col) val){
+        (CursorPos.Line, CursorPos.Col) = val;
+        RealignWondow();
+    }
+}
+public class Window {
     public Function Function;
     public (float width, float height) Size;
     public (float x, float y) Pos;
     public int Offset = 0;
     public Window(Function func) {  Function = func; }
 }
-class Function {
+public class Function {
     public readonly List<string> LinesText = new(){ "" };
     public Bitmap? DisplayImage;
     public string Name = null!;
