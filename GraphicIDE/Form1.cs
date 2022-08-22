@@ -23,15 +23,14 @@ using GraphicIDE.Properties;
 
 using System.Net;
 
+// todo console button changing size??
 // todo print and exception
 // todo each window should have its own tab buttons
-// todo work on terminal as a Window
 // todo print('1\n2\n3\n4\n5\n6\n7\n8\n9\n') and then changeing focus to console and returning results in print taking up more than screen
 // todo when changing font size need to change pen sizes as well 
 // todo https://stackoverflow.com/questions/1264406/how-do-i-get-the-taskbars-position-and-size
 // todo cache some of the textline images
 // todo capslock shortcuts
-
 
 
 namespace GraphicIDE;
@@ -56,12 +55,20 @@ public partial class Form1: Form {
     private static List<Window> windows = new();
     private static (string txt, ConsoleTxtType typ) consoleTxt = ("", ConsoleTxtType.text);
     private static Window console = null!;
-    private static string executedTime = "---";
+    private static string executedTime = "-------";
     private static bool isConsoleVisible = false;
     private static Button? closeConsoleBtn, openConsoleBtn, errOpenButton, execTimeBtn;
     private static bool dragging = false, doubleClick = false;
     private static string? errLink = null;
-    private static List<(Button btn, Func<(int w, int h), (int x, int y)> calcPos)> buttonsOnScreen = new();
+    private static List<(Button btn, Func<(int w, int h), Point> calcPos)> buttonsOnScreen = new();
+
+    private static Func<(int w, int h), Point> 
+        ETBCalcPos = (size) => new(size.w - execTimeBtn!.Width - 35 /*open console btn size*/ - 5, size.h - execTimeBtn!.Height - 5),
+        CCBCalcPos = (_) => new((int)(console.Pos.x + console.Size.width) - closeConsoleBtn!.Width - 10, (int)console.Pos.y + 10),
+        EOBCalcPos = (_) => new((int)(console.Pos.x + console.Size.width) - errOpenButton!.Width - 10, (int)console.Pos.y + 40),
+        OCBCalcPos = (size) => new(size.w - openConsoleBtn!.Size.Width - 5, size.h - openConsoleBtn.Size.Height - 5);
+
+
     #endregion
     #region Tabs
     private static readonly List<Button> tabButtons = new();
@@ -73,14 +80,15 @@ public partial class Form1: Form {
     #region BrusesAndPens
     static readonly float[] dashes = new[] { 5f, 2f };
     static readonly Color
-        listRed         = Color.FromArgb(255, 157, 59, 52),
+        listRed         = Color.FromArgb(255, 157, 059, 052),
         redOpaqe        = Color.FromArgb(100, 255, 000, 000),
-        blueOpaqe       = Color.FromArgb(100, 75, 180, 245),
-        keyOrange       = Color.FromArgb(255, 245, 190, 80),
+        blueOpaqe       = Color.FromArgb(100, 075, 180, 245),
+        lightGray       = Color.FromArgb(080, 200, 200, 200),
+        keyOrange       = Color.FromArgb(255, 245, 190, 080),
         greenOpaqe      = Color.FromArgb(100, 000, 255, 000),
         mathPurple      = Color.FromArgb(255, 164, 128, 207),
         tabBarColor     = Color.FromArgb(255, 100, 100, 100),
-        orangeOpaqe     = Color.FromArgb(100, 250, 200, 93);
+        orangeOpaqe     = Color.FromArgb(100, 250, 200, 093);
     public static readonly SolidBrush
         keyOrangeB  = new(keyOrange),
         mathPurpleB = new(mathPurple),
@@ -141,7 +149,6 @@ public partial class Form1: Form {
         textBox.AcceptsTab = true;
         textBox.Dock = DockStyle.None;
         textBox.Size = new Size(0, 0);
-        /*textBox.ShortcutsEnabled = false;*/
 
         textBox.Multiline = true;
         textBox.ScrollBars = ScrollBars.Vertical;
@@ -193,7 +200,7 @@ public partial class Form1: Form {
             };
             run.FlatAppearance.BorderSize = 0;
             run.FlatAppearance.BorderColor = Color.White;
-            run.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
+            run.FlatAppearance.MouseOverBackColor = lightGray;
             Bitmap b = new(run.Size.Width, run.Size.Height);
             using(var g = Graphics.FromImage(b)) {
                 Bitmap scaled = new(playImg, run.Size.Width - gap * 2, run.Size.Height - gap * 2);
@@ -202,7 +209,7 @@ public partial class Form1: Form {
             run.BackgroundImage = b;
             run.Click += new EventHandler(ExecuteBtn!);
             Controls.Add(run);
-            buttonsOnScreen.Add((run, (size) => (size.w - run.Size.Width - 10, 0)));
+            buttonsOnScreen.Add((run, (size) => new(size.w - run.Size.Width - 10, 0)));
         }
         void AddDebugBtn() {
             Button run = new(){
@@ -213,7 +220,7 @@ public partial class Form1: Form {
             };
             run.FlatAppearance.BorderSize = 0;
             run.FlatAppearance.BorderColor = Color.White;
-            run.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
+            run.FlatAppearance.MouseOverBackColor = lightGray;
             Bitmap b = new(run.Size.Width, run.Size.Height);
             using(var g = Graphics.FromImage(b)) {
                 Bitmap scaled = new(debugImg, run.Size.Width, run.Size.Height);
@@ -222,7 +229,7 @@ public partial class Form1: Form {
             run.BackgroundImage = b;
             run.Click += new EventHandler(ExecuteBtn!);
             Controls.Add(run);
-            buttonsOnScreen.Add((run, (size) => (size.w - 2 * run.Size.Width - 20, 0)));
+            buttonsOnScreen.Add((run, (size) => new(size.w - 2 * run.Size.Width - 20, 0)));
         }
         void AddTabBtn() {
             Button run = new(){
@@ -233,7 +240,7 @@ public partial class Form1: Form {
             };
             run.FlatAppearance.BorderSize = 0;
             run.FlatAppearance.BorderColor = Color.White;
-            run.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
+            run.FlatAppearance.MouseOverBackColor = lightGray;
             Bitmap b = new(run.Size.Width, run.Size.Height);
             using(var g = Graphics.FromImage(b)) {
                 Bitmap scaled = new(xImg, run.Size.Width, run.Size.Height);
@@ -242,7 +249,7 @@ public partial class Form1: Form {
             run.BackgroundImage = b;
             run.Click += new EventHandler(AddTabEvent!);
             Controls.Add(run);
-            buttonsOnScreen.Add((run, (size) => (size.w - 3 * run.Size.Width - 30, 0)));
+            buttonsOnScreen.Add((run, (size) => new(size.w - 3 * run.Size.Width - 30, 0)));
         }
         void AddConsole() {
             var (height, width) = (screenHeight, screenWidth);
@@ -263,30 +270,29 @@ public partial class Form1: Form {
             nameToFunc[".console"] = console.Function;
         }
         void MakeExecTimeDisplay(){
-            var w = MeasureWidth("Execute Time: 1,000,000,000 ms", boldFont); 
+            var w = MeasureWidth(executedTime, boldFont); 
             var h = txtHeight; 
+            Bitmap bm = new(w, h);
+            using(var g = Graphics.FromImage(bm)){
+                g.DrawString(executedTime, boldFont, timeBrush, 0, 0);
+            }
             execTimeBtn = new() {
                 Size = new(w, h),
                 BackColor = Color.Transparent,
-                BackgroundImage = new Bitmap(passImg, w, h),
+                BackgroundImage = bm,
                 FlatStyle = FlatStyle.Flat,
                 BackgroundImageLayout = ImageLayout.Zoom,
             };
             execTimeBtn.FlatAppearance.BorderSize = 0;
             execTimeBtn.FlatAppearance.BorderColor = Color.White;
-            execTimeBtn.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
+            execTimeBtn.FlatAppearance.MouseOverBackColor = lightGray;
             execTimeBtn.Click += new EventHandler((object? s, EventArgs e) => ToggleTimeBtn());
             Controls.Add(execTimeBtn);
-            buttonsOnScreen.Add((execTimeBtn, (size) => (size.w - w, size.h - h)));
+            buttonsOnScreen.Add((execTimeBtn, ETBCalcPos));
         }
     }
     async void FocusTB(){
         await Task.Delay(100);
-        // (screenHeight, screenWidth) = (
-        //     Screen.PrimaryScreen.WorkingArea.Height - TAB_HEIGHT, 
-        //     Screen.PrimaryScreen.WorkingArea.Width / 2
-        // );
-
         textBox.Focus();
         CtrlTab();
     }
@@ -1245,12 +1251,6 @@ public partial class Form1: Form {
         }
         // tab bar
         e.Graphics.FillRectangle(tabBarBrush, 0, 0, screenWidth, TAB_HEIGHT);
-
-        // if(isConsoleVisible) {
-        //     e.Graphics.FillRectangle(blackBrush, console.Pos.x, console.Pos.y, console.Size.width, console.Size.height);
-        //     e.Graphics.DrawImage(console.Function.DisplayImage!, console.Pos.x, console.Pos.y);
-        //     e.Graphics.FillRectangle(whiteBrush, 0, console.Pos.y - 2, console.Size.width, 2);
-        // }
     }
     #endregion
 
@@ -1270,18 +1270,12 @@ public partial class Form1: Form {
         console.Pos.y = consolePos;
         console.Size.height = height - consolePos;
         console.Size.width = width;
-        // if(Width <= 20 || Height - consolePos <= 45){
-        //     return;
-        // }
         Bitmap img = new(width, height);
         using(var g = Graphics.FromImage(img)) {
             if(consoleTxt.typ == ConsoleTxtType.text) {
                 console.Function.LinesText = consoleTxt.txt.Split('\n').ToList();
                 g.DrawString(consoleTxt.txt, boldFont, textBrush, 0, 5);
                 int end = 5 + MeasureHeight(consoleTxt.txt, boldFont);
-                // int h = MeasureHeight(executedTime, tabFont);
-                // int w = MeasureWidth(executedTime, tabFont);
-                // g.DrawString(executedTime, tabFont, timeBrush, img.Width - w, img.Height - h);
                 if(errOpenButton is not null) {
                     buttonsOnScreen.Remove(buttonsOnScreen.Find((x)=>x.btn.Equals(buttonsOnScreen)));
                     Controls[Controls.IndexOf(errOpenButton)].Dispose();
@@ -1294,18 +1288,18 @@ public partial class Form1: Form {
                 if(errOpenButton is null) {
                     errOpenButton = new() {
                         Size = new(20, 20),
-                        Location = new((int)(console.Pos.x + console.Size.width) - 40, (int)console.Pos.y + 35),
                         BackColor = Color.Transparent,
                         BackgroundImage = searchImg,
                         FlatStyle = FlatStyle.Flat,
                         BackgroundImageLayout = ImageLayout.Zoom,
                     };
+                    errOpenButton.Location = EOBCalcPos((0, 0));
                     errOpenButton.FlatAppearance.BorderSize = 0;
                     errOpenButton.FlatAppearance.BorderColor = Color.White;
-                    errOpenButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
+                    errOpenButton.FlatAppearance.MouseOverBackColor = lightGray;
                     errOpenButton.Click += new EventHandler(OpenErrLink!);
                     Controls.Add(errOpenButton);
-                    buttonsOnScreen.Add((errOpenButton, (_)=>((int)(console.Pos.x + console.Size.width) - 40, (int)console.Pos.y + 35)));
+                    buttonsOnScreen.Add((errOpenButton, EOBCalcPos));
                 }
             }
         }
@@ -1315,20 +1309,22 @@ public partial class Form1: Form {
         if(closeConsoleBtn is null) {
             closeConsoleBtn = new() {
                 Size = new(20, 20),
-                Location = new((int)(console.Pos.x + console.Size.width) - 40, (int)console.Pos.y + 5),
                 BackColor = Color.Transparent,
                 BackgroundImage = xImg,
                 FlatStyle = FlatStyle.Flat,
                 BackgroundImageLayout = ImageLayout.Zoom,
             };
+            closeConsoleBtn.Location = CCBCalcPos((0, 0)); 
             closeConsoleBtn.FlatAppearance.BorderSize = 0;
             closeConsoleBtn.FlatAppearance.BorderColor = Color.White;
-            closeConsoleBtn.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
+            closeConsoleBtn.FlatAppearance.MouseOverBackColor = lightGray;
             closeConsoleBtn.Click += new EventHandler(HideConsole!);
             Controls.Add(closeConsoleBtn);
-            buttonsOnScreen.Add((closeConsoleBtn, (size)=>((int)(console.Pos.x + console.Size.width) - 40, (int)console.Pos.y + 5)));
+            buttonsOnScreen.Add((closeConsoleBtn, CCBCalcPos));
         }
-        windows.Add(windows[0]); windows[0] = console;
+        if(!windows[0].Equals(console)){
+            windows.Add(windows[0]); windows[0] = console;
+        }
         Invalidate();
     }
     private void HideConsole(object? sender, EventArgs e) {
@@ -1354,33 +1350,35 @@ public partial class Form1: Form {
     }
     private void MakeOpenConsoleBtn() {
         openConsoleBtn = new() {
-            Size = new(30, 30),
-            // Location = new(Width - 60, Height - 90),
+            Size = new(35, 35),
             BackColor = Color.Transparent,
             BackgroundImage = consoleImg,
             FlatStyle = FlatStyle.Flat,
             BackgroundImageLayout = ImageLayout.Zoom,
         };
+        openConsoleBtn.Location = OCBCalcPos((screenWidth, screenHeight));
         openConsoleBtn.FlatAppearance.BorderSize = 0;
         openConsoleBtn.FlatAppearance.BorderColor = Color.White;
-        openConsoleBtn.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 200, 200, 200);
+        openConsoleBtn.FlatAppearance.MouseOverBackColor = lightGray;
         openConsoleBtn.Click += new EventHandler((object? s, EventArgs e) => ShowConsole());
         Controls.Add(openConsoleBtn);
-        buttonsOnScreen.Add((openConsoleBtn, (size) => (size.w - openConsoleBtn.Size.Width, size.h - openConsoleBtn.Size.Height)));
+        buttonsOnScreen.Add((openConsoleBtn, OCBCalcPos));
     }
-    
+    private void RefreshTimeBtn(){
+        int h = MeasureHeight(executedTime, boldFont);
+        int w = MeasureWidth(executedTime, boldFont);
+        Bitmap bm = new(w, h);
+        using(var g = Graphics.FromImage(bm)){
+            g.DrawString(executedTime, boldFont, timeBrush, 0, 0);
+        }
+        execTimeBtn!.Size = new(w, h);
+        // var pos = buttonsOnScreen.Find((x)=>x.btn.Equals(execTimeBtn)).calcPos((Width, Height));
+        execTimeBtn!.Location = ETBCalcPos((screenWidth, screenHeight));
+        execTimeBtn!.BackgroundImage = bm;
+    }
     private void ToggleTimeBtn(){
         if(execTimeBtn!.BackgroundImage is null){
-            int h = MeasureHeight(executedTime, boldFont);
-            int w = MeasureWidth(executedTime, boldFont);
-            Bitmap bm = new(w, h);
-            using(var g = Graphics.FromImage(bm)){
-                g.DrawString(executedTime, boldFont, timeBrush, 0, 0);
-            }
-            execTimeBtn!.Size = new(w, h);
-            // var pos = buttonsOnScreen.Find((x)=>x.btn.Equals(execTimeBtn)).calcPos((Width, Height));
-            // execTimeBtn!.Location = new(Width - w, Height - h);
-            execTimeBtn!.BackgroundImage = bm;
+            RefreshTimeBtn();
         } else {
             execTimeBtn!.BackgroundImage = null;
         }
@@ -1466,6 +1464,9 @@ public partial class Form1: Form {
             console.txtBrush = redBrush;
             ShowConsole();
         }
+        if(execTimeBtn!.BackgroundImage is not null){
+            RefreshTimeBtn();
+        }
 
         void sWr_StringWritten(object sender, MyEvtArgs<string> e) =>
             res.Append(e.Value.Replace("\r\n", "\n"));
@@ -1491,8 +1492,7 @@ public partial class Form1: Form {
         }
         RefreshConsole();
         foreach(var button in buttonsOnScreen) {
-            var newPos = button.calcPos(WHTuple);
-            button.btn.Location = new(newPos.x, newPos.y);
+            button.btn.Location = button.calcPos(WHTuple);
         }
 
         (prevHeight, prevWidth) = (screenHeight, screenWidth);
@@ -1508,6 +1508,7 @@ public partial class Form1: Form {
         }
         bool isAltl = isAltlPressed();
         bool isCtrl = isCtrlPressed();
+        // todo bool isCaps = isCapsPressed();
         var refresh = true;
         ((Action)(lastPressed switch {
             Keys.CapsLock => () => refresh = false, // todo display that caps is pressed \ not pressed
@@ -1521,6 +1522,11 @@ public partial class Form1: Form {
             Keys.F1 => () => OpenErrLink(null, new()),
             _ => () => {lastCol = null; refresh = false;}
         }))();
+
+        // if(isCaps){
+        //     textBox.Text = "()";
+        //     MessageBox.Show("!");
+        // }
         
         if(refresh){
             DrawTextScreen();
@@ -1620,7 +1626,6 @@ public partial class Form1: Form {
                     }
                     bool dontDraw = curWindow.AsPlainText;
                     curWindow = window;
-                    // (screenWidth, screenHeight) = ((int, int))window.Size;
                     ChangeTab(window.Function.Button, dontDraw: dontDraw);
                     break;
                 }
@@ -2039,7 +2044,6 @@ public partial class Form1: Form {
             var item = windows[i];
             if(item.Function.Equals(curFunc)) {
                 curWindow = windows[(i + 1) % windows.Count];
-                // (screenWidth, screenHeight) = ((int, int))curWindow.Size;
                 ChangeTab(curWindow.Function.Button);
                 return;
             }
