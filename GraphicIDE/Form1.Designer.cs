@@ -37,8 +37,8 @@
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Name = "Form1";
             this.Text = "Form1";
-            this.Paint += new System.Windows.Forms.PaintEventHandler(this.Form1_Paint);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
+            this.Paint += new System.Windows.Forms.PaintEventHandler(DrawScreen.Form1_Paint);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(KeyInput.Form1_KeyDown);
             this.Resize += new(this.Resize_Event);
             this.ResumeLayout(false);
 
