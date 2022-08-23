@@ -40,17 +40,17 @@ public static class AST {
             return null;
         }
     }
-    // TODO 
     public static BM_Middle ImportStatement(dynamic ast){
         string name = ast.Names[0].Names[0];
         int width = MeasureWidth(name, boldFont);
-        int gap = 7;
+        int gap = 6;
         Bitmap truck = new(truckImg, txtHeight + gap * 2, txtHeight + gap * 2);
-        Bitmap res = new(gap * 2 + width + truck.Width, truck.Height);
+        Bitmap res = new(gap * 2 + width + truck.Width, truck.Height + 8);
         using(var g = Graphics.FromImage(res)){
-            g.FillRectangle(whiteBrush, 0, 0, res.Width, res.Height);
-            g.DrawString(name, boldFont, blackBrush, gap, gap);
-            g.DrawImage(truck, res.Width - truck.Width, 0);
+            g.FillRectangle(truckIBrush, 4, 6, res.Width - truck.Width - 6, res.Height - 4 - 8);
+            g.DrawRectangle(truckBrush, 2, 6, res.Width - truck.Width - 4, res.Height - 4 - 8);
+            g.DrawString(name, boldFont, blackBrush, gap, gap * 2);
+            g.DrawImage(truck, res.Width - truck.Width, gap);
         }
         return new(res, res.Height / 2);
 

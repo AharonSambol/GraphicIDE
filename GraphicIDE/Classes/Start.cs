@@ -62,7 +62,7 @@ public static class Start{
         run.FlatAppearance.MouseOverBackColor = lightGray;
         Bitmap b = new(run.Size.Width, run.Size.Height);
         using(var g = Graphics.FromImage(b)) {
-            Bitmap scaled = new(xImg, run.Size.Width, run.Size.Height);
+            Bitmap scaled = new(plusImg, run.Size.Width, run.Size.Height);
             g.DrawImage(scaled, 0, 0);
         }
         run.BackgroundImage = b;

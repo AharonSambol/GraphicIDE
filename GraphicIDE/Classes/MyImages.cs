@@ -10,6 +10,7 @@ public static class MyImages {
         searchImg = new(Resources.search),
         rulerImg = new(Resources.ruler),
         truckImg = new(Resources.truck),
+        plusImg = new(Resources.plus),
         debugImg = new(Resources.bug),
         playImg = new(Resources.play),
         passImg = new(Resources.pass),

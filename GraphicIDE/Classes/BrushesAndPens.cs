@@ -10,11 +10,14 @@ public static class BrushesAndPens{
         keyOrange       = Color.FromArgb(255, 245, 190, 080),
         greenOpaqe      = Color.FromArgb(100, 000, 255, 000),
         mathPurple      = Color.FromArgb(255, 164, 128, 207),
+        truckColor      = Color.FromArgb(255, 089, 025, 025),
+        truckIColor     = Color.FromArgb(255, 137, 024, 026),
         tabBarColor     = Color.FromArgb(255, 100, 100, 100),
         orangeOpaqe     = Color.FromArgb(100, 250, 200, 093);
     public static readonly SolidBrush
         keyOrangeB  = new(keyOrange),
         mathPurpleB = new(mathPurple),
+        truckIBrush = new(truckIColor),
         yellowB     = new(Color.Wheat),
         whiteBrush  = new(Color.White),
         blackBrush  = new(Color.Black),
@@ -39,6 +42,7 @@ public static class BrushesAndPens{
         redListP        = new(listRed, 5),
         redOpaqeP       = new(redOpaqe, 5),
         blueOpaqeP      = new(blueOpaqe, 5),
+        truckBrush      = new(truckColor, 4),
         keyOrangeP      = new(keyOrange, 5),
         greenOpaqeP     = new(greenOpaqe, 5),
         mathPurpleP     = new(mathPurple, 5),

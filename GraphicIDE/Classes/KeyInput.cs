@@ -350,8 +350,9 @@ public static class KeyInput {
         for(int i = 0; i < windows.Count; i++) {
             var item = windows[i];
             if(item.Function.Equals(curFunc)) {
+                var prevWindow = curWindow;
                 curWindow = windows[(i + 1) % windows.Count];
-                ChangeTab(curWindow.Function.Name);
+                ChangeTab(curWindow.Function.Name, prevWindow: curWindow);
                 return;
             }
         }

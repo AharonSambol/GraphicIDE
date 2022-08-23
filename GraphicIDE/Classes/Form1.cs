@@ -9,17 +9,18 @@ using static GraphicIDE.Tabs;
 using static GraphicIDE.Console;
 using static GraphicIDE.KeyInput;
 
+// todo add / move / resize windows
 // todo console button changing size??
 // todo print and exception
+// todo empty print
 // todo print('1\n2\n3\n4\n5\n6\n7\n8\n9\n') and then changeing focus to console and returning results in print taking up more than screen
 // todo when changing font size need to change pen sizes as well 
-// todo pic gets smushed when switch to console on laptop (maybe cuz size change and didnt redraw pic?)
 // todo while >> until / forever
+// todo ctrl z / y
 // todo cache some of the textline images
 // todo drag selection
 // todo right click
 // todo capslock shortcuts
-// todo import statements
 
 namespace GraphicIDE;
 
@@ -48,7 +49,6 @@ public partial class Form1: Form {
         InitializeComponent();
         this.MinimumSize = new(100, 100);
         // this.FormBorderStyle = FormBorderStyle.None;
-        
         this.BackColor = Color.Black;
         this.DoubleBuffered = true;
         screenPos = GetScreenPos();
@@ -87,7 +87,7 @@ public partial class Form1: Form {
         var window2 = MakeNewWindow(func2, size: (windowWidth, windowHeight), pos: (windowWidth, 0));
         curWindow = mainWindow;
         curFunc = mainFunc;
-        ChangeTab(curFunc.Name);
+        ChangeTab(curFunc.Name, prevWindow: window2);
 
         AddRunBtn();
         AddDebugBtn();
@@ -239,8 +239,9 @@ public partial class Form1: Form {
                         break;
                     }
                     bool dontDraw = curWindow.AsPlainText;
+                    var prevWindow = curWindow;
                     curWindow = window;
-                    ChangeTab(window.Function.Name, dontDraw: dontDraw);
+                    ChangeTab(window.Function.Name, prevWindow, dontDraw: dontDraw);
                     break;
                 }
             }
@@ -417,6 +418,7 @@ public class Window {
     public int Offset = 0;
     public int tabsEnd = 0;
     public readonly List<Button> tabButtons = new();
+    public Button? selectedTab;
     public bool AsPlainText = false;
     public SolidBrush txtBrush = textBrush;
     public Window(Function func) {  
