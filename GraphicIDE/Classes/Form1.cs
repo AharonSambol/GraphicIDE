@@ -1,5 +1,4 @@
-﻿using System.Text;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 using static GraphicIDE.BrushesAndPens;
 using static GraphicIDE.MyMath;
@@ -14,18 +13,15 @@ using static GraphicIDE.KeyInput;
 // todo print and exception
 // todo print('1\n2\n3\n4\n5\n6\n7\n8\n9\n') and then changeing focus to console and returning results in print taking up more than screen
 // todo when changing font size need to change pen sizes as well 
-// todo https://stackoverflow.com/questions/1264406/how-do-i-get-the-taskbars-position-and-size
+// todo pic gets smushed when switch to console on laptop (maybe cuz size change and didnt redraw pic?)
+// todo while >> until / forever
 // todo cache some of the textline images
 // todo drag selection
 // todo right click
 // todo capslock shortcuts
 // todo import statements
-// todo copy paste from whatsapp not working
+// todo BAD: Tabs.cs EnterNewTab() ```windows = windows.FindAll((w) => w.Pos.x != 0 || w.Pos.y != 0);``` 
 // todo each window should have its own tab buttons
-// todo while >> until / forever
-// todo "make new tab" closes console badly
-// todo mouse click not working when not full screen
-
 namespace GraphicIDE;
 
 public partial class Form1: Form {
@@ -36,7 +32,7 @@ public partial class Form1: Form {
     public static readonly TextBox textBox = new();
     public static readonly StringFormat stringFormat = new();
     public static Font boldFont = null!;
-    public const int WM_KEYDOWN = 0x100, TAB_HEIGHT = 25;
+    public const int WM_KEYDOWN = 0x100;
     public static int indentW, qWidth, qHeight, upSideDownW, txtHeight;
     public static int screenWidth = 0, screenHeight = 0, prevHeight, prevWidth;
     public static List<Window> windows = new();
@@ -44,7 +40,6 @@ public partial class Form1: Form {
     public static List<(Button btn, Func<(int w, int h), Point> calcPos)> buttonsOnScreen = new();
     public static Point screenPos;
     public static Form1 nonStatic = null!;
-
 
     #endregion
 
@@ -88,9 +83,13 @@ public partial class Form1: Form {
             screenWidth / 2
         );
 
-        AddTab(".Main", size: (windowWidth, windowHeight), pos: (0, TAB_HEIGHT), isFirst: true);
-        AddTab("Main2", size: (windowWidth, windowHeight), pos: (windowWidth, TAB_HEIGHT));
-        curWindow = windows[1];
+        var mainFunc = NewFunc(".Main", isfirst: true);
+        var mainWindow = MakeNewWindow(mainFunc, size: (windowWidth, windowHeight), pos: (0, TAB_HEIGHT));
+        var func2 = NewFunc(".Main2", isfirst: true);
+        var window2 = MakeNewWindow(func2, size: (windowWidth, windowHeight), pos: (windowWidth, TAB_HEIGHT));
+        curWindow = mainWindow;
+        curFunc = mainFunc;
+        ChangeTab(curFunc.Name);
 
         AddRunBtn();
         AddDebugBtn();
@@ -109,9 +108,7 @@ public partial class Form1: Form {
     #endregion
 
     #region THE EVENTS
-    public void Move_Event(object sender, EventArgs e){
-        screenPos = GetScreenPos();
-    }
+    public void Move_Event(object sender, EventArgs e) => screenPos = GetScreenPos();
     public void Resize_Event(object sender, EventArgs e){
         (int Width, int Height) WHTuple = (screenWidth, screenHeight) = (GetWidth(), GetHeight());
         if(screenHeight == 0 || screenWidth == 0){  return; }
@@ -125,6 +122,11 @@ public partial class Form1: Form {
             window.Size.width /= changeW;
             window.Pos.x /= changeW;
             window.Pos.y = TAB_HEIGHT + ((window.Pos.y - TAB_HEIGHT) / changeH);
+            for (int i=0; i < window.tabButtons.Count; i++) {
+                var btn = window.tabButtons[i];
+                btn.Location = new((int)window.Pos.x + (TAB_WIDTH + 10) * i, (int)window.Pos.y - TAB_HEIGHT);
+                var a = btn.Location;
+            }
         }
         RefreshConsole();
         foreach(var button in buttonsOnScreen) {
@@ -155,7 +157,7 @@ public partial class Form1: Form {
                 Keys.X => () => Cut(isAltlKeyPressed),
                 Keys.D => () => Duplicate(isAltlKeyPressed),
                 Keys.A => () => SelectAll(),
-                Keys.N => () => MakeNewTab(),
+                Keys.N => () => PromptMakeNewTab(),
                 Keys.Tab => () => CtrlTab(),
                 Keys.Oemtilde => () => ToggleConsole(),
                 Keys.Oemplus => () => ChangeFontSize((int)boldFont.Size + 1),
@@ -240,7 +242,7 @@ public partial class Form1: Form {
                     }
                     bool dontDraw = curWindow.AsPlainText;
                     curWindow = window;
-                    ChangeTab(window.Function.Button, dontDraw: dontDraw);
+                    ChangeTab(window.Function.Name, dontDraw: dontDraw);
                     break;
                 }
             }
@@ -287,10 +289,7 @@ public partial class Form1: Form {
         }
     }
     public static int GetClickRow() {
-        // float topBar = nonStatic.RectangleToScreen(nonStatic.ClientRectangle).Top - nonStatic.Top;
-        // double mouse = Cursor.Position.Y - (curWindow.Pos.y + curWindow.Offset + topBar);
         double mouse = Cursor.Position.Y - (curWindow.Pos.y + curWindow.Offset) - screenPos.Y;
-
         int i = (int)Math.Floor(mouse / txtHeight);
         return Max(0, Min(linesText.Count - 1, i));
     }
@@ -418,6 +417,8 @@ public class Window {
     public (float width, float height) Size;
     public (float x, float y) Pos;
     public int Offset = 0;
+    public int tabsEnd = 0;
+    public readonly List<Button> tabButtons = new();
     public bool AsPlainText = false;
     public SolidBrush txtBrush = textBrush;
     public Window(Function func) {  Function = func; }
@@ -425,9 +426,11 @@ public class Window {
 public class Function {
     public List<string> LinesText = new(){ "" };
     public Bitmap? DisplayImage;
-    public string Name = null!;
     public int CurLine = 0;
     public int CurCol = -1;
-    public Button Button = null!;
     public bool isPic = false;
+    public readonly string Name;
+    public Function(string name){
+        Name = name;
+    }
 }

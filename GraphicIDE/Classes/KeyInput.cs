@@ -351,7 +351,7 @@ public static class KeyInput {
             var item = windows[i];
             if(item.Function.Equals(curFunc)) {
                 curWindow = windows[(i + 1) % windows.Count];
-                ChangeTab(curWindow.Function.Button);
+                ChangeTab(curWindow.Function.Name);
                 return;
             }
         }
@@ -488,8 +488,15 @@ public static class KeyInput {
         return res.ToString();
     }
     public static (int, int) AddString(ReadOnlySpan<char> change, (int line, int col) pos) {
-        if(change.Contains("\r\n", StringComparison.Ordinal)) {
-            var newLines = change.ToString().Split("\r\n");
+        bool containsRN = change.Contains("\r\n", StringComparison.Ordinal);
+        bool containsN = change.Contains("\n", StringComparison.Ordinal);
+        if(containsRN || containsN) {
+            string[] newLines;
+            if(containsRN){
+                newLines = change.ToString().Split("\r\n");
+            } else {
+                newLines = change.ToString().Split("\n");
+            }
             var newCol = newLines[^1].Length - 1;
             if(pos.col != linesText[pos.line].Length - 1) {
                 newLines[^1] = string.Concat(newLines[^1], linesText[pos.line].AsSpan(pos.col + 1));    

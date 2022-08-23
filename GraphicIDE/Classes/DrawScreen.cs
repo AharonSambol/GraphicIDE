@@ -111,11 +111,12 @@ public static class DrawScreen{
     public static void Form1_Paint(object? sender, PaintEventArgs e) {
         foreach(var item in windows.AsEnumerable().Reverse()) {
             if((int)item.Size.width > 0 && (int)item.Size.height > 0){
-                // make back black
-                e.Graphics.FillRectangle(blackBrush, item.Pos.x, item.Pos.y, item.Size.width, item.Size.height);
                 //draw the img
                 Bitmap bm = new((int)item.Size.width, (int)item.Size.height);
-                Graphics.FromImage(bm).DrawImage(item.Function.DisplayImage!, 0, item.Offset);
+                using(var g = Graphics.FromImage(bm)){
+                    g.Clear(Color.Black); // make back black
+                    g.DrawImage(item.Function.DisplayImage!, 0, item.Offset);
+                }
                 e.Graphics.DrawImage(bm, item.Pos.x, item.Pos.y);
                 //draw frame
                 e.Graphics.DrawRectangle(new(Color.White, 2), item.Pos.x-2, item.Pos.y-2, item.Size.width+2, item.Size.height+2);
@@ -124,5 +125,4 @@ public static class DrawScreen{
         // tab bar
         e.Graphics.FillRectangle(tabBarBrush, 0, 0, screenWidth, TAB_HEIGHT);
     }
-    
 }

@@ -74,11 +74,8 @@ public static class Start{
         var (height, width) = (screenHeight, screenWidth);
         int consolePos = height - (height / 4);
         Bitmap img = new(width, height - consolePos);
-        var func = new Function() { 
+        var func = new Function(".console") { 
             DisplayImage = img,
-            Button = new(){
-                Name = ".console"
-            } 
         };
         console = new Window(func) {
             Pos = (0, consolePos),
@@ -86,7 +83,7 @@ public static class Start{
             AsPlainText = true,
             txtBrush = redBrush,
         };
-        nameToFunc[".console"] = console.Function;
+        nameToFunc[func.Name] = console.Function;
     }
     public static void MakeExecTimeDisplay(){
         var w = MeasureWidth(executedTime, boldFont); 
@@ -113,7 +110,7 @@ public static class Start{
     public static async void FocusTB(){
         await Task.Delay(100);
         textBox.Focus();
-        CtrlTab();
+        // CtrlTab();
     }
     
 }
