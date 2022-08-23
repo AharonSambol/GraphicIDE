@@ -110,14 +110,20 @@ public static class DrawScreen{
     }
     public static void Form1_Paint(object? sender, PaintEventArgs e) {
         foreach(var item in windows.AsEnumerable().Reverse()) {
-            if((int)item.Size.width > 0 && (int)item.Size.height > 0){
+            var itemHeight = (int)item.Size.height - TAB_HEIGHT;
+            var drawPosY = item.Pos.y + TAB_HEIGHT;
+            if(item.Function.Name.Equals(".console")){
+                itemHeight = (int)item.Size.height;
+                drawPosY = item.Pos.y;
+            }
+            if((int)item.Size.width > 0 && itemHeight > 0){
                 //draw the img
-                Bitmap bm = new((int)item.Size.width, (int)item.Size.height);
+                Bitmap bm = new((int)item.Size.width, itemHeight);
                 using(var g = Graphics.FromImage(bm)){
                     g.Clear(Color.Black); // make back black
                     g.DrawImage(item.Function.DisplayImage!, 0, item.Offset);
                 }
-                e.Graphics.DrawImage(bm, item.Pos.x, item.Pos.y);
+                e.Graphics.DrawImage(bm, item.Pos.x, drawPosY);
                 //draw frame
                 e.Graphics.DrawRectangle(new(Color.White, 2), item.Pos.x-2, item.Pos.y-2, item.Size.width+2, item.Size.height+2);
             }

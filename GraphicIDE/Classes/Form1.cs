@@ -20,8 +20,7 @@ using static GraphicIDE.KeyInput;
 // todo right click
 // todo capslock shortcuts
 // todo import statements
-// todo BAD: Tabs.cs EnterNewTab() ```windows = windows.FindAll((w) => w.Pos.x != 0 || w.Pos.y != 0);``` 
-// todo each window should have its own tab buttons
+
 namespace GraphicIDE;
 
 public partial class Form1: Form {
@@ -74,19 +73,18 @@ public partial class Form1: Form {
         textBox.KeyDown += new KeyEventHandler(Form1_KeyDown!);
 
         stringFormat.SetTabStops(0, new float[] { 4 });
-
         
         (prevHeight, prevWidth) = (screenHeight, screenWidth) = (GetHeight(), GetWidth());
 
         var (windowHeight, windowWidth) = (
-            screenHeight - TAB_HEIGHT, 
+            screenHeight, 
             screenWidth / 2
         );
 
         var mainFunc = NewFunc(".Main", isfirst: true);
-        var mainWindow = MakeNewWindow(mainFunc, size: (windowWidth, windowHeight), pos: (0, TAB_HEIGHT));
+        var mainWindow = MakeNewWindow(mainFunc, size: (windowWidth, windowHeight), pos: (0, 0));
         var func2 = NewFunc(".Main2", isfirst: true);
-        var window2 = MakeNewWindow(func2, size: (windowWidth, windowHeight), pos: (windowWidth, TAB_HEIGHT));
+        var window2 = MakeNewWindow(func2, size: (windowWidth, windowHeight), pos: (windowWidth, 0));
         curWindow = mainWindow;
         curFunc = mainFunc;
         ChangeTab(curFunc.Name);
@@ -113,7 +111,7 @@ public partial class Form1: Form {
         (int Width, int Height) WHTuple = (screenWidth, screenHeight) = (GetWidth(), GetHeight());
         if(screenHeight == 0 || screenWidth == 0){  return; }
         var (changeH, changeW) = (
-            (float)(prevHeight - TAB_HEIGHT) / (screenHeight - TAB_HEIGHT),
+            (float)prevHeight / screenHeight,
             (float)prevWidth / screenWidth
         ); 
         
@@ -121,10 +119,10 @@ public partial class Form1: Form {
             window.Size.height /= changeH;
             window.Size.width /= changeW;
             window.Pos.x /= changeW;
-            window.Pos.y = TAB_HEIGHT + ((window.Pos.y - TAB_HEIGHT) / changeH);
+            window.Pos.y = window.Pos.y / changeH;
             for (int i=0; i < window.tabButtons.Count; i++) {
                 var btn = window.tabButtons[i];
-                btn.Location = new((int)window.Pos.x + (TAB_WIDTH + 10) * i, (int)window.Pos.y - TAB_HEIGHT);
+                btn.Location = new((int)window.Pos.x + (TAB_WIDTH + 10) * i, (int)window.Pos.y);
                 var a = btn.Location;
             }
         }
@@ -229,7 +227,7 @@ public partial class Form1: Form {
                 bool inX = mousePos.x >= window.Pos.x && mousePos.x <= window.Pos.x + window.Size.width;
                 bool inY = mousePos.y >= window.Pos.y && mousePos.y <= window.Pos.y + window.Size.height;
                 if(inX && inY) {
-                    if(window.Function.Equals(curFunc)) {
+                    if(window.Equals(curWindow)) {
                         var prev = (CursorPos.Line, CursorPos.Col);
                         var prevSel = selectedLine;
                         MouseBtnClick(refresh: false);
@@ -394,8 +392,8 @@ static class CursorPos {
         int pos = txtPos + curWindow.Offset; 
         if(pos < 0){
             curWindow.Offset = - txtPos;
-        } else if(pos >= (int)curWindow.Size.height){
-            curWindow.Offset = - (txtPos + Form1.txtHeight - (int)curWindow.Size.height);
+        } else if(pos >= (int)curWindow.Size.height - TAB_HEIGHT - (int)(Form1.txtHeight/0.8)){
+            curWindow.Offset = - (txtPos + Form1.txtHeight - (int)curWindow.Size.height + TAB_HEIGHT);
         }
         // TODO for col too
     }
@@ -414,7 +412,6 @@ static class CursorPos {
 }
 public class Window {
     public Function Function;
-    public string Name;
     public (float width, float height) Size;
     public (float x, float y) Pos;
     public int Offset = 0;
@@ -422,7 +419,9 @@ public class Window {
     public readonly List<Button> tabButtons = new();
     public bool AsPlainText = false;
     public SolidBrush txtBrush = textBrush;
-    public Window(Function func) {  Function = func; }
+    public Window(Function func) {  
+        Function = func; 
+    }
 }
 public class Function {
     public List<string> LinesText = new(){ "" };
