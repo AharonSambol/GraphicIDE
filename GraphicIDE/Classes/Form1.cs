@@ -414,6 +414,7 @@ static class CursorPos {
 }
 public class Window {
     public Function Function;
+    public string Name;
     public (float width, float height) Size;
     public (float x, float y) Pos;
     public int Offset = 0;

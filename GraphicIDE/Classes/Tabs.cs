@@ -17,14 +17,14 @@ public static class Tabs {
     public static void AddTabEvent(object? sender, EventArgs e) => PromptMakeNewTab();
     private static void AddTabToWindow(string name, Window window){
         Button btn = new() {
-            Name = name,
+            Name = $"{ name },{ window.Name }",
             Text = name,
             BackColor = Color.LightGray,
-            Location = new((int)window.Pos.x + window.tabsEnd, (int)window.Pos.y - TAB_HEIGHT),
+            Location = new((int)window.Pos.x + window. tabsEnd, (int)window.Pos.y - TAB_HEIGHT),
             Size = new(TAB_WIDTH, TAB_HEIGHT),
             Font = tabFont
         };
-        btn.Click += new EventHandler(ChangeTab!);
+        btn.Click += new EventHandler((object? sender, EventArgs e) => ChangeTab(sender!));
 
         window.tabButtons.Add(btn);
         nonStatic.Controls.Add(btn);
@@ -35,11 +35,14 @@ public static class Tabs {
             AddTabToWindow(name, window);
         }
     }
+    private static string windowName = "-";
     public static Window MakeNewWindow(Function func, (int width, int height) size, (int x, int y) pos){
         Window window = new(func) { 
             Size = size, 
-            Pos = pos
+            Pos = pos,
+            Name = windowName,
         };
+        windowName += "-";
         curWindow = window;
         foreach(var tab in nameToFunc.Keys) {
             AddTabToWindow(tab, window);
@@ -55,9 +58,13 @@ public static class Tabs {
         if(!isfirst){   ChangeTab(name); }
         return func;
     }
-    public static void ChangeTab(object sender, EventArgs e) => ChangeTab(((Button)sender).Name, select: true);
-    public static void ChangeTab(string name, bool select=false, bool dontDraw=false) {
-        var func = nameToFunc[name];
+    public static void ChangeTab(object sender){
+        var names = ((Button)sender).Name.Split(',');
+        curWindow = windows.Find((x) => x.Name.Equals(names[1]))!;
+        ChangeTab(names[0]);
+    }
+    public static void ChangeTab(string funcName, bool select=false, bool dontDraw=false) {
+        var func = nameToFunc[funcName];
         if(select && windows.Find((x) => x.Function.Equals(func)) is not null) {
             return;
         }
