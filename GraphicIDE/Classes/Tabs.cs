@@ -6,6 +6,8 @@ using static GraphicIDE.DrawScreen;
 namespace GraphicIDE;
 
 public static class Tabs {
+    public static Font tabFont = new(FontFamily.GenericMonospace, 10, FontStyle.Bold);
+    public const int TAB_WIDTH = 80;
     public static readonly List<Button> tabButtons = new();
     public static int tabButtonEnd = 0;
     public static readonly Dictionary<string, Function> nameToFunc = new();

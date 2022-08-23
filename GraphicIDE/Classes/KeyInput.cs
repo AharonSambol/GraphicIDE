@@ -7,6 +7,10 @@ using static GraphicIDE.Helpers;
 namespace GraphicIDE;
 
 public static class KeyInput {
+    public static Keys lastPressed;
+
+    public static bool iChanged = false, forgetThisOne = false;
+
     public static void Form1_KeyDown(object? sender, KeyEventArgs e) {
         textBox.SelectionStart = 1;
         textBox.SelectionLength = 0;
@@ -29,6 +33,7 @@ public static class KeyInput {
             Keys.Right => () => RightKey(isShift, isAltl, isCtrl),
             Keys.Left => () => LeftKey(isShift, isAltl, isCtrl),
             Keys.F1 => () => OpenErrLink(null, new()),
+            Keys.Tab => () => Tab(),
             _ => () => {lastCol = null; refresh = false;}
         }))();
 
@@ -45,6 +50,13 @@ public static class KeyInput {
     public static void TextBox_TextChanged(object? sender, EventArgs e) {
         if(iChanged) {
             iChanged = false;
+            return;
+        } if(forgetThisOne){
+            forgetThisOne = false;
+            iChanged = true;
+            textBox.Text = "()";
+            textBox.SelectionStart = 1;
+            textBox.SelectionLength = 0;
             return;
         }
         ReadOnlySpan<char> change = null;
@@ -68,6 +80,40 @@ public static class KeyInput {
         }))();
         DrawTextScreen();
         nonStatic.Invalidate();
+    }
+    public static void Tab(){
+        if(isShiftPressed()){
+            var selectLine = selectedLine is null ? CursorPos.Line : selectedLine.Value.line;
+            var (bigger, smaller) = MaxMin(CursorPos.Line, selectLine);
+            for (int i=smaller; i <= bigger; i++) {
+                if(linesText[i].StartsWith("    ")){
+                    linesText[i] = linesText[i][4..];
+                    if(i == CursorPos.Line && CursorPos.Col != -1){
+                        CursorPos.ChangeCol(Max(-1, CursorPos.Col - 4));
+                    }
+                    if(selectedLine is (int line, int col) sl && i == sl.line && sl.col != -1){
+                        selectedLine = (sl.line, Max(-1, sl.col - 4));
+                    }
+                }
+            }
+        } else if(selectedLine is (int line, int col) sl && sl.line != CursorPos.Line){
+            var (bigger, smaller) = MaxMin(CursorPos.Line, sl.line);
+            for (int i=smaller; i <= bigger; i++) {
+                linesText[i] = $"    { linesText[i] }";
+                if(i == CursorPos.Line){
+                    CursorPos.ChangeCol(CursorPos.Col + 4);
+                }
+                if(i == sl.line){
+                    selectedLine = (sl.line, sl.col + 4);
+                }
+            }
+        } else {
+            textBox.Text = "(    )";
+            textBox.SelectionStart = 5;
+            textBox.SelectionLength = 0;
+            //? here it will call TextBox_TextChanged
+        }
+        forgetThisOne = true;
     }
     public static void LeftKey(bool isShift, bool isAltlKeyPressed, bool isCtrlKeyPressed) {
         if(!isShift) {
@@ -316,7 +362,6 @@ public static class KeyInput {
     public static void Duplicate(bool isAltlKeyPressed) {
         if(selectedLine is null) {
             var txt = "\r\n" + linesText[CursorPos.Line];
-            if(isAltlKeyPressed) { txt = txt.Trim(); }
             AddString(txt, (CursorPos.Line, linesText[CursorPos.Line].Length - 1));
         } else {
             var caretPos = (CursorPos.Line, CursorPos.Col);
@@ -325,15 +370,14 @@ public static class KeyInput {
                 ) {
                 caretPos = selectedLine.Value;
             }
-            var txt = GetSelectedText();
-            if(isAltlKeyPressed) { txt = txt.Trim(); }
-            CursorPos.ChangeBoth(AddString(txt, caretPos));
+            var txt = GetSelectedLines();
+            CursorPos.ChangeBoth(AddString($"\r\n{ txt }", caretPos));
         }
     }
     public static void Cut(bool isAltlKeyPressed) {
         string txt;
         if(selectedLine is null) {
-            txt = linesText[CursorPos.Line];
+            txt = linesText[CursorPos.Line].Trim();
             linesText.RemoveAt(CursorPos.Line);
             GetClosestForCaret();
         } else {
@@ -342,7 +386,6 @@ public static class KeyInput {
             selectedLine = select;
             DeleteSelection();
         }
-        if(isAltlKeyPressed) { txt = txt.Trim(); }
         if(!txt.Equals("")) {
             Clipboard.SetText(txt);
         }
@@ -352,12 +395,21 @@ public static class KeyInput {
             DeleteSelection();
             selectedLine = null;
         }
-        CursorPos.ChangeBoth(AddString(Clipboard.GetText(), (CursorPos.Line, CursorPos.Col)));
+        var txt = Clipboard.GetText();
+        if(CursorPos.Col > -1){
+            var line = linesText[CursorPos.Line];
+            var before = line.AsSpan(0, CursorPos.Col);
+            var tabCount = (line.Length - line.TrimStart(' ').Length) / 4;
+            if(tabCount > 0){
+                var tabs = new string(' ', tabCount * 4);
+                txt = String.Join($"\r\n{ tabs }", txt.Split("\n"));
+            }
+        }
+        CursorPos.ChangeBoth(AddString(txt, (CursorPos.Line, CursorPos.Col)));
     }
     public static void Copy(bool isAltlKeyPressed) {
         string txt;
-        if(selectedLine is null) { txt = linesText[CursorPos.Line]; } else { txt = GetSelectedText(); }
-        if(isAltlKeyPressed) { txt = txt.Trim(); }
+        if(selectedLine is null) { txt = linesText[CursorPos.Line].Trim(); } else { txt = GetSelectedText(); }
         if(!txt.Equals("")) {
             Clipboard.SetText(txt);
         }

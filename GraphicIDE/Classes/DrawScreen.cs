@@ -10,6 +10,7 @@ using static GraphicIDE.Tabs;
 namespace GraphicIDE;
 
 public static class DrawScreen{
+    public const int LINE_HEIGHT = 30;
     public static bool isPic = false, skipDrawNewScreen = false;
     public static void DrawPicScreen() {
         if(isPic) {
@@ -53,7 +54,7 @@ public static class DrawScreen{
         int totalWidth = 0;
         int end = 0;
         for(int i = 0; i < linesText.Count; i++) {
-            var lineText = ReplaceTabs(linesText[i]);
+            var lineText = linesText[i];
             int width = MeasureWidth(lineText, boldFont);
             totalWidth = Max(totalWidth, width);
 
@@ -62,7 +63,7 @@ public static class DrawScreen{
             g.DrawString(lineText, boldFont, curTextBrush, 0, 0);
 
             if(i == CursorPos.Line && withCurser) {
-                var before = CursorPos.Col == -1 ? "": ReplaceTabs(linesText[i][..(CursorPos.Col + 1)]);
+                var before = CursorPos.Col == -1 ? "": linesText[i][..(CursorPos.Col + 1)];
                 g.FillRectangle(
                     curserBrush,
                     MeasureWidth(before, boldFont) - 3,
@@ -84,9 +85,9 @@ public static class DrawScreen{
                         sCol = i > sl.line ? -1 : lineText.Length - 1;
                     }
                     var (smaller, bigger) = cCol < sCol ? (cCol, sCol) : (sCol, cCol);
-                    var startS = smaller == -1 ? 0 : MeasureWidth(ReplaceTabs(linesText[i][..(smaller + 1)]), boldFont);
+                    var startS = smaller == -1 ? 0 : MeasureWidth(linesText[i][..(smaller + 1)], boldFont);
 
-                    var endS = MeasureWidth(ReplaceTabs(linesText[i][..Min(linesText[i].Length, bigger + 1)]), boldFont);
+                    var endS = MeasureWidth(linesText[i][..Min(linesText[i].Length, bigger + 1)], boldFont);
                     g.FillRectangle(selectBrush, 0 + startS, 0, endS - startS, LINE_HEIGHT);
                 }
             }
@@ -103,8 +104,8 @@ public static class DrawScreen{
         curFunc.DisplayImage = newBitMap;
     }
     public static void OpenErrLink(object? sender, EventArgs e) {
-        if(errLink is not null) {
-            Process.Start(new ProcessStartInfo("cmd", $"/c start {errLink}") { CreateNoWindow = true });
+        if(PythonFuncs.errLink is not null) {
+            Process.Start(new ProcessStartInfo("cmd", $"/c start {PythonFuncs.errLink}") { CreateNoWindow = true });
         }
     }
     public static void Form1_Paint(object? sender, PaintEventArgs e) {

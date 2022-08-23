@@ -520,7 +520,7 @@ public static class AST {
                 var lenH = MeasureHeight(st, boldFont);
                 Bitmap bm = new(len, lenH);
                 using(var bg = Graphics.FromImage(bm)) {
-                    bg.DrawString(ReplaceTabs(st), boldFont, textBrush, 0, 0);
+                    bg.DrawString(st, boldFont, textBrush, 0, 0);
                 }
                 resses.Add(bm);
             }

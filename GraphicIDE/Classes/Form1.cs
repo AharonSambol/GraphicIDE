@@ -18,7 +18,6 @@ using static GraphicIDE.KeyInput;
 // todo https://stackoverflow.com/questions/1264406/how-do-i-get-the-taskbars-position-and-size
 // todo cache some of the textline images
 // todo capslock shortcuts
-// todo when paste indented then add indent to all
 // todo copy paste from whatsapp not working
 // todo "make new tab" closes console badly
 // todo mouse click not working when not full screen
@@ -29,34 +28,16 @@ public partial class Form1: Form {
     #region vars
     public static (int line, int col)? selectedLine = null;
     public static int? lastCol = null;
-    public static Keys lastPressed;
     public static List<string> linesText = null!;
     public static readonly TextBox textBox = new();
     public static readonly StringFormat stringFormat = new();
-    public static Font
-        boldFont = null!,
-        tabFont = new(FontFamily.GenericMonospace, 10, FontStyle.Bold);
-    public static bool iChanged = false;
-    public static readonly Graphics nullGraphics = Graphics.FromImage(new Bitmap(1,1));
-    public const int LINE_HEIGHT = 30, WM_KEYDOWN = 0x100, TAB_HEIGHT = 25, TAB_WIDTH = 80;
-    public static Dictionary<Font, float> fontToPipeSize = new();
+    public static Font boldFont = null!;
+    public const int WM_KEYDOWN = 0x100, TAB_HEIGHT = 25;
     public static int indentW, qWidth, qHeight, upSideDownW, txtHeight;
     public static int screenWidth = 0, screenHeight = 0, prevHeight, prevWidth;
     public static List<Window> windows = new();
-    public static (string txt, ConsoleTxtType typ) consoleTxt = ("", ConsoleTxtType.text);
-    public static Window console = null!;
-    public static string executedTime = "-------";
-    public static bool isConsoleVisible = false;
-    public static Button? closeConsoleBtn, openConsoleBtn, errOpenButton, execTimeBtn;
     public static bool dragging = false, doubleClick = false;
-    public static string? errLink = null;
     public static List<(Button btn, Func<(int w, int h), Point> calcPos)> buttonsOnScreen = new();
-
-    public static Func<(int w, int h), Point> 
-        ETBCalcPos = (size) => new(size.w - execTimeBtn!.Width - 35 /*open console btn size*/ - 20, size.h - execTimeBtn!.Height - 5),
-        CCBCalcPos = (_) => new((int)(console.Pos.x + console.Size.width) - closeConsoleBtn!.Width - 10, (int)console.Pos.y + 10),
-        EOBCalcPos = (_) => new((int)(console.Pos.x + console.Size.width) - errOpenButton!.Width - 10, (int)console.Pos.y + 40),
-        OCBCalcPos = (size) => new(size.w - openConsoleBtn!.Width - 10, size.h - openConsoleBtn.Height - 5);
     public static Form1 nonStatic = null!;
 
     #endregion
@@ -432,6 +413,21 @@ public partial class Form1: Form {
             }
             res.Append(linesText[bigger.line].AsSpan(0, bigger.col + 1));
         }
+        return res.ToString();
+    }
+    public static string GetSelectedLines() {
+        if(selectedLine is null) {  return ""; }
+        var res = new StringBuilder();
+        var selectedLine_ = ((int line, int col))selectedLine!;
+        selectedLine = null;
+        if(CursorPos.Line == selectedLine_.line) {
+            return linesText[CursorPos.Line];
+        } 
+        (int bigger, int smaller) = MaxMin(CursorPos.Line, selectedLine_.line);
+        for(int i = smaller; i < bigger; i++) {
+            res.AppendLine(linesText[i]);
+        }
+        res.Append(linesText[bigger]);
         return res.ToString();
     }
     public static (int, int) AddString(ReadOnlySpan<char> change, (int line, int col) pos) {

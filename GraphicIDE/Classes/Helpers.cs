@@ -7,6 +7,9 @@ using static GraphicIDE.Tabs;
 namespace GraphicIDE;
 
 public static class Helpers {
+    public static Dictionary<Font, float> fontToPipeSize = new();
+    public static readonly Graphics nullGraphics = Graphics.FromImage(new Bitmap(1,1));
+
     public static int GetHeight(){
         return Form1.nonStatic.RectangleToScreen(Form1.nonStatic.ClientRectangle).Height;
     }
@@ -61,7 +64,7 @@ public static class Helpers {
         PythonOperator.TrueDivide => "???? what is true divide???",
         _ => "??I missed one???"
     };
-    public static string ReplaceTabs(string st) => st.Replace("\t", "    ");
+    // public static string ReplaceTabs(string st) => st.Replace("\t", "    ");
     public static BM_Middle MakeTxtBM(string txt, Brush? brush = null) {
         var width = MeasureWidth(txt, Form1.boldFont);
         var height = MeasureHeight(txt, Form1.boldFont);
@@ -85,18 +88,18 @@ public static class Helpers {
         }
         // used || so that trailing\leading spaces get included too
         // you might wonder why theres an "a" in here... me too... it just doesn't work without it...
-        st = ReplaceTabs($"|a{st}|");
-        return (int)(Form1.nullGraphics.MeasureString(st, ft).Width - CachedWidthOfPipes(ft));
+        st = $"|a{st}|";
+        return (int)(nullGraphics.MeasureString(st, ft).Width - CachedWidthOfPipes(ft));
     }
     public static float CachedWidthOfPipes(Font ft){
-        if(Form1.fontToPipeSize.TryGetValue(ft, out float res)){
+        if(fontToPipeSize.TryGetValue(ft, out float res)){
             return res;
         }
-        float w = Form1.nullGraphics.MeasureString("|", ft).Width * 2;
-        Form1.fontToPipeSize[ft] = w; 
+        float w = nullGraphics.MeasureString("|", ft).Width * 2;
+        fontToPipeSize[ft] = w; 
         return w;
     }
-    public static int MeasureHeight(string st, Font ft) => (int)Form1.nullGraphics.MeasureString(st, ft).Height;
+    public static int MeasureHeight(string st, Font ft) => (int)nullGraphics.MeasureString(st, ft).Height;
 
     public static bool isShiftPressed() => (Form1.ModifierKeys & Keys.Shift) == Keys.Shift;
     public static bool isCapsPressed() => (Form1.ModifierKeys & Keys.CapsLock) == Keys.CapsLock;

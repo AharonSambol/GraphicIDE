@@ -6,7 +6,17 @@ using static GraphicIDE.DrawScreen;
 
 namespace GraphicIDE;
 public static class Console {
-
+    public static (string txt, ConsoleTxtType typ) consoleTxt = ("", ConsoleTxtType.text);
+    public static Window console = null!;
+    public static string executedTime = "-------";
+    public static bool isConsoleVisible = false;
+    public static Button? closeConsoleBtn, openConsoleBtn, errOpenButton, execTimeBtn;
+    public static Func<(int w, int h), Point> 
+        ETBCalcPos = (size) => new(size.w - execTimeBtn!.Width - 35 /*open console btn size*/ - 20, size.h - execTimeBtn!.Height - 5),
+        CCBCalcPos = (_) => new((int)(console.Pos.x + console.Size.width) - closeConsoleBtn!.Width - 10, (int)console.Pos.y + 10),
+        EOBCalcPos = (_) => new((int)(console.Pos.x + console.Size.width) - errOpenButton!.Width - 10, (int)console.Pos.y + 40),
+        OCBCalcPos = (size) => new(size.w - openConsoleBtn!.Width - 10, size.h - openConsoleBtn.Height - 5);
+    
     public static void ShowConsole() {
         int idx = nonStatic.Controls.IndexOf(openConsoleBtn);
         if(idx != -1) {

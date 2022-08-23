@@ -20,6 +20,7 @@ using static GraphicIDE.Console;
 namespace GraphicIDE;
 
 public static class PythonFuncs{
+    public static string? errLink = null;
     public static PythonAst ToAST() {
         StringBuilder theScript = new();
         foreach(var line in linesText) {
