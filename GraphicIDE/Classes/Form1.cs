@@ -12,13 +12,17 @@ using static GraphicIDE.KeyInput;
 
 // todo console button changing size??
 // todo print and exception
-// todo each window should have its own tab buttons
 // todo print('1\n2\n3\n4\n5\n6\n7\n8\n9\n') and then changeing focus to console and returning results in print taking up more than screen
 // todo when changing font size need to change pen sizes as well 
 // todo https://stackoverflow.com/questions/1264406/how-do-i-get-the-taskbars-position-and-size
 // todo cache some of the textline images
+// todo drag selection
+// todo right click
 // todo capslock shortcuts
+// todo import statements
 // todo copy paste from whatsapp not working
+// todo each window should have its own tab buttons
+// todo while >> until / forever
 // todo "make new tab" closes console badly
 // todo mouse click not working when not full screen
 
@@ -38,7 +42,9 @@ public partial class Form1: Form {
     public static List<Window> windows = new();
     public static bool dragging = false, doubleClick = false;
     public static List<(Button btn, Func<(int w, int h), Point> calcPos)> buttonsOnScreen = new();
+    public static Point screenPos;
     public static Form1 nonStatic = null!;
+
 
     #endregion
 
@@ -51,6 +57,7 @@ public partial class Form1: Form {
         
         this.BackColor = Color.Black;
         this.DoubleBuffered = true;
+        screenPos = GetScreenPos();
 
         textBox.AcceptsReturn = true;
         textBox.AcceptsTab = true;
@@ -102,6 +109,9 @@ public partial class Form1: Form {
     #endregion
 
     #region THE EVENTS
+    public void Move_Event(object sender, EventArgs e){
+        screenPos = GetScreenPos();
+    }
     public void Resize_Event(object sender, EventArgs e){
         (int Width, int Height) WHTuple = (screenWidth, screenHeight) = (GetWidth(), GetHeight());
         if(screenHeight == 0 || screenWidth == 0){  return; }
@@ -124,7 +134,46 @@ public partial class Form1: Form {
         (prevHeight, prevWidth) = (screenHeight, screenWidth);
         Invalidate();
     }
-    
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
+        var keyCode = (Keys) (msg.WParam.ToInt32() & Convert.ToInt32(Keys.KeyCode));
+        if(msg.Msg == WM_KEYDOWN && ModifierKeys == Keys.Control) {
+            bool isAltlKeyPressed = isAltlPressed();
+            bool isShift = isShiftPressed();
+            bool refresh = true;
+            ((Action)(keyCode switch {
+                Keys.Delete => () => DeleteKey(isAltlKeyPressed, true),
+                Keys.Back => () => BackSpaceKey(isAltlKeyPressed, true),
+                Keys.Enter => () => EnterKey(true),
+                Keys.End => () => EndKey(isShift, true),
+                Keys.Home => () => HomeKey(isShift, true),
+                Keys.Up => () => ChangeOffsetTo(curWindow.Offset + txtHeight),
+                Keys.Down => () => ChangeOffsetTo(curWindow.Offset - txtHeight),
+                Keys.Right => () => RightKey(isShift, isAltlKeyPressed, true),
+                Keys.Left => () => LeftKey(isShift, isAltlKeyPressed, true),
+                Keys.C => () => Copy(isAltlKeyPressed),
+                Keys.V => () => Paste(),
+                Keys.X => () => Cut(isAltlKeyPressed),
+                Keys.D => () => Duplicate(isAltlKeyPressed),
+                Keys.A => () => SelectAll(),
+                Keys.N => () => MakeNewTab(),
+                Keys.Tab => () => CtrlTab(),
+                Keys.Oemtilde => () => ToggleConsole(),
+                Keys.Oemplus => () => ChangeFontSize((int)boldFont.Size + 1),
+                Keys.OemMinus => () => ChangeFontSize((int)boldFont.Size - 1),
+                Keys.Space => () => PythonFuncs.Execute(),
+                _ => () => refresh = false
+            }))();
+            if(refresh){
+                DrawTextScreen();
+                Invalidate();
+            }
+            return true;
+        }
+        return base.ProcessCmdKey(ref msg, keyData);
+    }
+    #endregion
+
+    #region Mouse
     protected override void OnMouseWheel(MouseEventArgs e) {
         if(curWindow.Function.DisplayImage!.Height > 40) {
             ChangeOffsetTo(curWindow.Offset + e.Delta / 10);
@@ -170,7 +219,10 @@ public partial class Form1: Form {
     async void Drag(MouseEventArgs e) {
         (int line, int col)? tempSelectedLine = null;
         if(e.Button == MouseButtons.Left) {
-            (int x, int y) mousePos = (Cursor.Position.X, Cursor.Position.Y);
+            (int x, int y) mousePos = (
+                Cursor.Position.X - screenPos.X, 
+                Cursor.Position.Y - screenPos.Y
+            );
             foreach(var window in windows) {
                 bool inX = mousePos.x >= window.Pos.x && mousePos.x <= window.Pos.x + window.Size.width;
                 bool inY = mousePos.y >= window.Pos.y && mousePos.y <= window.Pos.y + window.Size.height;
@@ -216,65 +268,6 @@ public partial class Form1: Form {
             await Task.Delay(1);
         }
     }
-    protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
-        var keyCode = (Keys) (msg.WParam.ToInt32() & Convert.ToInt32(Keys.KeyCode));
-        if(msg.Msg == WM_KEYDOWN && ModifierKeys == Keys.Control) {
-            bool isAltlKeyPressed = isAltlPressed();
-            bool isShift = isShiftPressed();
-            bool refresh = true;
-            ((Action)(keyCode switch {
-                Keys.Delete => () => DeleteKey(isAltlKeyPressed, true),
-                Keys.Back => () => BackSpaceKey(isAltlKeyPressed, true),
-                Keys.Enter => () => EnterKey(true),
-                Keys.End => () => EndKey(isShift, true),
-                Keys.Home => () => HomeKey(isShift, true),
-                Keys.Up => () => ChangeOffsetTo(curWindow.Offset + txtHeight),
-                Keys.Down => () => ChangeOffsetTo(curWindow.Offset - txtHeight),
-                Keys.Right => () => RightKey(isShift, isAltlKeyPressed, true),
-                Keys.Left => () => LeftKey(isShift, isAltlKeyPressed, true),
-                Keys.C => () => Copy(isAltlKeyPressed),
-                Keys.V => () => Paste(),
-                Keys.X => () => Cut(isAltlKeyPressed),
-                Keys.D => () => Duplicate(isAltlKeyPressed),
-                Keys.A => () => SelectAll(),
-                Keys.N => () => MakeNewTab(),
-                Keys.Tab => () => CtrlTab(),
-                Keys.Oemtilde => () => ToggleConsole(),
-                Keys.Oemplus => () => ChangeFontSize((int)boldFont.Size + 1),
-                Keys.OemMinus => () => ChangeFontSize((int)boldFont.Size - 1),
-                Keys.Space => () => PythonFuncs.Execute(),
-                _ => () => refresh = false
-            }))();
-            if(refresh){
-                DrawTextScreen();
-                Invalidate();
-            }
-            return true;
-        }
-        return base.ProcessCmdKey(ref msg, keyData);
-    }
-    #endregion
-
-    #region SetTabSize
-    private const int EM_SETTABSTOPS = 0x00CB;
-    [DllImport("User32.dll", CharSet = CharSet.Auto)]
-    private static extern IntPtr SendMessage(IntPtr h, int msg, int wParam, int[] lParam);
-    public static void SetTabWidth(TextBox textbox, int tabWidth) {
-        Graphics graphics = textbox.CreateGraphics();
-        var characterWidth = (int)graphics.MeasureString("M", textbox.Font).Width;
-        SendMessage(textbox.Handle, EM_SETTABSTOPS, 1, new int[] { tabWidth * characterWidth });
-    }
-    #endregion
-
-    #region Miscelaneuos
-    public static void GetClosestForCaret() {
-        if(lastCol is not null) {
-            CursorPos.ChangeCol(Min((int)lastCol, linesText[CursorPos.Line].Length - 1));
-        } else {
-            lastCol = CursorPos.Col;
-            CursorPos.ChangeCol(Min(CursorPos.Col, linesText[CursorPos.Line].Length - 1));
-        }
-    }
     public static void MouseBtnClick(bool refresh=true) {
         if(selectedLine is not null) {
             if(!isShiftPressed() && !dragging) {
@@ -282,19 +275,22 @@ public partial class Form1: Form {
             }
         }
         CursorPos.ChangeLine(GetClickRow());
-        CursorPos.ChangeCol(BinarySearch(linesText[CursorPos.Line].Length, Cursor.Position.X - curWindow.Pos.x, GetDistW));
+        CursorPos.ChangeCol(BinarySearch(
+            linesText[CursorPos.Line].Length, 
+            Cursor.Position.X - curWindow.Pos.x - screenPos.X, 
+            GetDistW
+        ));
         textBox.Focus();
         if(refresh) {
             DrawTextScreen();
             nonStatic.Invalidate();
         }
     }
-    public static float GetDistW(int i) {
-        return MeasureWidth(linesText[CursorPos.Line][..(i + 1)], boldFont);
-    }
     public static int GetClickRow() {
-        float topBar = nonStatic.RectangleToScreen(nonStatic.ClientRectangle).Top - nonStatic.Top;
-        double mouse = Cursor.Position.Y - (curWindow.Pos.y + curWindow.Offset + topBar);
+        // float topBar = nonStatic.RectangleToScreen(nonStatic.ClientRectangle).Top - nonStatic.Top;
+        // double mouse = Cursor.Position.Y - (curWindow.Pos.y + curWindow.Offset + topBar);
+        double mouse = Cursor.Position.Y - (curWindow.Pos.y + curWindow.Offset) - screenPos.Y;
+
         int i = (int)Math.Floor(mouse / txtHeight);
         return Max(0, Min(linesText.Count - 1, i));
     }
@@ -323,30 +319,23 @@ public partial class Form1: Form {
         }
         return mid;
     }
-    public static void DeleteSelection() {
-        var selectedLine_ = ((int line, int col))selectedLine!;
-        selectedLine = null;
-        if(CursorPos.Line == selectedLine_.line) {
-            (int bigger, int smaller) = MaxMin(CursorPos.Col, selectedLine_.col);
-                
-            linesText[CursorPos.Line] = string.Concat(
-                linesText[CursorPos.Line].AsSpan(0, smaller + 1),
-                linesText[CursorPos.Line].AsSpan(bigger + 1)
-            );
-            CursorPos.ChangeCol(smaller);
-        } else {
-            ((int line, int col) smaller, (int line, int col) bigger) 
-                = CursorPos.Line > selectedLine_.line 
-                    ? (selectedLine_, (CursorPos.Line, CursorPos.Col))
-                    : ((CursorPos.Line, CursorPos.Col), selectedLine_);
-            linesText[smaller.line] = string.Concat(
-                linesText[smaller.line].AsSpan(0, smaller.col + 1),
-                linesText[bigger.line].AsSpan(bigger.col + 1));
-            for(int i = smaller.line + 1; i <= bigger.line; i++) {
-                linesText.RemoveAt(smaller.line + 1);
-            }
-            CursorPos.ChangeBoth(smaller);
-        }
+    
+    #endregion
+
+    #region SetTabSize
+    private const int EM_SETTABSTOPS = 0x00CB;
+    [DllImport("User32.dll", CharSet = CharSet.Auto)]
+    private static extern IntPtr SendMessage(IntPtr h, int msg, int wParam, int[] lParam);
+    public static void SetTabWidth(TextBox textbox, int tabWidth) {
+        Graphics graphics = textbox.CreateGraphics();
+        var characterWidth = (int)graphics.MeasureString("M", textbox.Font).Width;
+        SendMessage(textbox.Handle, EM_SETTABSTOPS, 1, new int[] { tabWidth * characterWidth });
+    }
+    #endregion
+
+    #region Miscelaneuos
+    public static float GetDistW(int i) {
+        return MeasureWidth(linesText[CursorPos.Line][..(i + 1)], boldFont);
     }
     public static (int line, int col, char val)? GetNextR() {
         if(CursorPos.Col != linesText[CursorPos.Line].Length - 1) {
@@ -394,64 +383,6 @@ public partial class Form1: Form {
             );
         }
     }
-    public static string GetSelectedText() {
-        if(selectedLine is null) {  return ""; }
-        var res = new StringBuilder();
-        var selectedLine_ = ((int line, int col))selectedLine!;
-        selectedLine = null;
-        if(CursorPos.Line == selectedLine_.line) {
-            (int bigger, int smaller) = MaxMin(CursorPos.Col, selectedLine_.col);
-            return linesText[CursorPos.Line].Substring(smaller + 1, bigger - smaller);
-        } else {
-            ((int line, int col) smaller, (int line, int col) bigger)
-                = CursorPos.Line > selectedLine_.line
-                    ? (selectedLine_, (CursorPos.Line, CursorPos.Col))
-                    : ((CursorPos.Line, CursorPos.Col), selectedLine_);
-            res.AppendLine(linesText[smaller.line][(smaller.col + 1)..]);
-            for(int i = smaller.line + 1; i < bigger.line; i++) {
-                res.AppendLine(linesText[i]);
-            }
-            res.Append(linesText[bigger.line].AsSpan(0, bigger.col + 1));
-        }
-        return res.ToString();
-    }
-    public static string GetSelectedLines() {
-        if(selectedLine is null) {  return ""; }
-        var res = new StringBuilder();
-        var selectedLine_ = ((int line, int col))selectedLine!;
-        selectedLine = null;
-        if(CursorPos.Line == selectedLine_.line) {
-            return linesText[CursorPos.Line];
-        } 
-        (int bigger, int smaller) = MaxMin(CursorPos.Line, selectedLine_.line);
-        for(int i = smaller; i < bigger; i++) {
-            res.AppendLine(linesText[i]);
-        }
-        res.Append(linesText[bigger]);
-        return res.ToString();
-    }
-    public static (int, int) AddString(ReadOnlySpan<char> change, (int line, int col) pos) {
-        if(change.Contains("\r\n", StringComparison.Ordinal)) { // todo but not the litteral
-            var newLines = change.ToString().Split("\r\n");
-            var newCol = newLines[^1].Length - 1;
-            if(pos.col != linesText[pos.line].Length - 1) {
-                newLines[^1] = string.Concat(newLines[^1], linesText[pos.line].AsSpan(pos.col + 1));    
-            }
-            linesText[pos.line] = string.Concat(linesText[pos.line].AsSpan(0, pos.col + 1), newLines[0]);
-            for(int i = 1; i < newLines.Length; i++) {
-                linesText.Insert(pos.line + 1, newLines[i]);
-                pos.line++;
-            }
-            pos.col = newCol;
-        } else {
-            var line = linesText[pos.line];
-            var start = pos.col == -1 ? "" : line.AsSpan(0, pos.col+1);
-            linesText[pos.line] = $"{start}{change}{line.AsSpan(pos.col + 1)}";
-            pos.col += change.Length;
-        }
-        return (pos.line, pos.col);
-    }
-    
     #endregion
 }
 

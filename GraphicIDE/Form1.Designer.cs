@@ -40,6 +40,8 @@
             this.Paint += new System.Windows.Forms.PaintEventHandler(DrawScreen.Form1_Paint);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(KeyInput.Form1_KeyDown);
             this.Resize += new(this.Resize_Event);
+            this.Move += new(this.Move_Event);
+
             this.ResumeLayout(false);
 
         }

@@ -1,3 +1,5 @@
+using System.Text;
+
 using static GraphicIDE.Form1;
 using static GraphicIDE.MyMath;
 using static GraphicIDE.Tabs;
@@ -415,4 +417,96 @@ public static class KeyInput {
         }
     }
     #endregion
+
+    public static void DeleteSelection() {
+        var selectedLine_ = ((int line, int col))selectedLine!;
+        selectedLine = null;
+        if(CursorPos.Line == selectedLine_.line) {
+            (int bigger, int smaller) = MaxMin(CursorPos.Col, selectedLine_.col);
+                
+            linesText[CursorPos.Line] = string.Concat(
+                linesText[CursorPos.Line].AsSpan(0, smaller + 1),
+                linesText[CursorPos.Line].AsSpan(bigger + 1)
+            );
+            CursorPos.ChangeCol(smaller);
+        } else {
+            ((int line, int col) smaller, (int line, int col) bigger) 
+                = CursorPos.Line > selectedLine_.line 
+                    ? (selectedLine_, (CursorPos.Line, CursorPos.Col))
+                    : ((CursorPos.Line, CursorPos.Col), selectedLine_);
+            linesText[smaller.line] = string.Concat(
+                linesText[smaller.line].AsSpan(0, smaller.col + 1),
+                linesText[bigger.line].AsSpan(bigger.col + 1));
+            for(int i = smaller.line + 1; i <= bigger.line; i++) {
+                linesText.RemoveAt(smaller.line + 1);
+            }
+            CursorPos.ChangeBoth(smaller);
+        }
+    }
+    public static void GetClosestForCaret() {
+        if(lastCol is not null) {
+            CursorPos.ChangeCol(Min((int)lastCol, linesText[CursorPos.Line].Length - 1));
+        } else {
+            lastCol = CursorPos.Col;
+            CursorPos.ChangeCol(Min(CursorPos.Col, linesText[CursorPos.Line].Length - 1));
+        }
+    }
+    public static string GetSelectedText() {
+        if(selectedLine is null) {  return ""; }
+        var res = new StringBuilder();
+        var selectedLine_ = ((int line, int col))selectedLine!;
+        selectedLine = null;
+        if(CursorPos.Line == selectedLine_.line) {
+            (int bigger, int smaller) = MaxMin(CursorPos.Col, selectedLine_.col);
+            return linesText[CursorPos.Line].Substring(smaller + 1, bigger - smaller);
+        } else {
+            ((int line, int col) smaller, (int line, int col) bigger)
+                = CursorPos.Line > selectedLine_.line
+                    ? (selectedLine_, (CursorPos.Line, CursorPos.Col))
+                    : ((CursorPos.Line, CursorPos.Col), selectedLine_);
+            res.AppendLine(linesText[smaller.line][(smaller.col + 1)..]);
+            for(int i = smaller.line + 1; i < bigger.line; i++) {
+                res.AppendLine(linesText[i]);
+            }
+            res.Append(linesText[bigger.line].AsSpan(0, bigger.col + 1));
+        }
+        return res.ToString();
+    }
+    public static string GetSelectedLines() {
+        if(selectedLine is null) {  return ""; }
+        var res = new StringBuilder();
+        var selectedLine_ = ((int line, int col))selectedLine!;
+        selectedLine = null;
+        if(CursorPos.Line == selectedLine_.line) {
+            return linesText[CursorPos.Line];
+        } 
+        (int bigger, int smaller) = MaxMin(CursorPos.Line, selectedLine_.line);
+        for(int i = smaller; i < bigger; i++) {
+            res.AppendLine(linesText[i]);
+        }
+        res.Append(linesText[bigger]);
+        return res.ToString();
+    }
+    public static (int, int) AddString(ReadOnlySpan<char> change, (int line, int col) pos) {
+        if(change.Contains("\r\n", StringComparison.Ordinal)) {
+            var newLines = change.ToString().Split("\r\n");
+            var newCol = newLines[^1].Length - 1;
+            if(pos.col != linesText[pos.line].Length - 1) {
+                newLines[^1] = string.Concat(newLines[^1], linesText[pos.line].AsSpan(pos.col + 1));    
+            }
+            linesText[pos.line] = string.Concat(linesText[pos.line].AsSpan(0, pos.col + 1), newLines[0]);
+            for(int i = 1; i < newLines.Length; i++) {
+                linesText.Insert(pos.line + 1, newLines[i]);
+                pos.line++;
+            }
+            pos.col = newCol;
+        } else {
+            var line = linesText[pos.line];
+            var start = pos.col == -1 ? "" : line.AsSpan(0, pos.col+1);
+            linesText[pos.line] = $"{start}{change}{line.AsSpan(pos.col + 1)}";
+            pos.col += change.Length;
+        }
+        return (pos.line, pos.col);
+    }
+    
 }

@@ -9,7 +9,10 @@ namespace GraphicIDE;
 public static class Helpers {
     public static Dictionary<Font, float> fontToPipeSize = new();
     public static readonly Graphics nullGraphics = Graphics.FromImage(new Bitmap(1,1));
-
+    
+    public static Point GetScreenPos(){
+        return Form1.nonStatic.RectangleToScreen(Form1.nonStatic.ClientRectangle).Location;
+    }
     public static int GetHeight(){
         return Form1.nonStatic.RectangleToScreen(Form1.nonStatic.ClientRectangle).Height;
     }
