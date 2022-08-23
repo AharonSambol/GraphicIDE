@@ -23,16 +23,16 @@ public static class DrawScreen{
                 if(bm is not null) {
                     #region resize to fit screen
                     if(bm.Img.Height > curWindow.Size.height || bm.Img.Width > curWindow.Size.width){
-                        var (newWidth, newHeight) = (bm.Img.Width, bm.Img.Height);
+                        (float newWidth, float newHeight) = (bm.Img.Width, bm.Img.Height);
                         if(newWidth > curWindow.Size.width){
-                            newWidth = (int)curWindow.Size.width;
-                            newHeight = newHeight / (newWidth / newWidth);
+                            newWidth = curWindow.Size.width;
+                            newHeight = newHeight / (bm.Img.Width / newWidth);
                         }
-                        if(newHeight > curWindow.Size.height){
-                            newHeight = (int)curWindow.Size.height;
-                            newWidth = newWidth / (newHeight / newHeight);
+                        if(newHeight > curWindow.Size.height - TAB_HEIGHT){
+                            newHeight = curWindow.Size.height - TAB_HEIGHT;
+                            newWidth = newWidth / (bm.Img.Height / newHeight);
                         }
-                        bm = new(new(bm.Img, newWidth, newHeight), 0);
+                        bm = new(new(bm.Img, (int)newWidth, (int)newHeight), 0);
                     }
                     #endregion
                     curFunc.DisplayImage = bm.Img;
