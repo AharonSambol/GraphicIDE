@@ -22,6 +22,7 @@ using static GraphicIDE.KeyInput;
 // todo cache some of the textline images
 // todo capslock shortcuts
 // todo syntax highlighting
+// todo add description to prompt windows
 // todo add more visualizations
 // ? indexing + slicing
 // ? tuple + dict + generator
@@ -33,9 +34,8 @@ using static GraphicIDE.KeyInput;
 // ? func call
 // ? break, continue
 // ? built in funcs
-// ? in, is, not
+// ? None
 // ? lambda 
-// ?
 
 namespace GraphicIDE;
 
@@ -58,7 +58,6 @@ public partial class Form1: Form {
 
     #endregion
 
-    #region Start
     public Form1() {
         nonStatic = this;
         InitializeComponent();
@@ -107,6 +106,7 @@ public partial class Form1: Form {
         AddRunBtn();
         AddDebugBtn();
         AddTabBtn();
+        RenameTabBtn();
 
         AddConsole();
         MakeExecTimeDisplay();
@@ -118,7 +118,6 @@ public partial class Form1: Form {
 
         FocusTB();
     }
-    #endregion
 
     #region THE EVENTS
     public void Move_Event(object sender, EventArgs e) => screenPos = GetScreenPos();
@@ -152,8 +151,8 @@ public partial class Form1: Form {
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
         var keyCode = (Keys) (msg.WParam.ToInt32() & Convert.ToInt32(Keys.KeyCode));
         if(msg.Msg == WM_KEYDOWN && ModifierKeys == Keys.Control) {
-            bool isAltlKeyPressed = isAltlPressed();
-            bool isShift = isShiftPressed();
+            bool isAltlKeyPressed = IsAltlPressed();
+            bool isShift = IsShiftPressed();
             bool refresh = true;
             ((Action)(keyCode switch {
                 Keys.Delete => () => DeleteKey(isAltlKeyPressed, true),
@@ -171,6 +170,7 @@ public partial class Form1: Form {
                 Keys.D => () => Duplicate(isAltlKeyPressed),
                 Keys.A => () => SelectAll(),
                 Keys.N => () => PromptMakeNewTab(),
+                Keys.R => () => PromptRenameTab(),
                 Keys.Tab => () => CtrlTab(),
                 Keys.Oemtilde => () => ToggleConsole(),
                 Keys.Oemplus => () => ChangeFontSize((int)boldFont.Size + 1),
@@ -209,9 +209,9 @@ public partial class Form1: Form {
         dragging = false;
         doubleClick = true;
 
-        GoInDirCtrl(GetNextL, isAltlPressed());
+        GoInDirCtrl(GetNextL, IsAltlPressed());
         selectedLine = (CursorPos.Line, CursorPos.Col);
-        GoInDirCtrl(GetNextR, isAltlPressed());
+        GoInDirCtrl(GetNextR, IsAltlPressed());
 
         DrawTextScreen();
         Invalidate();
@@ -221,9 +221,9 @@ public partial class Form1: Form {
         var newSelectedLine = (CursorPos.Line, -1);
         var newCurCol = linesText[CursorPos.Line].Length - 1;
         if(newCurCol == pos.col && newSelectedLine == sel) {
-            GoInDirCtrl(GetNextL, isAltlPressed());
+            GoInDirCtrl(GetNextL, IsAltlPressed());
             selectedLine = (CursorPos.Line, CursorPos.Col);
-            GoInDirCtrl(GetNextR, isAltlPressed());
+            GoInDirCtrl(GetNextR, IsAltlPressed());
         } else {
             CursorPos.ChangeCol(newCurCol);
             selectedLine = newSelectedLine;
@@ -276,7 +276,7 @@ public partial class Form1: Form {
                 return; 
             }
         }
-        if(!isShiftPressed() || selectedLine is null) {
+        if(!IsShiftPressed() || selectedLine is null) {
             selectedLine = tempSelectedLine!;
         }
         while(dragging) {
@@ -286,7 +286,7 @@ public partial class Form1: Form {
     }
     public static void MouseBtnClick(bool refresh=true) {
         if(selectedLine is not null) {
-            if(!isShiftPressed() && !dragging) {
+            if(!IsShiftPressed() && !dragging) {
                 selectedLine = null;
             }
         }
@@ -446,7 +446,7 @@ public class Function {
     public int CurLine = 0;
     public int CurCol = -1;
     public bool isPic = false;
-    public readonly string Name;
+    public string Name;
     public Function(string name){
         Name = name;
     }

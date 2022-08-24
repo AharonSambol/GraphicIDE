@@ -104,10 +104,10 @@ public static class Helpers {
     }
     public static int MeasureHeight(string st, Font ft) => (int)nullGraphics.MeasureString(st, ft).Height;
 
-    public static bool isShiftPressed() => (Form1.ModifierKeys & Keys.Shift) == Keys.Shift;
-    public static bool isCapsPressed() => (Form1.ModifierKeys & Keys.CapsLock) == Keys.CapsLock;
-    public static bool isAltlPressed() => (Form1.ModifierKeys & Keys.Alt) == Keys.Alt;
-    public static bool isCtrlPressed() => (Form1.ModifierKeys & Keys.Control) == Keys.Control;
+    public static bool IsShiftPressed() => (Form1.ModifierKeys & Keys.Shift) == Keys.Shift;
+    public static bool IsCapsPressed() => (Form1.ModifierKeys & Keys.CapsLock) == Keys.CapsLock;
+    public static bool IsAltlPressed() => (Form1.ModifierKeys & Keys.Alt) == Keys.Alt;
+    public static bool IsCtrlPressed() => (Form1.ModifierKeys & Keys.Control) == Keys.Control;
 
     public static bool IsBefore((int line, int col) one, (int line, int col) two) {
         return one.line < two.line || (one.line == two.line && one.col < two.col);

@@ -10,6 +10,7 @@ public static class MyImages {
         printerImg = new(Resources.printer),
         consoleImg = new(Resources.console),
         searchImg = new(Resources.search),
+        renameImg = new(Resources.rename),
         returnImg = new(Resources.Arrow),
         rulerImg = new(Resources.ruler),
         truckImg = new(Resources.truck),

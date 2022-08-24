@@ -11,64 +11,71 @@ namespace GraphicIDE;
 public static class Start{
     public static void AddRunBtn() {
         int gap = 5;
-        Button run = new(){
+        Button btn = new(){
             BackColor = tabBarColor,
             Size = new(TAB_HEIGHT, TAB_HEIGHT),
             BackgroundImageLayout = ImageLayout.None,
             FlatStyle = FlatStyle.Flat,
         };
-        run.FlatAppearance.BorderSize = 0;
-        run.FlatAppearance.BorderColor = Color.White;
-        run.FlatAppearance.MouseOverBackColor = lightGray;
-        Bitmap b = new(run.Size.Width, run.Size.Height);
+        btn.FlatAppearance.BorderSize = 0;
+        btn.FlatAppearance.BorderColor = Color.White;
+        btn.FlatAppearance.MouseOverBackColor = lightGray;
+        Bitmap b = new(btn.Size.Width, btn.Size.Height);
         using(var g = Graphics.FromImage(b)) {
-            Bitmap scaled = new(playImg, run.Size.Width - gap * 2, run.Size.Height - gap * 2);
+            Bitmap scaled = new(playImg, btn.Size.Width - gap * 2, btn.Size.Height - gap * 2);
             g.DrawImage(scaled, gap, gap);
         }
-        run.BackgroundImage = b;
-        run.Click += new EventHandler(PythonFuncs.ExecuteBtn!);
-        nonStatic.Controls.Add(run);
-        buttonsOnScreen.Add((run, (size) => new(size.w - run.Size.Width - 10, 0)));
+        btn.BackgroundImage = b;
+        btn.Click += new EventHandler(PythonFuncs.ExecuteBtn!);
+        nonStatic.Controls.Add(btn);
+        buttonsOnScreen.Add((btn, (size) => new(size.w - btn.Size.Width - 10, 0)));
     }
     public static void AddDebugBtn() {
-        Button run = new(){
+        Button btn = new(){
             BackColor = tabBarColor,
             Size = new(TAB_HEIGHT, TAB_HEIGHT),
-            BackgroundImageLayout = ImageLayout.None,
+            BackgroundImageLayout = ImageLayout.Stretch,
             FlatStyle = FlatStyle.Flat,
+            BackgroundImage = debugImg,
         };
-        run.FlatAppearance.BorderSize = 0;
-        run.FlatAppearance.BorderColor = Color.White;
-        run.FlatAppearance.MouseOverBackColor = lightGray;
-        Bitmap b = new(run.Size.Width, run.Size.Height);
-        using(var g = Graphics.FromImage(b)) {
-            Bitmap scaled = new(debugImg, run.Size.Width, run.Size.Height);
-            g.DrawImage(scaled, 0, 0);
-        }
-        run.BackgroundImage = b;
-        run.Click += new EventHandler(PythonFuncs.ExecuteBtn!);
-        nonStatic.Controls.Add(run);
-        buttonsOnScreen.Add((run, (size) => new(size.w - 2 * run.Size.Width - 20, 0)));
+        btn.FlatAppearance.BorderSize = 0;
+        btn.FlatAppearance.BorderColor = Color.White;
+        btn.FlatAppearance.MouseOverBackColor = lightGray;
+        btn.Click += new EventHandler(PythonFuncs.ExecuteBtn!);
+        nonStatic.Controls.Add(btn);
+        buttonsOnScreen.Add((btn, (size) => new(size.w - 2 * (btn.Size.Width + 10), 0)));
     }
-    public static  void AddTabBtn() {
-        Button run = new(){
+    public static void AddTabBtn() {
+        Button btn = new(){
             BackColor = tabBarColor,
             Size = new(TAB_HEIGHT, TAB_HEIGHT),
-            BackgroundImageLayout = ImageLayout.None,
+            BackgroundImageLayout = ImageLayout.Stretch,
             FlatStyle = FlatStyle.Flat,
+            BackgroundImage = plusImg,
         };
-        run.FlatAppearance.BorderSize = 0;
-        run.FlatAppearance.BorderColor = Color.White;
-        run.FlatAppearance.MouseOverBackColor = lightGray;
-        Bitmap b = new(run.Size.Width, run.Size.Height);
-        using(var g = Graphics.FromImage(b)) {
-            Bitmap scaled = new(plusImg, run.Size.Width, run.Size.Height);
-            g.DrawImage(scaled, 0, 0);
-        }
-        run.BackgroundImage = b;
-        run.Click += new EventHandler(AddTabEvent!);
-        nonStatic.Controls.Add(run);
-        buttonsOnScreen.Add((run, (size) => new(size.w - 3 * run.Size.Width - 30, 0)));
+        btn.FlatAppearance.BorderSize = 0;
+        btn.FlatAppearance.BorderColor = Color.White;
+        btn.FlatAppearance.MouseOverBackColor = lightGray;
+        
+        btn.Click += new EventHandler(AddTabEvent!);
+        nonStatic.Controls.Add(btn);
+        buttonsOnScreen.Add((btn, (size) => new(size.w - 3 * (btn.Size.Width + 10), 0)));
+    }
+    public static void RenameTabBtn() {
+        Button btn = new(){
+            BackColor = tabBarColor,
+            Size = new(TAB_HEIGHT, TAB_HEIGHT),
+            BackgroundImageLayout = ImageLayout.Stretch,
+            FlatStyle = FlatStyle.Flat,
+            BackgroundImage = renameImg,
+        };
+        btn.FlatAppearance.BorderSize = 0;
+        btn.FlatAppearance.BorderColor = Color.White;
+        btn.FlatAppearance.MouseOverBackColor = lightGray;
+        
+        btn.Click += new EventHandler((_,_) => PromptRenameTab());
+        nonStatic.Controls.Add(btn);
+        buttonsOnScreen.Add((btn, (size) => new(size.w - 4 * (btn.Size.Width + 10), 0)));
     }
     public static void AddConsole() {
         var (height, width) = (screenHeight, screenWidth);

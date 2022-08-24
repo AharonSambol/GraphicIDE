@@ -83,10 +83,10 @@ public static class Tabs {
         curWindow = window;
         ChangeTab(clickedBtn.Name, prevWindow: prevWindow);
     }
-    public static void ChangeTab(string funcName, Window prevWindow, bool select=false, bool dontDraw=false) {
+    public static void ChangeTab(string funcName, Window prevWindow, bool dontDraw=false) {
         var func = nameToFunc[funcName];
         if(selectedLine is not null) {
-            if(!isShiftPressed()) {
+            if(!IsShiftPressed()) {
                 selectedLine = null;
             }
         }
@@ -126,6 +126,7 @@ public static class Tabs {
             Multiline = true,
             Size = new(500, 40),
             Font = boldFont,
+            PlaceholderText = "New function:"
         };
         textBox.Location = new(
             (int)(screenWidth / 2 - textBox.Width / 2),
@@ -141,6 +142,40 @@ public static class Tabs {
             var name = ((TextBox)sender).Text;
             var func = NewFunc(name);
             curWindow.Function = func;
+        } else if(e.KeyCode == Keys.Escape) {
+            nonStatic.Controls.Remove((TextBox)sender);
+        }
+    }
+    public static void PromptRenameTab(){
+        TextBox textBox = new(){
+            Multiline = true,
+            Size = new(500, 40),
+            Font = boldFont,
+            PlaceholderText = $"Rename { curFunc.Name } to:",
+        };
+        textBox.Location = new(
+            (int)(screenWidth / 2 - textBox.Width / 2),
+            (int)(screenHeight / 2 - textBox.Height / 2)
+        );
+        textBox.KeyDown += new KeyEventHandler(RenameTab!);
+        nonStatic.Controls.Add(textBox);
+        textBox.Focus();
+    }
+    public static void RenameTab(object sender, KeyEventArgs e){
+        if(e.KeyCode == Keys.Enter) {
+            nonStatic.Controls.Remove((TextBox)sender);
+            var name = ((TextBox)sender).Text;
+            nameToFunc.Remove(curFunc.Name);
+            nameToFunc[name] = curFunc;
+            foreach(var window in windows) {
+                foreach(var tab in window.tabButtons) {
+                    if(tab.Name.Equals(curFunc.Name)){
+                        tab.Name = name;
+                        tab.Text = name;
+                    }
+                }
+            }
+            curFunc.Name = name;
         } else if(e.KeyCode == Keys.Escape) {
             nonStatic.Controls.Remove((TextBox)sender);
         }

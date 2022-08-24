@@ -17,12 +17,12 @@ public static class KeyInput {
         textBox.SelectionStart = 1;
         textBox.SelectionLength = 0;
         lastPressed = e.KeyCode;
-        bool isShift = isShiftPressed();
+        bool isShift = IsShiftPressed();
         if(selectedLine is null && isShift) {
             selectedLine = (CursorPos.Line, CursorPos.Col);
         }
-        bool isAltl = isAltlPressed();
-        bool isCtrl = isCtrlPressed();
+        bool isAltl = IsAltlPressed();
+        bool isCtrl = IsCtrlPressed();
         // todo bool isCaps = isCapsPressed();
         var refresh = true;
         ((Action)(lastPressed switch {
@@ -84,7 +84,7 @@ public static class KeyInput {
         nonStatic.Invalidate();
     }
     public static void Tab(){
-        if(isShiftPressed()){
+        if(IsShiftPressed()){
             var selectLine = selectedLine is null ? CursorPos.Line : selectedLine.Value.line;
             var (bigger, smaller) = MaxMin(CursorPos.Line, selectLine);
             for (int i=smaller; i <= bigger; i++) {
@@ -93,12 +93,12 @@ public static class KeyInput {
                     if(i == CursorPos.Line && CursorPos.Col != -1){
                         CursorPos.ChangeCol(Max(-1, CursorPos.Col - 4));
                     }
-                    if(selectedLine is (int line, int col) sl && i == sl.line && sl.col != -1){
+                    if(selectedLine is (int, int) sl && i == sl.line && sl.col != -1){
                         selectedLine = (sl.line, Max(-1, sl.col - 4));
                     }
                 }
             }
-        } else if(selectedLine is (int line, int col) sl && sl.line != CursorPos.Line){
+        } else if(selectedLine is (int, int) sl && sl.line != CursorPos.Line){
             var (bigger, smaller) = MaxMin(CursorPos.Line, sl.line);
             for (int i=smaller; i <= bigger; i++) {
                 linesText[i] = $"    { linesText[i] }";

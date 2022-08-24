@@ -75,7 +75,7 @@ public static class Console {
                 FlatStyle = FlatStyle.Flat,
                 BackgroundImageLayout = ImageLayout.Zoom,
             };
-            closeConsoleBtn.Location = CCBCalcPos((0, 0)); 
+            closeConsoleBtn.Location = CCBCalcPos((0, 0));
             closeConsoleBtn.FlatAppearance.BorderSize = 0;
             closeConsoleBtn.FlatAppearance.BorderColor = Color.White;
             closeConsoleBtn.FlatAppearance.MouseOverBackColor = lightGray;
@@ -133,7 +133,6 @@ public static class Console {
             g.DrawString(executedTime, boldFont, timeBrush, 0, 0);
         }
         execTimeBtn!.Size = new(w, h);
-        // var pos = buttonsOnScreen.Find((x)=>x.btn.Equals(execTimeBtn)).calcPos((Width, Height));
         execTimeBtn!.Location = ETBCalcPos((screenWidth, screenHeight));
         execTimeBtn!.BackgroundImage = bm;
     }

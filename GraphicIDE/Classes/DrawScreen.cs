@@ -38,11 +38,11 @@ public static class DrawScreen{
                         (float newWidth, float newHeight) = (bm.Img.Width, bm.Img.Height);
                         if(newWidth > curWindow.Size.width){
                             newWidth = curWindow.Size.width;
-                            newHeight = newHeight / (bm.Img.Width / newWidth);
+                            newHeight /= (bm.Img.Width / newWidth);
                         }
                         if(newHeight > curWindow.Size.height - TAB_HEIGHT){
                             newHeight = curWindow.Size.height - TAB_HEIGHT;
-                            newWidth = newWidth / (bm.Img.Height / newHeight);
+                            newWidth /= (bm.Img.Height / newHeight);
                         }
                         bm = new(new(bm.Img, (int)newWidth, (int)newHeight), 0);
                     }
