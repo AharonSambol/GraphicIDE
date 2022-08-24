@@ -129,18 +129,26 @@ public static class DrawScreen{
                 drawPosY = item.Pos.y;
             }
             if((int)item.Size.width > 0 && itemHeight > 0){
-                //draw the img
+                // ? draw the img
                 Bitmap bm = new((int)item.Size.width, itemHeight);
                 using(var g = Graphics.FromImage(bm)){
-                    g.Clear(Color.Black); // make back black
+                    g.Clear(Color.Black); // ? make back black
                     g.DrawImage(item.Function.DisplayImage!, 0, item.Offset);
                 }
                 e.Graphics.DrawImage(bm, item.Pos.x, drawPosY);
-                //draw frame
+                // ? draw frame
                 e.Graphics.DrawRectangle(new(Color.White, 2), item.Pos.x-2, item.Pos.y-2, item.Size.width+2, item.Size.height+2);
             }
         }
-        // tab bar
+        // ? prompt
+        if(visablePrompt is Prompt p){
+            e.Graphics.DrawImage(
+                p.bm, 
+                (int)(screenWidth / 2 - p.bm.Width / 2), 
+                (int)(screenHeight / 2 - p.bm.Height + p.tb.Height / 2 + 20)
+            );
+        }
+        // ? tab bar
         e.Graphics.FillRectangle(tabBarBrush, 0, 0, screenWidth, TAB_HEIGHT);
     }
 }

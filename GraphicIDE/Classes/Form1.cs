@@ -145,6 +145,13 @@ public partial class Form1: Form {
             button.btn.Location = button.calcPos(WHTuple);
         }
 
+        if(visablePrompt is Prompt p){
+            p.tb.Location = new(
+                (int)(screenWidth / 2 - p.tb.Width / 2),
+                (int)(screenHeight / 2 - p.tb.Height / 2)
+            );
+        }
+
         (prevHeight, prevWidth) = (screenHeight, screenWidth);
         Invalidate();
     }
