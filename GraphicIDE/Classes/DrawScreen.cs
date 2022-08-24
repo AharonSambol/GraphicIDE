@@ -12,6 +12,7 @@ namespace GraphicIDE;
 public static class DrawScreen{
     public const int LINE_HEIGHT = 30;
     public static bool isPic = false, skipDrawNewScreen = false;
+    private static readonly Font titleFont = new(FontFamily.GenericMonospace, 35, FontStyle.Bold);
     public static void DrawPicScreen() {
         if(isPic) {
             DrawTextScreen();
@@ -20,7 +21,18 @@ public static class DrawScreen{
         } else {
             try {
                 var bm = MakeImg(PythonFuncs.ToAST());
+                
                 if(bm is not null) {
+                    if(!curFunc.Name.StartsWith(".")){
+                        int w = MeasureWidth(curFunc.Name, titleFont);
+                        int h = MeasureHeight(curFunc.Name, titleFont);
+                        Bitmap newBm = new(Max(bm.Img.Width, w), bm.Img.Height + h);
+                        using(var g = Graphics.FromImage(newBm)){
+                            g.DrawImage(bm.Img, 0, h);
+                            g.DrawString(curFunc.Name, titleFont, titleBrush, 0, 0);
+                        }
+                        bm = new(newBm, 0);
+                    }
                     #region resize to fit screen
                     if(bm.Img.Height > curWindow.Size.height || bm.Img.Width > curWindow.Size.width){
                         (float newWidth, float newHeight) = (bm.Img.Width, bm.Img.Height);

@@ -15,6 +15,7 @@ using Microsoft.CSharp.RuntimeBinder;
 
 using static GraphicIDE.BrushesAndPens;
 using static GraphicIDE.Form1;
+using static GraphicIDE.Tabs;
 using static GraphicIDE.Console;
 
 namespace GraphicIDE;
@@ -46,10 +47,22 @@ public static class PythonFuncs{
         textBox.Focus();
     }
     public static void Execute() {
-        StringBuilder theScript = new(), res = new(), errs = new();
-        foreach(var line in linesText) {
-            theScript.AppendLine(line);
+        StringBuilder theScript = new(), res = new(), errs = new(), main = new();
+        foreach(var func in nameToFunc.Values) {
+            if(func.Name.Equals(".Main")){
+                foreach(var line in func.LinesText) {
+                    main.AppendLine(line);
+                }
+            } else if(func.Name.Equals(".console")){
+                continue;
+            } else {
+                theScript.Append("def ").Append(func.Name).Append(":\n"); // todo add args
+                foreach(var line in func.LinesText) {
+                    theScript.Append('\t').AppendLine(line);
+                }
+            }
         }
+        theScript.Append(main);
 
         var engine = Python.CreateEngine();
         MemoryStream ms = new();

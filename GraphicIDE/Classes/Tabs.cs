@@ -19,13 +19,13 @@ public static class Tabs {
         Button btn = new() {
             Name = name,
             Text = name,
-            BackColor = Color.DarkGray,
+            BackColor = lightGray,
             Location = new((int)window.Pos.x + window. tabsEnd, (int)window.Pos.y),
             Size = new(TAB_WIDTH, TAB_HEIGHT),
             Font = tabFont,
             FlatStyle = FlatStyle.Flat,
         };
-        btn.FlatAppearance.BorderColor = Color.DarkGray;
+        btn.FlatAppearance.BorderColor = lightGray;
         btn.Click += new EventHandler((object? sender, EventArgs e) => ChangeTab(sender!, window));
 
         window.tabButtons.Add(btn);
@@ -33,9 +33,9 @@ public static class Tabs {
         window.tabsEnd += btn.Width + 10;
         if(window.Equals(curWindow) && !isFirst){
             if(window.selectedTab is not null){
-                window.selectedTab.BackColor = window.selectedTab.FlatAppearance.BorderColor = Color.DarkGray;
+                window.selectedTab.BackColor = window.selectedTab.FlatAppearance.BorderColor = lightGray;
             } 
-            btn.BackColor = btn.FlatAppearance.BorderColor = lightGray;
+            btn.BackColor = btn.FlatAppearance.BorderColor = Color.DarkGray;
             window.selectedTab = btn;
         }
         return btn;
@@ -56,7 +56,7 @@ public static class Tabs {
             var btn = AddTabToWindow(tab, window);
             if(tab.Equals(func.Name)){
                 window.selectedTab = btn;
-                btn.BackColor = btn.FlatAppearance.BorderColor = lightGray;
+                btn.BackColor = btn.FlatAppearance.BorderColor = Color.DarkGray;
             }
 
         }
@@ -73,11 +73,11 @@ public static class Tabs {
     }
     public static void ChangeTab(object sender, Window window){
         if(window.selectedTab is not null){
-            window.selectedTab.BackColor = window.selectedTab.FlatAppearance.BorderColor = Color.DarkGray;
+            window.selectedTab.BackColor = window.selectedTab.FlatAppearance.BorderColor = lightGray;
         }
         var clickedBtn = (Button)sender;
         window.selectedTab = clickedBtn;
-        clickedBtn.BackColor = clickedBtn.FlatAppearance.BorderColor = lightGray;
+        clickedBtn.BackColor = clickedBtn.FlatAppearance.BorderColor = Color.DarkGray;
 
         var prevWindow = curWindow;
         curWindow = window;
@@ -91,7 +91,6 @@ public static class Tabs {
             }
         }
 
-        // todo curFunc.Button.BackColor = Color.LightGray;
         curFunc.CurLine = CursorPos.Line;
         curFunc.CurCol = CursorPos.Col;
         var actualWindow = curWindow;
@@ -105,7 +104,6 @@ public static class Tabs {
         curWindow = actualWindow;
         curTextBrush = curWindow.txtBrush;
         curFunc.isPic = isPic;
-        // todo func.Button.BackColor = Color.WhiteSmoke;
         curFunc = func;
         curWindow.Function = func;
         linesText = func.LinesText;

@@ -154,25 +154,57 @@ public static class AST {
     }
     
     // todo: while / until / forever
+    // public static BM_Middle WhileStatement(dynamic ast) {
+    //     var condition = MakeImg(ast.Test).Img;
+    //     var body = MakeImg(ast.Body).Img;
+    //     var infWidth = MeasureWidth("∞", bigFont);
+    //     Bitmap res = new(
+    //             width: Max(condition.Width + infWidth, body.Width + indentW),
+    //             height: condition.Height + body.Height + 14
+    //         );
+    //     using(var g = Graphics.FromImage(res)) {
+    //         g.DrawString(
+    //             "∞", bigFont, keyOrangeB, 0,
+    //             (int)(condition.Height / 2 - qHeight / 2) - 10
+    //         );
+    //         g.DrawImage(condition, infWidth, 0);
+    //         g.DrawLine(blueOpaqeP, 1, 0, 1, res.Height - 5);
+    //         g.DrawImage(body, indentW, condition.Height);
+    //         g.DrawLine(blueDashed, 4, 1, res.Width, 1);
+    //         g.DrawLine(blueDashed, 4, res.Height - 8, res.Width, res.Height - 8);
+    //     }
+    //     return new(res, (int)(res.Height/2));
+    // }
+    private static Font bigFont = new(FontFamily.GenericMonospace, 30, FontStyle.Bold);
     public static BM_Middle WhileStatement(dynamic ast) {
-        var condition = MakeImg(ast.Test).Img;
-        var body = MakeImg(ast.Body).Img;
-        Font bigFont = new(FontFamily.GenericMonospace, 30, FontStyle.Bold);
-        var infWidth = MeasureWidth("∞", bigFont);
+        int indent = 8;
+        int gap = 8;
+        Bitmap condition = MakeImg(ast.Test).Img;
+        Bitmap body = MakeImg(ast.Body).Img;
+        Bitmap border = new(
+            // condition.Width + 8, 
+            Max(condition.Width + 8, body.Width + indent) + txtHeight * 4,
+            condition.Height + 8
+        );
+        using(var g = Graphics.FromImage(border)){
+            g.DrawRectangle(whileOrangeP, 2, 2, border.Width - 4, border.Height - 4);
+            g.DrawImage(condition, 4, 4);
+        }
+        condition = border;
+        Bitmap arrowUp   = new(arrowUpImg  , txtHeight * 2, body.Height + condition.Height);
+        Bitmap arrowDown = new(arrowDownImg, txtHeight * 2, body.Height + condition.Height);
         Bitmap res = new(
-                width: Max(condition.Width + infWidth, body.Width + indentW),
-                height: condition.Height + body.Height + 14
-            );
+            width: Max(condition.Width, body.Width + indent) + arrowDown.Width + arrowUp.Width,
+            height: condition.Height + body.Height + gap * 2 + 6
+        );
         using(var g = Graphics.FromImage(res)) {
-            g.DrawString(
-                "∞", bigFont, keyOrangeB, 0,
-                (int)(condition.Height / 2 - qHeight / 2) - 10
-            );
-            g.DrawImage(condition, infWidth, 0);
-            g.DrawLine(blueOpaqeP, 1, 0, 1, res.Height - 5);
-            g.DrawImage(body, indentW, condition.Height);
-            g.DrawLine(blueDashed, 4, 1, res.Width, 1);
-            g.DrawLine(blueDashed, 4, res.Height - 8, res.Width, res.Height - 8);
+            g.DrawImage(arrowDown, 0, gap);
+            g.DrawImage(arrowUp, res.Width - arrowUp.Width, gap);
+
+            g.DrawImage(condition, arrowDown.Width, gap);
+            g.DrawImage(body, indent + arrowDown.Width, condition.Height + gap);
+
+            g.DrawLine(whileOrangeP, 0, res.Height-4, res.Width, res.Height-4);
         }
         return new(res, (int)(res.Height/2));
     }

@@ -10,17 +10,19 @@ using static GraphicIDE.Console;
 using static GraphicIDE.KeyInput;
 
 // todo add / move / resize windows
+// todo let them make custom ing for functions
 // todo console button changing size??
 // todo print and exception
 // todo empty print
-// todo print('1\n2\n3\n4\n5\n6\n7\n8\n9\n') and then changeing focus to console and returning results in print taking up more than screen
-// todo when changing font size need to change pen sizes as well 
+// todo when changing font size need to change pen sizes as well / just resize img
 // todo while >> until / forever
+// todo drag selection
+// todo add cheat sheat
+// todo right click
 // todo ctrl z / y
 // todo cache some of the textline images
-// todo drag selection
-// todo right click
 // todo capslock shortcuts
+// todo add more visualizations
 
 namespace GraphicIDE;
 
@@ -83,7 +85,7 @@ public partial class Form1: Form {
 
         var mainFunc = NewFunc(".Main", isfirst: true);
         var mainWindow = MakeNewWindow(mainFunc, size: (windowWidth, windowHeight), pos: (0, 0));
-        var func2 = NewFunc(".Main2", isfirst: true);
+        var func2 = NewFunc("Main2()", isfirst: true);
         var window2 = MakeNewWindow(func2, size: (windowWidth, windowHeight), pos: (windowWidth, 0));
         curWindow = mainWindow;
         curFunc = mainFunc;
@@ -288,7 +290,7 @@ public partial class Form1: Form {
         }
     }
     public static int GetClickRow() {
-        double mouse = Cursor.Position.Y - (curWindow.Pos.y + curWindow.Offset) - screenPos.Y;
+        double mouse = Cursor.Position.Y - (curWindow.Pos.y + curWindow.Offset) - screenPos.Y - TAB_HEIGHT;
         int i = (int)Math.Floor(mouse / txtHeight);
         return Max(0, Min(linesText.Count - 1, i));
     }

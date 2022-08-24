@@ -11,6 +11,7 @@ public static class BrushesAndPens{
         greenOpaqe      = Color.FromArgb(100, 000, 255, 000),
         mathPurple      = Color.FromArgb(255, 164, 128, 207),
         truckColor      = Color.FromArgb(255, 089, 025, 025),
+        whileOrange     = Color.FromArgb(255, 223, 146, 082),
         truckIColor     = Color.FromArgb(255, 137, 024, 026),
         tabBarColor     = Color.FromArgb(255, 100, 100, 100),
         orangeOpaqe     = Color.FromArgb(100, 250, 200, 093);
@@ -27,6 +28,7 @@ public static class BrushesAndPens{
         intBrush            = new(Color.FromArgb(255, 207, 255, 182)),
         timeBrush           = new(Color.FromArgb(255, 100, 100, 100)),
         textBrush           = new(Color.FromArgb(255, 160, 160, 160)),
+        titleBrush          = new(Color.FromArgb(255, 150, 150, 160)),
         greenBrush          = new(Color.FromArgb(255, 110, 255, 130)),
         selectBrush         = new(Color.FromArgb(100, 000, 100, 255)),
         stringBrush         = new(Color.FromArgb(255, 255, 204, 116)),
@@ -46,5 +48,6 @@ public static class BrushesAndPens{
         keyOrangeP      = new(keyOrange, 5),
         greenOpaqeP     = new(greenOpaqe, 5),
         mathPurpleP     = new(mathPurple, 5),
+        whileOrangeP    = new(whileOrange, 4),
         orangeOpaqeP    = new(orangeOpaqe, 5);
 }
