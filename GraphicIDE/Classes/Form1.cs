@@ -28,9 +28,14 @@ using static GraphicIDE.KeyInput;
 // ? comprehension
 // ? import from\as
 // ? try except raise
-// ? del, global, *, assert, yield\yeild from, with, classes(+attributes), formatStr, 
+// ? del, global, *, assert, yield\yeild from, with, classes(+attributes), formatStr, finally
 // ? annotations
 // ? func call
+// ? break, continue
+// ? built in funcs
+// ? in, is, not
+// ? lambda 
+// ?
 
 namespace GraphicIDE;
 

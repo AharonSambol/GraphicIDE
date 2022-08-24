@@ -38,7 +38,7 @@ public static class Console {
                 g.DrawString(consoleTxt.txt, boldFont, textBrush, 0, 5);
                 int end = 5 + MeasureHeight(consoleTxt.txt, boldFont);
                 if(errOpenButton is not null) {
-                    buttonsOnScreen.Remove(buttonsOnScreen.Find((x)=>x.btn.Equals(buttonsOnScreen)));
+                    buttonsOnScreen.Remove(buttonsOnScreen.Find((x)=>x.btn.Equals(errOpenButton)));
                     nonStatic.Controls[nonStatic.Controls.IndexOf(errOpenButton)].Dispose();
                     errOpenButton = null;
                 }
