@@ -10,19 +10,27 @@ using static GraphicIDE.Console;
 using static GraphicIDE.KeyInput;
 
 // todo add / move / resize windows
-// todo let them make custom ing for functions
+// todo scroll horizontal
+// todo let them make custom img for functions
 // todo console button changing size??
-// todo print and exception
-// todo empty print
 // todo when changing font size need to change pen sizes as well / just resize img
-// todo while >> until / forever
 // todo drag selection
 // todo add cheat sheat
 // todo right click
+// todo print and exception
 // todo ctrl z / y
 // todo cache some of the textline images
 // todo capslock shortcuts
+// todo syntax highlighting
 // todo add more visualizations
+// ? indexing + slicing
+// ? tuple + dict + generator
+// ? comprehension
+// ? import from\as
+// ? try except raise
+// ? del, global, *, assert, yield\yeild from, with, classes(+attributes), formatStr, 
+// ? annotations
+// ? func call
 
 namespace GraphicIDE;
 

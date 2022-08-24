@@ -34,11 +34,27 @@ public static class AST {
                 "OrExpression" => () => OrExpression(ast),
                 "ImportStatement" => () => ImportStatement(ast),
                 "AugmentedAssignStatement" => () => AugmentedAssignStatement(ast),
+                "FunctionDefinition" => () => MainModule(ast),
+                "ReturnStatement" => () => ReturnStatement(ast),
                 _ => () => null
             }))();
         } catch(Exception) { 
             return null;
         }
+    }
+    private static Bitmap? scaledReturn;
+    private static BM_Middle ReturnStatement(dynamic ast){
+        var val = MakeImg(ast.Expression).Img;
+        if(scaledReturn is null){
+            scaledReturn = new(returnImg, returnImg.Width / (returnImg.Height / txtHeight), txtHeight);
+        }
+
+        Bitmap res = new(val.Width + scaledReturn.Width, Max(val.Height, scaledReturn.Height));
+        using(var g = Graphics.FromImage(res)){
+            g.DrawImage(val, res.Width - val.Width, (int)(res.Height/2-val.Height/2));
+            g.DrawImage(scaledReturn, 0, (int)(res.Height/2-scaledReturn.Height/2));
+        }
+        return new(res, (int)res.Height/2);
     }
     public static BM_Middle ImportStatement(dynamic ast){
         string name = ast.Names[0].Names[0];
@@ -100,7 +116,6 @@ public static class AST {
         }
         return new(bm, bm.Height / 2);
     }
-    
     public static BM_Middle? emptyListScaled = null;
     public static BM_Middle ListExpression(dynamic ast) {
         if(ast.Items.Length == 0) {
@@ -152,38 +167,12 @@ public static class AST {
         passPic = new(img, (int)(img.Height / 2));
         return passPic!;
     }
-    
-    // todo: while / until / forever
-    // public static BM_Middle WhileStatement(dynamic ast) {
-    //     var condition = MakeImg(ast.Test).Img;
-    //     var body = MakeImg(ast.Body).Img;
-    //     var infWidth = MeasureWidth("∞", bigFont);
-    //     Bitmap res = new(
-    //             width: Max(condition.Width + infWidth, body.Width + indentW),
-    //             height: condition.Height + body.Height + 14
-    //         );
-    //     using(var g = Graphics.FromImage(res)) {
-    //         g.DrawString(
-    //             "∞", bigFont, keyOrangeB, 0,
-    //             (int)(condition.Height / 2 - qHeight / 2) - 10
-    //         );
-    //         g.DrawImage(condition, infWidth, 0);
-    //         g.DrawLine(blueOpaqeP, 1, 0, 1, res.Height - 5);
-    //         g.DrawImage(body, indentW, condition.Height);
-    //         g.DrawLine(blueDashed, 4, 1, res.Width, 1);
-    //         g.DrawLine(blueDashed, 4, res.Height - 8, res.Width, res.Height - 8);
-    //     }
-    //     return new(res, (int)(res.Height/2));
-    // }
-    private static Font bigFont = new(FontFamily.GenericMonospace, 30, FontStyle.Bold);
     public static BM_Middle WhileStatement(dynamic ast) {
-        int indent = 8;
-        int gap = 8;
+        int indent = 8, gap = 8;
         Bitmap condition = MakeImg(ast.Test).Img;
         Bitmap body = MakeImg(ast.Body).Img;
         Bitmap border = new(
-            // condition.Width + 8, 
-            Max(condition.Width + 8, body.Width + indent) + txtHeight * 4,
+            Max(condition.Width + 8, body.Width + indent),
             condition.Height + 8
         );
         using(var g = Graphics.FromImage(border)){
@@ -204,7 +193,7 @@ public static class AST {
             g.DrawImage(condition, arrowDown.Width, gap);
             g.DrawImage(body, indent + arrowDown.Width, condition.Height + gap);
 
-            g.DrawLine(whileOrangeP, 0, res.Height-4, res.Width, res.Height-4);
+            g.DrawLine(whileOrangeP, arrowDown.Width, res.Height-4, res.Width-arrowUp.Width, res.Height-4);
         }
         return new(res, (int)(res.Height/2));
     }
@@ -619,6 +608,9 @@ public static class AST {
         return new(res, (int)(res.Height / 2));
     }
     public static BM_Middle TupleExpression(dynamic ast) {
+        if(ast.Items.Length == 0){
+            return new(new(1, txtHeight), (int)(txtHeight/2));
+        }
         List<Bitmap> resses = new();
         var (width, height) = (0, 0);
         foreach(var statement in ast.Items) {

@@ -24,8 +24,15 @@ public static class PythonFuncs{
     public static string? errLink = null;
     public static PythonAst ToAST() {
         StringBuilder theScript = new();
-        foreach(var line in linesText) {
-            theScript.AppendLine(line);
+        if(!curFunc.Name.StartsWith(".")){
+            theScript.Append("def ").Append(curFunc.Name).AppendLine(":");
+            foreach(var line in linesText) {
+                theScript.Append("    ").AppendLine(line);
+            }
+        } else {
+            foreach(var line in linesText) {
+                theScript.AppendLine(line);
+            }
         }
         var engine = Python.CreateEngine();
 
