@@ -14,9 +14,11 @@ public static class MyImages {
         returnImg = new(Resources.Arrow),
         rulerImg = new(Resources.ruler),
         truckImg = new(Resources.truck),
+        pasteImg = new(Resources.paste),
         plusImg = new(Resources.plus),
         debugImg = new(Resources.bug),
         playImg = new(Resources.play),
+        copyImg = new(Resources.copy),
         passImg = new(Resources.pass),
         sumImg = new(Resources.sum),
         xImg = new(Resources.red_X);

@@ -9,13 +9,11 @@ using static GraphicIDE.MyImages;
 namespace GraphicIDE;
 
 public static class Tabs {
-    public const int TAB_HEIGHT = 25;
+    public const int TAB_HEIGHT = 25, TAB_WIDTH = 80;
     public static Font tabFont = new(FontFamily.GenericMonospace, 10, FontStyle.Bold);
-    public const int TAB_WIDTH = 80;
+    public static readonly Dictionary<string, Function> nameToFunc = new();
     public static readonly List<Button> tabButtons = new();
     public static Prompt? visablePrompt;
-    public static int tabButtonEnd = 0;
-    public static readonly Dictionary<string, Function> nameToFunc = new();
     public static Function curFunc = null!;
     public static Window curWindow = null!;
     public static void AddTabEvent(object? sender, EventArgs e) => PromptMakeNewTab();

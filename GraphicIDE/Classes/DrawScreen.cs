@@ -148,6 +148,10 @@ public static class DrawScreen{
                 (int)(screenHeight / 2 - p.bm.Height + p.tb.Height / 2 + 20)
             );
         }
+        // ? right click menu
+        if(rightClickMenu is Menu m){
+            e.Graphics.FillRectangle(m.bgColor, m.bgPos);
+        }
         // ? tab bar
         e.Graphics.FillRectangle(tabBarBrush, 0, 0, screenWidth, TAB_HEIGHT);
     }

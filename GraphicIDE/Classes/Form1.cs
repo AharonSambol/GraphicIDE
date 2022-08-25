@@ -1,7 +1,11 @@
 ﻿using System.Runtime.InteropServices;
+using System.Diagnostics;
+using System.Net;
+
 
 using static GraphicIDE.BrushesAndPens;
 using static GraphicIDE.MyMath;
+using static GraphicIDE.MyImages;
 using static GraphicIDE.Helpers;
 using static GraphicIDE.DrawScreen;
 using static GraphicIDE.Start;
@@ -22,7 +26,7 @@ using static GraphicIDE.KeyInput;
 // todo cache some of the textline images
 // todo capslock shortcuts
 // todo syntax highlighting
-// todo add description to prompt windows
+// todo when renaming func rename all calls too
 // todo add more visualizations
 // ? indexing + slicing
 // ? tuple + dict + generator
@@ -151,6 +155,9 @@ public partial class Form1: Form {
                 (int)(screenHeight / 2 - p.tb.Height / 2)
             );
         }
+        if(rightClickMenu is not null){
+            DisposeMenu(ref rightClickMenu);
+        }
 
         (prevHeight, prevWidth) = (screenHeight, screenWidth);
         Invalidate();
@@ -196,6 +203,132 @@ public partial class Form1: Form {
     #endregion
 
     #region Mouse
+    public static Menu? rightClickMenu;
+    private static Menu? staticRightClickMenu;
+    private static void RightClick(){
+        int size = 80, gap = 10;
+
+        bool addToControls = true;
+        if(staticRightClickMenu is null){   
+            MakeFirstRCMenu(); 
+            addToControls = false;
+        }
+
+        (int x, int y) mouse = (
+            Cursor.Position.X - screenPos.X,
+            Cursor.Position.Y - screenPos.Y
+        );
+        (int X, int Y) location = (mouse.x, mouse.y);
+        
+        int sizeH = size * 2 + gap * 3;
+        int sizeW = size * 3 + gap * 4;
+        Rectangle bgPos = new(location.X, location.Y, sizeW, sizeH);
+
+        foreach(var button in staticRightClickMenu!.Value.buttons) {
+            button.btn.Location = button.getPos(location);
+            if(addToControls){
+                nonStatic.Controls.Add(button.btn);
+            }
+            button.btn.BringToFront();
+        }
+
+        rightClickMenu = staticRightClickMenu;
+        BlockMouse(staticRightClickMenu!.Value.buttons[0].btn);
+        nonStatic.Invalidate();
+    }
+    private static void MakeFirstRCMenu(){
+        int size = 80, gap = 10;
+
+        Button bg = MakeButton(40, 40, new(1, 1), streatch: false);
+        bg.FlatAppearance.MouseOverBackColor = Color.Transparent;
+        bg.MouseDown += new MouseEventHandler((object? _, MouseEventArgs e) => {
+            if(e.Button == MouseButtons.Right){
+                // ! could be optimized to just move it and not delete+create new
+                DisposeMenu(ref rightClickMenu);
+                RightClick();
+            } else {
+                DisposeMenu(ref rightClickMenu);
+            }
+        });
+
+        Button copy = MakeButton(size, size, copyImg, streatch: false);
+        Func<(int X, int Y), Point> copyGetPos = (pos) => new(pos.X + gap, pos.Y + gap);
+        copy.Click += new EventHandler((_,_) => {
+            DisposeMenu(ref rightClickMenu);
+            Copy(IsAltlPressed());
+        });
+
+        Button paste = MakeButton(size, size, pasteImg, streatch: false);
+        Func<(int X, int Y), Point> pasteGetPos = (pos) => new(pos.X + 2 * gap + 1 * size, pos.Y + gap);
+        paste.Click += new EventHandler((_,_) => {
+            DisposeMenu(ref rightClickMenu);
+            Paste();
+            DrawTextScreen();
+            nonStatic.Invalidate();
+        });
+
+        Button search = MakeButton(size, size, searchImg, streatch: false);
+        Func<(int X, int Y), Point> searchGetPos = (pos) => new(pos.X + gap, pos.Y + 2 * gap + size);
+        search.Click += new EventHandler((_,_) => {
+            DisposeMenu(ref rightClickMenu);
+            string txt = (
+                selectedLine is null 
+                ? linesText[CursorPos.Line] 
+                : GetSelectedText()
+            ).Trim();
+            if(!txt.Equals("")) {
+                Process.Start(
+                    new ProcessStartInfo(
+                        "cmd", 
+                        $"/c start https://www.google.com/search?q=Python{ WebUtility.UrlEncode(" " + txt) }"
+                    ) { CreateNoWindow = true }
+                );
+            }
+        });
+
+        Button terminal = MakeButton(size, size, consoleImg, streatch: false);
+        Func<(int X, int Y), Point> terminalGetPos = (pos) => new(pos.X + 2 * gap + size, pos.Y + 2 * gap + size);
+        terminal.Click += new EventHandler((_,_) => {
+            DisposeMenu(ref rightClickMenu);
+            Process.Start("CMD.exe");
+        });  
+
+        Button run = MakeButton(size, size, playImg, streatch: false);
+        Func<(int X, int Y), Point> runGetPos = (pos) => new(pos.X + 3 * gap + 2 * size, pos.Y + gap);
+        run.Click += new EventHandler((_,_) => {
+            DisposeMenu(ref rightClickMenu);
+            PythonFuncs.Execute();
+        });
+
+        Button rename = MakeButton(size, size, renameImg, streatch: false);
+        Func<(int X, int Y), Point> renameGetPos = (pos) => new(pos.X + 3 * gap + 2 * size, pos.Y + 2 * gap + size);
+        rename.Click += new EventHandler((_,_) => {
+            DisposeMenu(ref rightClickMenu);
+            // Todo
+        });      
+
+        staticRightClickMenu = new(new(0,0,1,1), sandyBrush, new(){ 
+            (bg, (_)=>new(0,0)),
+            (copy, copyGetPos), (paste, pasteGetPos), (search, searchGetPos), 
+            (terminal, terminalGetPos), (run, runGetPos), (rename, renameGetPos)
+        });
+    }
+    private static async void BlockMouse(Button btn){
+        int w = btn.Size.Width / 2, h = btn.Size.Height / 2;
+        while(rightClickMenu is not null){
+            await Task.Delay(10);
+            btn.Location = new(Cursor.Position.X - screenPos.X - w, Cursor.Position.Y - screenPos.Y- h);
+        }
+    }
+    public static void DisposeMenu(ref Menu? menu){
+        if(menu is Menu m){
+            foreach(var item in m.buttons) {
+                nonStatic.Controls.Remove(item.btn);
+            }
+        }
+        menu = null;
+        nonStatic.Invalidate();
+    }
     protected override void OnMouseWheel(MouseEventArgs e) {
         if(curWindow.Function.DisplayImage!.Height > 40) {
             ChangeOffsetTo(curWindow.Offset + e.Delta / 10);
@@ -239,6 +372,9 @@ public partial class Form1: Form {
         Invalidate();
     }
     async void Drag(MouseEventArgs e) {
+        if(rightClickMenu is not null){
+            DisposeMenu(ref rightClickMenu);
+        }
         (int line, int col)? tempSelectedLine = null;
         if(e.Button == MouseButtons.Left) {
             (int x, int y) mousePos = (
@@ -271,7 +407,7 @@ public partial class Form1: Form {
             PythonFuncs.Execute();
             return;
         } else if(e.Button == MouseButtons.Right) {
-            // TODO todo 
+            RightClick();
             return;
         }
 
@@ -407,6 +543,7 @@ public partial class Form1: Form {
 }
 
 public record class BM_Middle(Bitmap Img, int Middle);
+public record struct Menu(Rectangle bgPos, SolidBrush bgColor, List<(Button btn, Func<(int X, int Y), Point> getPos)> buttons);
 static class CursorPos {
     public static int Line{ get; private set; } = 0;
     public static int Col{ get; private set; } = -1;
