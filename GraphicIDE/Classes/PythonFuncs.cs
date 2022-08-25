@@ -24,8 +24,8 @@ public static class PythonFuncs{
     public static string? errLink = null;
     public static PythonAst ToAST() {
         StringBuilder theScript = new();
-        if(!curFunc.Name.StartsWith(".")){
-            theScript.Append("def ").Append(curFunc.Name).AppendLine(":");
+        if(!curFunc.name.StartsWith(".")){
+            theScript.Append("def ").Append(curFunc.name).AppendLine(":");
             foreach(var line in linesText) {
                 theScript.Append("    ").AppendLine(line);
             }
@@ -56,15 +56,15 @@ public static class PythonFuncs{
     public static void Execute() {
         StringBuilder theScript = new(), res = new(), errs = new(), main = new();
         foreach(var func in nameToFunc.Values) {
-            if(func.Name.Equals(".Main")){
-                foreach(var line in func.LinesText) {
+            if(func.name.Equals(".Main")){
+                foreach(var line in func.linesText) {
                     main.AppendLine(line);
                 }
-            } else if(func.Name.Equals(".console")){
+            } else if(func.name.Equals(".console")){
                 continue;
             } else {
-                theScript.Append("def ").Append(func.Name).Append(":\n");
-                foreach(var line in func.LinesText) {
+                theScript.Append("def ").Append(func.name).Append(":\n");
+                foreach(var line in func.linesText) {
                     theScript.Append('\t').AppendLine(line);
                 }
             }
@@ -83,8 +83,8 @@ public static class PythonFuncs{
 
         engine.Runtime.IO.SetOutput(ms, outputWr);
         engine.Runtime.IO.SetErrorOutput(ems, errOutputWr);
-        console.Function.CurCol = -1;
-        console.Function.CurLine = 0;
+        console.function.curCol = -1;
+        console.function.curLine = 0;
         try {
             var source = engine.CreateScriptSourceFromString(theScript.ToString(), SourceCodeKind.File);
             Stopwatch sw = new();

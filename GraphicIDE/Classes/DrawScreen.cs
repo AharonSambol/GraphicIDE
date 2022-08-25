@@ -11,46 +11,46 @@ namespace GraphicIDE;
 
 public static class DrawScreen{
     public const int WINDOW_LEFT_GAP = 6;
-    public static bool isPic = false, skipDrawNewScreen = false;
+    public static bool skipDrawNewScreen = false;
     private static readonly Font titleFont = new(FontFamily.GenericMonospace, 35, FontStyle.Bold);
     public static void DrawPicScreen() {
-        if(isPic) {
+        if(curFunc.isPic) {
             DrawTextScreen();
             nonStatic.Invalidate();
-            isPic = false;
+            curFunc.isPic = false;
         } else {
             try {
                 var bm_ = MakeImg(PythonFuncs.ToAST());
                 
                 if(bm_ is BM_Middle bm) {
-                    if(!curFunc.Name.StartsWith(".")){
-                        int w = MeasureWidth(curFunc.Name, titleFont);
-                        int h = MeasureHeight(curFunc.Name, titleFont);
+                    if(!curFunc.name.StartsWith(".")){
+                        int w = MeasureWidth(curFunc.name, titleFont);
+                        int h = MeasureHeight(curFunc.name, titleFont);
                         Bitmap newBm = new(Max(bm.Img.Width, w), bm.Img.Height + h);
                         using(var g = Graphics.FromImage(newBm)){
                             g.DrawImage(bm.Img, 0, h);
-                            g.DrawString(curFunc.Name, titleFont, titleBrush, 0, 0);
+                            g.DrawString(curFunc.name, titleFont, titleBrush, 0, 0);
                         }
                         bm = new(newBm, 0);
                     }
                     #region resize to fit screen
-                    if(bm.Img.Height > curWindow.Size.height || bm.Img.Width > curWindow.Size.width){
+                    if(bm.Img.Height > curWindow.size.height || bm.Img.Width > curWindow.size.width){
                         (float newWidth, float newHeight) = (bm.Img.Width, bm.Img.Height);
-                        if(newWidth > curWindow.Size.width - 2 * WINDOW_LEFT_GAP){
-                            newWidth = curWindow.Size.width - 2 * WINDOW_LEFT_GAP;
+                        if(newWidth > curWindow.size.width - 2 * WINDOW_LEFT_GAP){
+                            newWidth = curWindow.size.width - 2 * WINDOW_LEFT_GAP;
                             newHeight /= (bm.Img.Width / newWidth);
                         }
-                        if(newHeight > curWindow.Size.height - TAB_HEIGHT){
-                            newHeight = curWindow.Size.height - TAB_HEIGHT;
+                        if(newHeight > curWindow.size.height - TAB_HEIGHT){
+                            newHeight = curWindow.size.height - TAB_HEIGHT;
                             newWidth /= (bm.Img.Height / newHeight);
                         }
                         bm = new(new(bm.Img, (int)newWidth, (int)newHeight), 0);
                     }
                     #endregion
-                    curFunc.DisplayImage = bm.Img;
+                    curFunc.displayImage = bm.Img;
                     skipDrawNewScreen = true;
                     nonStatic.Invalidate();
-                    isPic = true;
+                    curFunc.isPic = true;
                 }
             } catch (Exception){}
         }
@@ -60,7 +60,7 @@ public static class DrawScreen{
             skipDrawNewScreen = false;
             return;
         }
-        isPic = false;
+        curFunc.isPic = false;
 
         LinkedList<Bitmap> bitmaps = new();
         int totalWidth = 0;
@@ -74,8 +74,8 @@ public static class DrawScreen{
             var g = Graphics.FromImage(bm);
             g.DrawString(lineText, boldFont, curTextBrush, 0, 0);
 
-            if(i == CursorPos.Line && withCurser) {
-                var before = CursorPos.Col == -1 ? "": linesText[i][..(CursorPos.Col + 1)];
+            if(i == CursorPos.line && withCurser) {
+                var before = CursorPos.col == -1 ? "": linesText[i][..(CursorPos.col + 1)];
                 g.FillRectangle(
                     curserBrush,
                     MeasureWidth(before, boldFont) - 3,
@@ -84,15 +84,15 @@ public static class DrawScreen{
             }
 
             if(selectedLine is (int, int) sl && withCurser) {
-                if((i < sl.line && i > CursorPos.Line) || (i > sl.line && i < CursorPos.Line)) {
+                if((i < sl.line && i > CursorPos.line) || (i > sl.line && i < CursorPos.line)) {
                     g.FillRectangle(
                         selectBrush, 0, 0,
                         MeasureWidth(lineText, boldFont), txtHeight
                     );
-                } else if(i == sl.line || i == CursorPos.Line) {
-                    int cCol = CursorPos.Col, sCol = sl.col;
+                } else if(i == sl.line || i == CursorPos.line) {
+                    int cCol = CursorPos.col, sCol = sl.col;
                     if(i == sl.line) {
-                        cCol = i == CursorPos.Line ? CursorPos.Col : (i > CursorPos.Line ? -1 : lineText.Length - 1);
+                        cCol = i == CursorPos.line ? CursorPos.col : (i > CursorPos.line ? -1 : lineText.Length - 1);
                     } else {
                         sCol = i > sl.line ? -1 : lineText.Length - 1;
                     }
@@ -106,14 +106,14 @@ public static class DrawScreen{
             end += bm.Height;
             bitmaps.AddLast(bm);
         }
-        Bitmap newBitMap = new(Min(totalWidth, (int)curWindow.Size.width - WINDOW_LEFT_GAP * 2), end);
+        Bitmap newBitMap = new(Min(totalWidth, (int)curWindow.size.width - WINDOW_LEFT_GAP * 2), end);
         var gr = Graphics.FromImage(newBitMap);
         end = 0;
         foreach(var item in bitmaps) {
             gr.DrawImage(item, 0, end);
             end += item.Height;
         }
-        curFunc.DisplayImage = newBitMap;
+        curFunc.displayImage = newBitMap;
     }
     public static void OpenErrLink(object? sender, EventArgs e) {
         if(PythonFuncs.errLink is not null) {
@@ -121,23 +121,25 @@ public static class DrawScreen{
         }
     }
     public static void Form1_Paint(object? sender, PaintEventArgs e) {
-        foreach(var item in windows.AsEnumerable().Reverse()) {
-            var itemHeight = (int)item.Size.height - TAB_HEIGHT;
-            var drawPosY = item.Pos.y + TAB_HEIGHT;
-            if(item.Function.Name.Equals(".console")){
-                itemHeight = (int)item.Size.height;
-                drawPosY = item.Pos.y;
+        foreach(var window in windows.AsEnumerable().Reverse()) {
+            var itemHeight = (int)window.size.height - TAB_HEIGHT;
+            var drawPosY = window.pos.y + TAB_HEIGHT;
+            if(window.function.name.Equals(".console")){
+                itemHeight = (int)window.size.height;
+                drawPosY = window.pos.y;
             }
-            if((int)item.Size.width > 0 && itemHeight > 0){
+            if((int)window.size.width > 0 && itemHeight > 0){
                 // ? draw the img
-                Bitmap bm = new((int)item.Size.width, itemHeight);
+                Bitmap bm = new((int)window.size.width, itemHeight);
                 using(var g = Graphics.FromImage(bm)){
                     g.Clear(Color.Black); // ? make back black
-                    g.DrawImage(item.Function.DisplayImage!, 0, item.Offset);
+                    g.DrawImage(
+                        window.function.displayImage!, 
+                        0, window.function.isPic ? 0 : window.offset);
                 }
-                e.Graphics.DrawImage(bm, item.Pos.x + WINDOW_LEFT_GAP, drawPosY);
+                e.Graphics.DrawImage(bm, window.pos.x + WINDOW_LEFT_GAP, drawPosY);
                 // ? draw frame
-                e.Graphics.DrawRectangle(new(Color.White, 2), item.Pos.x-2, item.Pos.y-2, item.Size.width+2, item.Size.height+2);
+                e.Graphics.DrawRectangle(new(Color.White, 2), window.pos.x-2, window.pos.y-2, window.size.width+2, window.size.height+2);
             }
         }
         // ? prompt

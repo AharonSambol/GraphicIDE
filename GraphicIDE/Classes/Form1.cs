@@ -25,16 +25,13 @@ using static GraphicIDE.KeyInput;
 // todo console button changing size??
 // todo syntax highlighting
 // todo drag selection
+// todo change scaled images when text size changes (just set them to null)
 // todo when changing font size need to change pen sizes as well / just resize img
 // todo function args
 // todo print and exception
 // todo add / move / resize windows
 // todo scroll horizontal
 // todo ctrl z / y
-// todo change scaled images when text size changes (just set them to null)
-// todo make vars blue
-// todo enter after tabs keep indent
-// todo dont draw img with offset
 // todo add more visualizations
 // ? indexing + slicing
 // ? tuple + dict + generator(+comprehension)
@@ -113,7 +110,7 @@ public partial class Form1: Form {
         var window2 = MakeNewWindow(func2, size: (windowWidth, windowHeight), pos: (windowWidth, 0));
         curWindow = mainWindow;
         curFunc = mainFunc;
-        ChangeTab(curFunc.Name, prevWindow: window2);
+        ChangeTab(curFunc.name, prevWindow: window2);
 
         AddRunBtn();
         AddDebugBtn();
@@ -142,13 +139,13 @@ public partial class Form1: Form {
         ); 
         
         foreach(var window in windows) {
-            window.Size.height /= changeH;
-            window.Size.width /= changeW;
-            window.Pos.x /= changeW;
-            window.Pos.y = window.Pos.y / changeH;
+            window.size.height /= changeH;
+            window.size.width /= changeW;
+            window.pos.x /= changeW;
+            window.pos.y = window.pos.y / changeH;
             for (int i=0; i < window.tabButtons.Count; i++) {
                 var btn = window.tabButtons[i];
-                btn.Location = new((int)window.Pos.x + (TAB_WIDTH + 10) * i, (int)window.Pos.y);
+                btn.Location = new((int)window.pos.x + (TAB_WIDTH + 10) * i, (int)window.pos.y);
                 var a = btn.Location;
             }
         }
@@ -182,8 +179,8 @@ public partial class Form1: Form {
                 Keys.Enter => () => EnterKey(true),
                 Keys.End => () => EndKey(isShift, true),
                 Keys.Home => () => HomeKey(isShift, true),
-                Keys.Up => () => ChangeOffsetTo(curWindow.Offset + txtHeight),
-                Keys.Down => () => ChangeOffsetTo(curWindow.Offset - txtHeight),
+                Keys.Up => () => ChangeOffsetTo(curWindow.offset + txtHeight),
+                Keys.Down => () => ChangeOffsetTo(curWindow.offset - txtHeight),
                 Keys.Right => () => RightKey(isShift, isAltlKeyPressed, true),
                 Keys.Left => () => LeftKey(isShift, isAltlKeyPressed, true),
                 Keys.C => () => Copy(isAltlKeyPressed),
@@ -281,7 +278,7 @@ public partial class Form1: Form {
             DisposeMenu(ref rightClickMenu);
             string txt = (
                 selectedLine is null 
-                ? linesText[CursorPos.Line] 
+                ? linesText[CursorPos.line] 
                 : GetSelectedText()
             ).Trim();
             if(!txt.Equals("")) {
@@ -338,8 +335,8 @@ public partial class Form1: Form {
         nonStatic.Invalidate();
     }
     protected override void OnMouseWheel(MouseEventArgs e) {
-        if(curWindow.Function.DisplayImage!.Height > 40) {
-            ChangeOffsetTo(curWindow.Offset + e.Delta / 10);
+        if(curWindow.function.displayImage!.Height > 40) {
+            ChangeOffsetTo(curWindow.offset + e.Delta / 10);
         }
         Invalidate();
         base.OnMouseWheel(e);
@@ -358,7 +355,7 @@ public partial class Form1: Form {
         doubleClick = true;
 
         GoInDirCtrl(GetNextL, IsAltlPressed());
-        selectedLine = (CursorPos.Line, CursorPos.Col);
+        selectedLine = (CursorPos.line, CursorPos.col);
         GoInDirCtrl(GetNextR, IsAltlPressed());
 
         DrawTextScreen();
@@ -366,11 +363,11 @@ public partial class Form1: Form {
         base.OnMouseDoubleClick(e);
     }
     public void ClickedSelected((int line, int col) pos, (int,int) sel) {
-        var newSelectedLine = (CursorPos.Line, -1);
-        var newCurCol = linesText[CursorPos.Line].Length - 1;
+        var newSelectedLine = (CursorPos.line, -1);
+        var newCurCol = linesText[CursorPos.line].Length - 1;
         if(newCurCol == pos.col && newSelectedLine == sel) {
             GoInDirCtrl(GetNextL, IsAltlPressed());
-            selectedLine = (CursorPos.Line, CursorPos.Col);
+            selectedLine = (CursorPos.line, CursorPos.col);
             GoInDirCtrl(GetNextR, IsAltlPressed());
         } else {
             CursorPos.ChangeCol(newCurCol);
@@ -390,24 +387,24 @@ public partial class Form1: Form {
                 Cursor.Position.Y - screenPos.Y
             );
             foreach(var window in windows) {
-                bool inX = mousePos.x >= window.Pos.x && mousePos.x <= window.Pos.x + window.Size.width;
-                bool inY = mousePos.y >= window.Pos.y && mousePos.y <= window.Pos.y + window.Size.height;
+                bool inX = mousePos.x >= window.pos.x && mousePos.x <= window.pos.x + window.size.width;
+                bool inY = mousePos.y >= window.pos.y && mousePos.y <= window.pos.y + window.size.height;
                 if(inX && inY) {
                     if(window.Equals(curWindow)) {
-                        var prev = (CursorPos.Line, CursorPos.Col);
+                        var prev = (CursorPos.line, CursorPos.col);
                         var prevSel = selectedLine;
                         MouseBtnClick(refresh: false);
-                        if(prevSel is (int, int) ps && InBetween((CursorPos.Line, CursorPos.Col), prev, ps)) {
+                        if(prevSel is (int, int) ps && InBetween((CursorPos.line, CursorPos.col), prev, ps)) {
                             ClickedSelected(prev, ps);
                             return;
                         }
-                        tempSelectedLine = (CursorPos.Line, CursorPos.Col);
+                        tempSelectedLine = (CursorPos.line, CursorPos.col);
                         break;
                     }
-                    bool dontDraw = curWindow.AsPlainText;
+                    bool dontDraw = curWindow.asPlainText;
                     var prevWindow = curWindow;
                     curWindow = window;
-                    ChangeTab(window.Function.Name, prevWindow, dontDraw: dontDraw);
+                    ChangeTab(window.function.name, prevWindow, dontDraw: dontDraw);
                     break;
                 }
             }
@@ -443,8 +440,8 @@ public partial class Form1: Form {
         }
         CursorPos.ChangeLine(GetClickRow());
         CursorPos.ChangeCol(BinarySearch(
-            linesText[CursorPos.Line].Length, 
-            Cursor.Position.X - curWindow.Pos.x - screenPos.X, 
+            linesText[CursorPos.line].Length, 
+            Cursor.Position.X - curWindow.pos.x - screenPos.X, 
             GetDistW
         ));
         textBox.Focus();
@@ -454,7 +451,7 @@ public partial class Form1: Form {
         }
     }
     public static int GetClickRow() {
-        double mouse = Cursor.Position.Y - (curWindow.Pos.y + curWindow.Offset) - screenPos.Y - TAB_HEIGHT;
+        double mouse = Cursor.Position.Y - (curWindow.pos.y + curWindow.offset) - screenPos.Y - TAB_HEIGHT;
         int i = (int)Math.Floor(mouse / txtHeight);
         return Max(0, Min(linesText.Count - 1, i));
     }
@@ -499,25 +496,25 @@ public partial class Form1: Form {
 
     #region Miscelaneuos
     public static float GetDistW(int i) {
-        return MeasureWidth(linesText[CursorPos.Line][..(i + 1)], boldFont);
+        return MeasureWidth(linesText[CursorPos.line][..(i + 1)], boldFont);
     }
     public static (int line, int col, char val)? GetNextR() {
-        if(CursorPos.Col != linesText[CursorPos.Line].Length - 1) {
-            return (CursorPos.Line, CursorPos.Col + 1, linesText[CursorPos.Line][CursorPos.Col + 1]);
+        if(CursorPos.col != linesText[CursorPos.line].Length - 1) {
+            return (CursorPos.line, CursorPos.col + 1, linesText[CursorPos.line][CursorPos.col + 1]);
         }
-        if(CursorPos.Line == linesText.Count - 1) {
+        if(CursorPos.line == linesText.Count - 1) {
             return null;
         }
-        return (CursorPos.Line + 1, -1, '\n');
+        return (CursorPos.line + 1, -1, '\n');
     }
     public static (int line, int col, char val)? GetNextL() {
-        if(CursorPos.Col != - 1) {
-            return (CursorPos.Line, CursorPos.Col - 1, linesText[CursorPos.Line][CursorPos.Col]);
+        if(CursorPos.col != - 1) {
+            return (CursorPos.line, CursorPos.col - 1, linesText[CursorPos.line][CursorPos.col]);
         }
-        if(CursorPos.Line == 0) {
+        if(CursorPos.line == 0) {
             return null;
         }
-        return (CursorPos.Line - 1, linesText[CursorPos.Line - 1].Length - 1, '\n');
+        return (CursorPos.line - 1, linesText[CursorPos.line - 1].Length - 1, '\n');
     }
     public static void GoInDirCtrl(Func<(int line, int col, char val)?> GetNext, bool isAlt) {
         var next = GetNext();
@@ -553,53 +550,54 @@ public partial class Form1: Form {
 public record struct BM_Middle(Bitmap Img, int Middle);
 public record struct Menu(Rectangle bgPos, SolidBrush bgColor, List<(Button btn, Func<(int X, int Y), Point> getPos)> buttons);
 static class CursorPos {
-    public static int Line{ get; private set; } = 0;
-    public static int Col{ get; private set; } = -1;
+    public static int line{ get; private set; } = 0;
+    public static int col{ get; private set; } = -1;
     private static void RealignWondow(){
-        int txtPos = CursorPos.Line * Form1.txtHeight;
-        int pos = txtPos + curWindow.Offset; 
+        int txtPos = CursorPos.line * Form1.txtHeight;
+        int pos = txtPos + curWindow.offset; 
         if(pos < 0){
-            curWindow.Offset = - txtPos;
-        } else if(pos >= (int)curWindow.Size.height - TAB_HEIGHT - (int)(Form1.txtHeight/0.8)){
-            curWindow.Offset = - (txtPos + Form1.txtHeight - (int)curWindow.Size.height + TAB_HEIGHT);
+            curWindow.offset = - txtPos;
+        } else if(pos >= (int)curWindow.size.height - TAB_HEIGHT - (int)(Form1.txtHeight/0.8)){
+            curWindow.offset = - (txtPos + Form1.txtHeight - (int)curWindow.size.height + TAB_HEIGHT);
         }
         // TODO for col too
     }
     public static void ChangeLine(int i){
-        CursorPos.Line = i;
+        CursorPos.line = i;
         RealignWondow();
     }
     public static void ChangeCol(int i){
-        CursorPos.Col = i;
+        CursorPos.col = i;
         RealignWondow();
     }
     public static void ChangeBoth((int line, int col) val){
-        (CursorPos.Line, CursorPos.Col) = val;
+        (CursorPos.line, CursorPos.col) = val;
         RealignWondow();
     }
 }
 public class Window {
-    public Function Function;
-    public (float width, float height) Size;
-    public (float x, float y) Pos;
-    public int Offset = 0;
+    public Function function;
+    public (float width, float height) size;
+    public (float x, float y) pos;
+    public int offset = 0;
+    public bool isPic = false;
     public int tabsEnd = 0;
     public readonly List<Button> tabButtons = new();
     public Button? selectedTab;
-    public bool AsPlainText = false;
+    public bool asPlainText = false;
     public SolidBrush txtBrush = textBrush;
     public Window(Function func) {  
-        Function = func; 
+        function = func; 
     }
 }
 public class Function {
-    public List<string> LinesText = new(){ "" };
-    public Bitmap? DisplayImage;
-    public int CurLine = 0;
-    public int CurCol = -1;
+    public List<string> linesText = new(){ "" };
+    public Bitmap? displayImage;
+    public int curLine = 0;
+    public int curCol = -1;
     public bool isPic = false;
-    public string Name;
+    public string name;
     public Function(string name){
-        Name = name;
+        this.name = name;
     }
 }

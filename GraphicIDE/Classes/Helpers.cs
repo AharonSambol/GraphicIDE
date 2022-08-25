@@ -20,8 +20,8 @@ public static class Helpers {
         return Form1.nonStatic.RectangleToScreen(Form1.nonStatic.ClientRectangle).Width;
     }
     public static void ChangeOffsetTo(int i){
-        curWindow.Offset = Math.Clamp(
-            i, Form1.txtHeight - curWindow.Function.DisplayImage!.Height, 0
+        curWindow.offset = Math.Clamp(
+            i, Form1.txtHeight - curWindow.function.displayImage!.Height, 0
         );
     }
     public static void ChangeFontSize(int size){

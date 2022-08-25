@@ -41,15 +41,15 @@ public static class Start{
         int consolePos = height - (height / 4);
         Bitmap img = new(width, height - consolePos);
         var func = new Function(".console") { 
-            DisplayImage = img,
+            displayImage = img,
         };
         console = new Window(func) {
-            Pos = (0, consolePos),
-            Size = (width, height - consolePos),
-            AsPlainText = true,
+            pos = (0, consolePos),
+            size = (width, height - consolePos),
+            asPlainText = true,
             txtBrush = redBrush,
         };
-        nameToFunc[func.Name] = console.Function;
+        nameToFunc[func.name] = console.function;
     }
     public static void MakeExecTimeDisplay(){
         var w = MeasureWidth(executedTime, boldFont); 

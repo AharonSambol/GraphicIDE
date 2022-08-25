@@ -13,8 +13,8 @@ public static class Console {
     public static Button? closeConsoleBtn, openConsoleBtn, errOpenButton, execTimeBtn;
     public static Func<(int w, int h), Point> 
         ETBCalcPos = (size) => new(size.w - execTimeBtn!.Width - 35 /*open console btn size*/ - 20, size.h - execTimeBtn!.Height - 5),
-        CCBCalcPos = (_) => new((int)(console.Pos.x + console.Size.width) - closeConsoleBtn!.Width - 10, (int)console.Pos.y + 10),
-        EOBCalcPos = (_) => new((int)(console.Pos.x + console.Size.width) - errOpenButton!.Width - 10, (int)console.Pos.y + 40),
+        CCBCalcPos = (_) => new((int)(console.pos.x + console.size.width) - closeConsoleBtn!.Width - 10, (int)console.pos.y + 10),
+        EOBCalcPos = (_) => new((int)(console.pos.x + console.size.width) - errOpenButton!.Width - 10, (int)console.pos.y + 40),
         OCBCalcPos = (size) => new(size.w - openConsoleBtn!.Width - 10, size.h - openConsoleBtn.Height - 5);
     
     public static void ShowConsole() {
@@ -28,13 +28,13 @@ public static class Console {
         var (height, width) = (screenHeight, screenWidth);
 
         int consolePos = height - (height / 4);
-        console.Pos.y = consolePos;
-        console.Size.height = height - consolePos;
-        console.Size.width = width;
+        console.pos.y = consolePos;
+        console.size.height = height - consolePos;
+        console.size.width = width;
         Bitmap img = new(width, height);
         using(var g = Graphics.FromImage(img)) {
             if(consoleTxt.typ == ConsoleTxtType.text) {
-                console.Function.LinesText = consoleTxt.txt.Split('\n').ToList();
+                console.function.linesText = consoleTxt.txt.Split('\n').ToList();
                 g.DrawString(consoleTxt.txt, boldFont, textBrush, 0, 5);
                 int end = 5 + MeasureHeight(consoleTxt.txt, boldFont);
                 if(errOpenButton is not null) {
@@ -43,7 +43,7 @@ public static class Console {
                     errOpenButton = null;
                 }
             } else {
-                console.Function.LinesText = consoleTxt.txt.Split('\n').ToList();
+                console.function.linesText = consoleTxt.txt.Split('\n').ToList();
 
                 g.DrawString(consoleTxt.txt, boldFont, redBrush, 0, 5);
                 if(errOpenButton is null) {
@@ -64,7 +64,7 @@ public static class Console {
                 }
             }
         }
-        console.Function.DisplayImage = img;
+        console.function.displayImage = img;
         isConsoleVisible = true;
 
         if(closeConsoleBtn is null) {

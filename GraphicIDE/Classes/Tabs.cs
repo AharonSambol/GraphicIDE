@@ -21,7 +21,7 @@ public static class Tabs {
             Name = name,
             Text = name,
             BackColor = lightGray,
-            Location = new((int)window.Pos.x + window. tabsEnd, (int)window.Pos.y),
+            Location = new((int)window.pos.x + window. tabsEnd, (int)window.pos.y),
             Size = new(TAB_WIDTH, TAB_HEIGHT),
             Font = tabFont,
             FlatStyle = FlatStyle.Flat,
@@ -43,19 +43,19 @@ public static class Tabs {
     }
     private static void AddTabSelect(string name, bool isFirst=false){
         foreach(var window in windows) {
-            if(window.Function.Name.Equals(".console")){    continue; }
+            if(window.function.name.Equals(".console")){    continue; }
             AddTabToWindow(name, window, isFirst);
         }
     }
     public static Window MakeNewWindow(Function func, (int width, int height) size, (int x, int y) pos){
         Window window = new(func) { 
-            Size = size, 
-            Pos = pos,
+            size = size, 
+            pos = pos,
         };
         curWindow = window;
         foreach(var tab in nameToFunc.Keys) {
             var btn = AddTabToWindow(tab, window);
-            if(tab.Equals(func.Name)){
+            if(tab.Equals(func.name)){
                 window.selectedTab = btn;
                 btn.BackColor = btn.FlatAppearance.BorderColor = Color.DarkGray;
             }
@@ -67,7 +67,7 @@ public static class Tabs {
     public static Function NewFunc(string name, bool isfirst=false) {
         Function func = new(name);
         nameToFunc.Add(name, func);
-        func.DisplayImage = new(screenWidth, screenHeight);
+        func.displayImage = new(screenWidth, screenHeight);
         AddTabSelect(name, isfirst);
         if(!isfirst){   ChangeTab(name, curWindow); }
         return func;
@@ -92,40 +92,35 @@ public static class Tabs {
             }
         }
 
-        curFunc.CurLine = CursorPos.Line;
-        curFunc.CurCol = CursorPos.Col;
+        curFunc.curLine = CursorPos.line;
+        curFunc.curCol = CursorPos.col;
         var actualWindow = curWindow;
         curWindow = prevWindow;
-        if(!isPic && !dontDraw) {    DrawPicScreen(); }
-        if(!isPic && !dontDraw) {
+        if(!curFunc.isPic && !dontDraw) {    DrawPicScreen(); }
+        if(!curFunc.isPic && !dontDraw) {
             try {
                 DrawTextScreen(false); nonStatic.Invalidate();
             } catch(Exception) { }
         }
         curWindow = actualWindow;
         curTextBrush = curWindow.txtBrush;
-        curFunc.isPic = isPic;
+        // curFunc.isPic = isPic;
         curFunc = func;
-        curWindow.Function = func;
-        linesText = func.LinesText;
-        CursorPos.ChangeLine(func.CurLine);
-        CursorPos.ChangeCol(func.CurCol);
-        isPic = func.isPic;
+        curWindow.function = func;
+        linesText = func.linesText;
+        CursorPos.ChangeLine(func.curLine);
+        CursorPos.ChangeCol(func.curCol);
+        // curFunc.isPic = func.isPic;
         skipDrawNewScreen = false;
         textBox.Focus();
         
-        if(isPic && false) {
-            isPic = false; // cuz DrawPicScreen reverses `isPic`
-            DrawPicScreen();
-        } else {
-            DrawTextScreen();
-            nonStatic.Invalidate();
-        }
+        DrawTextScreen();
+        nonStatic.Invalidate();
     }
     public static Prompt? newTabPrompt;
     public static void PromptMakeNewTab() {
         if(visablePrompt is not null){   return; }
-        if(curFunc.Name.Equals(".console")){   return; }
+        if(curFunc.name.Equals(".console")){   return; }
 
         TextBox textBox = new(){
             Multiline = true,
@@ -165,7 +160,7 @@ public static class Tabs {
         if(e.KeyCode == Keys.Enter) {
             var name = ((TextBox)sender).Text;
             var func = NewFunc(name);
-            curWindow.Function = func;
+            curWindow.function = func;
             DisposePrompt(ref newTabPrompt);
         } else if(e.KeyCode == Keys.Escape) {
             DisposePrompt(ref newTabPrompt);
@@ -174,7 +169,7 @@ public static class Tabs {
     public static Prompt? renamePrompt;
     public static void PromptRenameTab(){
         if(visablePrompt is not null){   return; }
-        if(curFunc.Name.StartsWith('.')){   return; }
+        if(curFunc.name.StartsWith('.')){   return; }
         
         TextBox textBox = new(){
             Multiline = true,
@@ -189,7 +184,7 @@ public static class Tabs {
         nonStatic.Controls.Add(textBox);
         textBox.Focus();
 
-        var title = $"Rename `{ curFunc.Name }` to:";
+        var title = $"Rename `{ curFunc.name }` to:";
         var titleW = MeasureWidth(title, boldFont);
         var titleH = MeasureHeight(title, boldFont);
         Bitmap bm = new(Max(textBox.Width, titleW) + 40, textBox.Height + titleH + 60);
@@ -226,17 +221,17 @@ public static class Tabs {
         if(e.KeyCode == Keys.Enter) {
             var name = renamePrompt!.Value.tb.Text;
             DisposePrompt(ref renamePrompt);
-            nameToFunc.Remove(curFunc.Name);
+            nameToFunc.Remove(curFunc.name);
             nameToFunc[name] = curFunc;
             foreach(var window in windows) {
                 foreach(var tab in window.tabButtons) {
-                    if(tab.Name.Equals(curFunc.Name)){
+                    if(tab.Name.Equals(curFunc.name)){
                         tab.Name = name;
                         tab.Text = name;
                     }
                 }
             }
-            curFunc.Name = name;
+            curFunc.name = name;
         } else if(e.KeyCode == Keys.Escape) {
             DisposePrompt(ref renamePrompt);
         }
