@@ -9,6 +9,8 @@ public static class MyImages {
         forArrowDownImg = new(Resources.forArrowDown),
         forArrowUpImg = new(Resources.forArrowUp),
         emptyListImg = new(Resources.emptyList),
+        shortArrowG = new(Resources.shortArrowGreen),
+        shortArrowR = new(Resources.shortArrowRed),
         printerImg = new(Resources.printer),
         consoleImg = new(Resources.console),
         searchImg = new(Resources.search),

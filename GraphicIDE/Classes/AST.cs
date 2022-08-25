@@ -41,11 +41,66 @@ public static class AST {
                 "set comprehension" => () => SetComprehension(ast),
                 "dict comprehension" => () => DictionaryComprehension(ast),
                 "ForStatement" => () => ForStatement(ast),
+                "conditional expression" => () => ShortIfElse(ast),
                 _ => () => null
             }))();
         } catch(Exception) { 
             return null;
         }
+    }
+    private static BM_Middle ShortIfElse(dynamic ast){
+        Bitmap test = MakeImg(ast.Test).Img;
+        Bitmap trueExp = MakeImg(ast.TrueExpression).Img;
+        Bitmap falseExp = MakeImg(ast.FalseExpression).Img;
+        int gap = 4;
+        int space = txtHeight * 2;
+        Bitmap res = new(
+            test.Width + Max(trueExp.Width, falseExp.Width) 
+            + gap * 10 + space
+            , Max(test.Height / 2, trueExp.Height + 3 * gap)
+            + Max(test.Height / 2, falseExp.Height + 3 * gap)
+            + 4 * gap
+        );
+        int middle = Max(test.Height / 2, trueExp.Height + 3 * gap) + 2 * gap;
+        using(var g = Graphics.FromImage(res)){
+            g.DrawImage(test, gap * 2, middle - test.Height / 2);
+            g.DrawRectangle(
+                whiteP, gap, middle - test.Height / 2 - gap, 
+                test.Width + gap*2, test.Height + gap*2
+            );
+            int end = test.Width + gap * 4;
+
+            var arr = new(Bitmap, Bitmap, int, Pen)[]{
+                (trueExp , shortArrowG, -1, greenP),
+                (falseExp, shortArrowR, +1, redListP   )
+            };
+            for (int i=0; i < arr.Length; i++) {
+                var (exp, arrow_, sign, pen) = arr[i];
+                Bitmap arrow = new(arrow_, txtHeight/2, txtHeight/2);
+                int y = middle + sign * (test.Height / 4);
+                int startX = end;
+                int endX = end + txtHeight;
+                Point startP = new(startX, y);
+                Point endP   = new(endX, y);
+                g.DrawLine(pen, startP, endP);
+                startP = endP;
+                endP.Y = middle + sign * (exp.Height/2 + gap * 3);
+                g.DrawLine(pen, startP, endP);
+                startP = endP;
+                endP.X = end + space - arrow.Width;
+                g.DrawLine(pen, startP, endP);
+                endP.Y -= arrow.Height/2;
+                g.DrawImage(arrow, endP);
+                endP.Y += arrow.Height/2 - (exp.Height/2 + gap);
+                endP.X += arrow.Width;
+                g.DrawRectangle(pen, endP.X, endP.Y, exp.Width + gap * 5, exp.Height + gap * 2);
+                endP.X += 2 * gap;
+                endP.Y += gap;
+                g.DrawImage(exp, endP);
+            }
+        }
+
+        return new(res, res.Height / 2);
     }
     private static BM_Middle Comprehension(dynamic ast, string open, string close, Brush brush, Color bg, Bitmap? ditem=null){
         int indent = indentW / 2;
@@ -303,7 +358,6 @@ public static class AST {
         }
         return new(res, (int)(res.Height / 2));
     }
-
     private static BM_Middle IfExpression(dynamic ast) {
         static Graphics JoinIfAndElse(Pen lastColor, ref Bitmap res, Bitmap img) {
             var (prevH, prevW) = (res.Height, res.Width);

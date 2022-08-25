@@ -181,6 +181,12 @@
   <data name="self" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\self.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="shortArrowGreen" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\shortArrowGreen.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="shortArrowRed" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\shortArrowRed.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="sum" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\sum.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

@@ -20,6 +20,7 @@ using static GraphicIDE.KeyInput;
 // todo add little icon to list/set.. comprehension to signal which type it is
 // todo have file system on right so dont need to have all tabs open
 // todo capslock shortcuts
+// todo scroll horizontal
 // todo when renaming func rename all calls too
 // todo save/open
 // todo console button changing size??
@@ -30,14 +31,14 @@ using static GraphicIDE.KeyInput;
 // todo function args
 // todo print and exception
 // todo add / move / resize windows
-// todo scroll horizontal
 // todo ctrl z / y
 // todo add more visualizations
 // ? indexing + slicing
 // ? tuple + dict + generator(+comprehension)
 // ? import from\as
+// ? classes(+attributes)
 // ? try except raise
-// ? del, global, *, assert, yield\yeild from, with, classes(+attributes), formatStr, finally, for-else
+// ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else
 // ? annotations
 // ? func call
 // ? break, continue

@@ -17,18 +17,23 @@ public static class BrushesAndPens{
         tabBarColor     = Color.FromArgb(255, 100, 100, 100),
         orangeOpaqe     = Color.FromArgb(100, 250, 200, 093),
         opaqeForBlue    = Color.FromArgb(050, 095, 129, 199),
+        shortIfElseG    = Color.FromArgb(255, 096, 202, 105),
+        shortIfElseR    = Color.FromArgb(255, 171, 038, 020),
         opaqekeyOrange  = Color.FromArgb(050, 245, 190, 080),
         opaqeMathPurple = Color.FromArgb(050, 164, 128, 207);
     public static readonly SolidBrush
-        forBlueB    = new(forBlue),
-        keyOrangeB  = new(keyOrange),
-        mathPurpleB = new(mathPurple),
-        truckIBrush = new(truckIColor),
-        yellowB     = new(Color.Wheat),
-        whiteBrush  = new(Color.White),
-        blackBrush  = new(Color.Black),
-        curserBrush = new(Color.WhiteSmoke),
-        smokeWhiteBrush = new(Color.WhiteSmoke),
+        forBlueB        = new(forBlue),
+        keyOrangeB      = new(keyOrange),
+        mathPurpleB     = new(mathPurple),
+        truckIBrush     = new(truckIColor),
+        tabBarBrush     = new(tabBarColor),
+        shortIfElseGB   = new(shortIfElseG),
+        shortIfElseRB   = new(shortIfElseR),
+        yellowB             = new(Color.Wheat),
+        whiteBrush          = new(Color.White),
+        blackBrush          = new(Color.Black),
+        curserBrush         = new(Color.WhiteSmoke),
+        smokeWhiteBrush     = new(Color.WhiteSmoke),
         redBrush            = new(Color.FromArgb(255, 200, 049, 045)),
         lblueBrush          = new(Color.FromArgb(255, 145, 178, 221)),
         intBrush            = new(Color.FromArgb(255, 207, 255, 182)),
@@ -39,7 +44,6 @@ public static class BrushesAndPens{
         greenBrush          = new(Color.FromArgb(255, 110, 255, 130)),
         selectBrush         = new(Color.FromArgb(100, 000, 100, 255)),
         stringBrush         = new(Color.FromArgb(255, 255, 204, 116)),
-        tabBarBrush         = new(tabBarColor),
         parenthesiesBrush   = new(Color.FromArgb(255, 076, 175, 104));
     public static SolidBrush curTextBrush = textBrush;
     public static readonly Pen
@@ -48,7 +52,9 @@ public static class BrushesAndPens{
         greenDashed     = new(greenOpaqe, 5)    { DashPattern = dashes },
         orangeDashed    = new(orangeOpaqe, 5)   { DashPattern = dashes },
         truckP          = new(truckColor, 4),
+        greenP          = new(shortIfElseG, 4),
         yellowP         = new(Color.Wheat, 5),
+        whiteP          = new(Color.Gray, 4),
         redListP        = new(listRed, 5),
         forBlueP        = new(forBlue, 4),
         redOpaqeP       = new(redOpaqe, 5),
@@ -57,5 +63,7 @@ public static class BrushesAndPens{
         greenOpaqeP     = new(greenOpaqe, 5),
         mathPurpleP     = new(mathPurple, 5),
         whileOrangeP    = new(whileOrange, 4),
-        orangeOpaqeP    = new(orangeOpaqe, 5);
+        orangeOpaqeP    = new(orangeOpaqe, 5),
+        shortIfElseGP   = new(shortIfElseG, 4),
+        shortIfElseRP   = new(shortIfElseR, 4);
 }
