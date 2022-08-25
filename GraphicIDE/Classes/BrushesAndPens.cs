@@ -3,6 +3,7 @@ namespace GraphicIDE;
 public static class BrushesAndPens{
     private static readonly float[] dashes = new[] { 5f, 2f };
     public static readonly Color
+        forBlue         = Color.FromArgb(255, 095, 129, 199),
         listRed         = Color.FromArgb(255, 157, 059, 052),
         redOpaqe        = Color.FromArgb(100, 255, 000, 000),
         blueOpaqe       = Color.FromArgb(100, 075, 180, 245),
@@ -14,8 +15,12 @@ public static class BrushesAndPens{
         whileOrange     = Color.FromArgb(255, 223, 146, 082),
         truckIColor     = Color.FromArgb(255, 137, 024, 026),
         tabBarColor     = Color.FromArgb(255, 100, 100, 100),
-        orangeOpaqe     = Color.FromArgb(100, 250, 200, 093);
+        orangeOpaqe     = Color.FromArgb(100, 250, 200, 093),
+        opaqeForBlue    = Color.FromArgb(050, 095, 129, 199),
+        opaqekeyOrange  = Color.FromArgb(050, 245, 190, 080),
+        opaqeMathPurple = Color.FromArgb(050, 164, 128, 207);
     public static readonly SolidBrush
+        forBlueB    = new(forBlue),
         keyOrangeB  = new(keyOrange),
         mathPurpleB = new(mathPurple),
         truckIBrush = new(truckIColor),
@@ -25,6 +30,7 @@ public static class BrushesAndPens{
         curserBrush = new(Color.WhiteSmoke),
         smokeWhiteBrush = new(Color.WhiteSmoke),
         redBrush            = new(Color.FromArgb(255, 200, 049, 045)),
+        lblueBrush          = new(Color.FromArgb(255, 145, 178, 221)),
         intBrush            = new(Color.FromArgb(255, 207, 255, 182)),
         timeBrush           = new(Color.FromArgb(255, 100, 100, 100)),
         textBrush           = new(Color.FromArgb(255, 160, 160, 160)),
@@ -41,11 +47,12 @@ public static class BrushesAndPens{
         blueDashed      = new(blueOpaqe, 5)     { DashPattern = dashes },
         greenDashed     = new(greenOpaqe, 5)    { DashPattern = dashes },
         orangeDashed    = new(orangeOpaqe, 5)   { DashPattern = dashes },
+        truckP          = new(truckColor, 4),
         yellowP         = new(Color.Wheat, 5),
         redListP        = new(listRed, 5),
+        forBlueP        = new(forBlue, 4),
         redOpaqeP       = new(redOpaqe, 5),
         blueOpaqeP      = new(blueOpaqe, 5),
-        truckBrush      = new(truckColor, 4),
         keyOrangeP      = new(keyOrange, 5),
         greenOpaqeP     = new(greenOpaqe, 5),
         mathPurpleP     = new(mathPurple, 5),

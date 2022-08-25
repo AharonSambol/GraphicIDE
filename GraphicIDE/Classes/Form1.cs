@@ -13,34 +13,40 @@ using static GraphicIDE.Tabs;
 using static GraphicIDE.Console;
 using static GraphicIDE.KeyInput;
 
-// todo add / move / resize windows
-// todo scroll horizontal
-// todo let them make custom img for functions
-// todo console button changing size??
-// todo when changing font size need to change pen sizes as well / just resize img
-// todo drag selection
+// todo git
 // todo add cheat sheat
-// todo print and exception
-// todo ctrl z / y
+// todo let them make custom img for functions
 // todo cache some of the textline images
+// todo add little icon to list/set.. comprehension to signal which type it is
+// todo have file system on right so dont need to have all tabs open
 // todo capslock shortcuts
-// todo syntax highlighting
 // todo when renaming func rename all calls too
 // todo save/open
+// todo console button changing size??
+// todo syntax highlighting
+// todo drag selection
+// todo when changing font size need to change pen sizes as well / just resize img
+// todo function args
+// todo print and exception
+// todo add / move / resize windows
+// todo scroll horizontal
+// todo ctrl z / y
 // todo change scaled images when text size changes (just set them to null)
 // todo make vars blue
+// todo enter after tabs keep indent
+// todo dont draw img with offset
 // todo add more visualizations
 // ? indexing + slicing
-// ? tuple + dict + generator
-// ? comprehension
+// ? tuple + dict + generator(+comprehension)
 // ? import from\as
 // ? try except raise
-// ? del, global, *, assert, yield\yeild from, with, classes(+attributes), formatStr, finally
+// ? del, global, *, assert, yield\yeild from, with, classes(+attributes), formatStr, finally, for-else
 // ? annotations
 // ? func call
 // ? break, continue
 // ? built in funcs
 // ? lambda 
+// ? short if else
 
 namespace GraphicIDE;
 

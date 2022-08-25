@@ -4,9 +4,11 @@ namespace GraphicIDE;
 
 public static class MyImages {
     public static readonly Bitmap
-        arrowDownImg = new(Resources.whileArrowDown),
+        whileArrowDownImg = new(Resources.whileArrowDown),
+        whileArrowUpImg = new(Resources.whileArrowUp),
+        forArrowDownImg = new(Resources.forArrowDown),
+        forArrowUpImg = new(Resources.forArrowUp),
         emptyListImg = new(Resources.emptyList),
-        arrowUpImg = new(Resources.whileArrowUp),
         printerImg = new(Resources.printer),
         consoleImg = new(Resources.console),
         searchImg = new(Resources.search),

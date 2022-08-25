@@ -63,7 +63,7 @@ public static class PythonFuncs{
             } else if(func.Name.Equals(".console")){
                 continue;
             } else {
-                theScript.Append("def ").Append(func.Name).Append(":\n"); // todo add args
+                theScript.Append("def ").Append(func.Name).Append(":\n");
                 foreach(var line in func.LinesText) {
                     theScript.Append('\t').AppendLine(line);
                 }
