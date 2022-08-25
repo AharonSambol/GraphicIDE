@@ -20,13 +20,14 @@ using static GraphicIDE.KeyInput;
 // todo when changing font size need to change pen sizes as well / just resize img
 // todo drag selection
 // todo add cheat sheat
-// todo right click
 // todo print and exception
 // todo ctrl z / y
 // todo cache some of the textline images
 // todo capslock shortcuts
 // todo syntax highlighting
 // todo when renaming func rename all calls too
+// todo save/open
+// todo better gaps (also from side of screen)
 // todo add more visualizations
 // ? indexing + slicing
 // ? tuple + dict + generator
@@ -38,7 +39,6 @@ using static GraphicIDE.KeyInput;
 // ? func call
 // ? break, continue
 // ? built in funcs
-// ? None
 // ? lambda 
 
 namespace GraphicIDE;
@@ -232,7 +232,7 @@ public partial class Form1: Form {
             button.btn.BringToFront();
         }
 
-        rightClickMenu = staticRightClickMenu;
+        rightClickMenu = new(bgPos, staticRightClickMenu!.Value.bgColor, staticRightClickMenu.Value.buttons);
         BlockMouse(staticRightClickMenu!.Value.buttons[0].btn);
         nonStatic.Invalidate();
     }
@@ -293,7 +293,7 @@ public partial class Form1: Form {
             Process.Start("CMD.exe");
         });  
 
-        Button run = MakeButton(size, size, playImg, streatch: false);
+        Button run = MakeButton(size, size, play3dImg, streatch: false);
         Func<(int X, int Y), Point> runGetPos = (pos) => new(pos.X + 3 * gap + 2 * size, pos.Y + gap);
         run.Click += new EventHandler((_,_) => {
             DisposeMenu(ref rightClickMenu);

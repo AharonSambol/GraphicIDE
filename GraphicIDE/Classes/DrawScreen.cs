@@ -10,7 +10,6 @@ using static GraphicIDE.Tabs;
 namespace GraphicIDE;
 
 public static class DrawScreen{
-    public const int LINE_HEIGHT = 30;
     public static bool isPic = false, skipDrawNewScreen = false;
     private static readonly Font titleFont = new(FontFamily.GenericMonospace, 35, FontStyle.Bold);
     public static void DrawPicScreen() {
@@ -79,7 +78,7 @@ public static class DrawScreen{
                 g.FillRectangle(
                     curserBrush,
                     MeasureWidth(before, boldFont) - 3,
-                    5, 1, txtHeight - 10
+                    txtHeight/5, 1, txtHeight/5*3
                 );
             }
 
@@ -87,7 +86,7 @@ public static class DrawScreen{
                 if((i < sl.line && i > CursorPos.Line) || (i > sl.line && i < CursorPos.Line)) {
                     g.FillRectangle(
                         selectBrush, 0, 0,
-                        MeasureWidth(lineText, boldFont), LINE_HEIGHT
+                        MeasureWidth(lineText, boldFont), txtHeight
                     );
                 } else if(i == sl.line || i == CursorPos.Line) {
                     int cCol = CursorPos.Col, sCol = sl.col;
@@ -100,7 +99,7 @@ public static class DrawScreen{
                     var startS = smaller == -1 ? 0 : MeasureWidth(linesText[i][..(smaller + 1)], boldFont);
 
                     var endS = MeasureWidth(linesText[i][..Min(linesText[i].Length, bigger + 1)], boldFont);
-                    g.FillRectangle(selectBrush, 0 + startS, 0, endS - startS, LINE_HEIGHT);
+                    g.FillRectangle(selectBrush, startS, 0, endS - startS, txtHeight);
                 }
             }
             end += bm.Height;

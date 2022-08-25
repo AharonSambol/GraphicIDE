@@ -9,11 +9,11 @@ namespace GraphicIDE;
 
 public static class Start{
     public static void AddRunBtn() {
-        int gap = 5;
-        Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, playImg/*just temp*/, streatch: false);
+        int gap = 3;
+        Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, play3dImg/*just temp*/, streatch: false);
         Bitmap b = new(btn.Size.Width, btn.Size.Height);
         using(var g = Graphics.FromImage(b)) {
-            Bitmap scaled = new(playImg, btn.Size.Width - gap * 2, btn.Size.Height - gap * 2);
+            Bitmap scaled = new(play3dImg, btn.Size.Width - gap * 2, btn.Size.Height - gap * 2);
             g.DrawImage(scaled, gap, gap);
         }
         btn.BackgroundImage = b;

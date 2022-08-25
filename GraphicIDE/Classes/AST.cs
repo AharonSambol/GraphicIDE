@@ -36,11 +36,15 @@ public static class AST {
                 "AugmentedAssignStatement" => () => AugmentedAssignStatement(ast),
                 "FunctionDefinition" => () => MainModule(ast),
                 "ReturnStatement" => () => ReturnStatement(ast),
+                "None" => () => None(ast),
                 _ => () => null
             }))();
         } catch(Exception) { 
             return null;
         }
+    }
+    private static BM_Middle None(dynamic ast){
+        return new(new(noneImg, txtHeight, txtHeight), (int)(txtHeight/2));
     }
     private static Bitmap? scaledReturn;
     private static BM_Middle ReturnStatement(dynamic ast){
