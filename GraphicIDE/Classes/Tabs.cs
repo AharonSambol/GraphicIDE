@@ -12,7 +12,6 @@ public static class Tabs {
     public const int TAB_HEIGHT = 25, TAB_WIDTH = 80;
     public static Font tabFont = new(FontFamily.GenericMonospace, 10, FontStyle.Bold);
     public static readonly Dictionary<string, Function> nameToFunc = new();
-    public static readonly List<Button> tabButtons = new();
     public static Prompt? visablePrompt;
     public static Function curFunc = null!;
     public static Window curWindow = null!;

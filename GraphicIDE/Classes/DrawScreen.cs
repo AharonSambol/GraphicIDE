@@ -20,9 +20,9 @@ public static class DrawScreen{
             isPic = false;
         } else {
             try {
-                var bm = MakeImg(PythonFuncs.ToAST());
+                var bm_ = MakeImg(PythonFuncs.ToAST());
                 
-                if(bm is not null) {
+                if(bm_ is BM_Middle bm) {
                     if(!curFunc.Name.StartsWith(".")){
                         int w = MeasureWidth(curFunc.Name, titleFont);
                         int h = MeasureHeight(curFunc.Name, titleFont);
@@ -62,7 +62,7 @@ public static class DrawScreen{
         }
         isPic = false;
 
-        List<Bitmap> bitmaps = new();
+        LinkedList<Bitmap> bitmaps = new();
         int totalWidth = 0;
         int end = 0;
         for(int i = 0; i < linesText.Count; i++) {
@@ -104,7 +104,7 @@ public static class DrawScreen{
                 }
             }
             end += bm.Height;
-            bitmaps.Add(bm);
+            bitmaps.AddLast(bm);
         }
         Bitmap newBitMap = new(Min(totalWidth, (int)curWindow.Size.width - WINDOW_LEFT_GAP * 2), end);
         var gr = Graphics.FromImage(newBitMap);

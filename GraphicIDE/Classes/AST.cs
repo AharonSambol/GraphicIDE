@@ -37,14 +37,61 @@ public static class AST {
                 "FunctionDefinition" => () => MainModule(ast),
                 "ReturnStatement" => () => ReturnStatement(ast),
                 "None" => () => None(ast),
+                "list comprehension" => () => ListComprehension(ast),
                 _ => () => null
             }))();
         } catch(Exception) { 
             return null;
         }
     }
+    private static BM_Middle ListComprehension(dynamic ast){
+        Bitmap item = MakeImg(ast.Item).Img;
+        LinkedList<Bitmap> iterPics = new();
+        int totalHeight = 0, totalWidth = 0;
+        foreach(var iter in ast.Iterators) {
+            if("ComprehensionFor".Equals(iter.NodeName)){
+                // todo make for image
+                // totalHeight += bm.Height;
+                // totalWidth = Max(totalWidth, bm.Width);
+                // iterPics.Add(bm);
+            } else if("ComprehensionIf".Equals(iter.NodeName)){
+                Bitmap condition = MakeImg(iter.Test).Img;
+                Bitmap bm = new(condition.Width + qWidth, condition.Height);
+                totalHeight += bm.Height;
+                totalWidth = Max(totalWidth, bm.Width);
+                using(var g = Graphics.FromImage(bm)){
+                    g.DrawString("¿", boldFont, keyOrangeB, 0, (int)(bm.Height / 2 - qHeight / 2));
+                    g.DrawImage(condition, upSideDownW, 0);
+                    g.DrawString(
+                        "?", boldFont, keyOrangeB, 
+                        condition.Width + upSideDownW, 
+                        (int)(bm.Height / 2 - qHeight / 2)
+                    );
+                }
+                iterPics.AddLast(bm);
+            } else {
+                throw new("What is this comprehension iterator?");
+            }
+        }
+        int bracketHieght = txtHeight * 2;
+        Bitmap res = new(totalWidth, totalHeight + bracketHieght + item.Height);
+        using (var g = Graphics.FromImage(res)) {
+            g.DrawString("[", boldFont, keyOrangeB, 0, 0);
+            int end = txtHeight;
+            foreach(var iter in iterPics) {
+                g.DrawImage(iter, 0, end);
+                end += iter.Height;
+            }
+            g.DrawImage(item, 0, end);
+        }
+        return new(res, (int)(res.Height / 2));
+    }
+    private static BM_Middle? scaledNone;
     private static BM_Middle None(dynamic ast){
-        return new(new(noneImg, txtHeight, txtHeight), (int)(txtHeight/2));
+        if(scaledNone is null){
+            scaledNone = new(new(noneImg, txtHeight, txtHeight), (int)(txtHeight/2));
+        }
+        return (BM_Middle)scaledNone;
     }
     private static Bitmap? scaledReturn;
     private static BM_Middle ReturnStatement(dynamic ast){
@@ -132,16 +179,16 @@ public static class AST {
                 pg.DrawImage(emptyList, 5, 0);
             }
             emptyListScaled = new(padded, (int)(padded.Height / 2));
-            return emptyListScaled!;
+            return (BM_Middle)emptyListScaled;
         }
         int lineLen = 5;
         int gap = 5;
-        List<BM_Middle> elements = new();
+        LinkedList<BM_Middle> elements = new();
         var (width, heightT, heightB) = (lineLen + gap, 0, 0);
         foreach(var item in ast.Items) {
             var img = MakeImg(item);
             var middle = img.Middle;
-            elements.Add(img);
+            elements.AddLast(img);
             width += lineLen + img.Img.Width + 2 * gap;
             heightT = Max(heightT, middle);
             heightB = Max(heightB, img.Img.Height - middle);
@@ -169,7 +216,7 @@ public static class AST {
         if(passPic is BM_Middle bm && bm.Img.Height == txtHeight) {   return bm; }
         Bitmap img = new(passImg, (int)(passImg.Width / (passImg.Height / txtHeight)), txtHeight);
         passPic = new(img, (int)(img.Height / 2));
-        return passPic!;
+        return (BM_Middle)passPic;
     }
     public static BM_Middle WhileStatement(dynamic ast) {
         int indent = 8, gap = 8;
@@ -467,17 +514,19 @@ public static class AST {
             }
         );
     public static BM_Middle SuiteStatement(dynamic ast) {
-        List<Bitmap> resses = new();
+        LinkedList<Bitmap> resses = new();
         var (height, width) = (0, 0);
         foreach(var statement in ast.Statements) {
             try {
-                resses.Add(MakeImg(statement).Img);
+                Bitmap img = MakeImg(statement).Img;
+                resses.AddLast(img);
+                height += img.Size.Height;
+                width = Max(width, img.Size.Width);
             } catch(Exception) {
                 // put just the text in this line
                 throw;
             }
-            height += resses[^1].Size.Height;
-            width = Max(width, resses[^1].Size.Width);
+            
         }
         var end = 20;
         var res = new Bitmap(width, height + end);
@@ -490,7 +539,7 @@ public static class AST {
         return new(res, (int)(res.Height / 2));
     }
     public static BM_Middle MainModule(dynamic ast) {
-        List<Bitmap> resses = new();
+        LinkedList<Bitmap> resses = new();
         var (height, width) = (0, 0);
         var statements = ast.Body.Statements;
         for(int j = 0; j < statements.Length; j++) {
@@ -519,7 +568,7 @@ public static class AST {
                 if(img is null) {
                     throw new Exception();
                 }
-                resses.Add(img);
+                resses.AddLast(img);
             } catch(Exception) {
                 StringBuilder sb = new();
                 for(int i = startI.line; i <= endI.line; i++) {
@@ -547,10 +596,10 @@ public static class AST {
                 using(var bg = Graphics.FromImage(bm)) {
                     bg.DrawString(st, boldFont, textBrush, 0, 0);
                 }
-                resses.Add(bm);
+                resses.AddLast(bm);
             }
-            height += resses[^1].Size.Height;
-            width = Max(width, resses[^1].Size.Width);
+            height += resses.Last!.Value.Size.Height;
+            width = Max(width, resses.Last!.Value.Size.Width);
         }
         var end = 20;
         var res = new Bitmap(width, height + end);
@@ -563,16 +612,16 @@ public static class AST {
         return new(res, (int)(res.Height / 2));
     }
     public static BM_Middle PrintStatement(dynamic ast) {
-        List<Bitmap> resses = new();
+        LinkedList<Bitmap> resses = new();
         var (width, height) = (0, 0);
         foreach(var statement in ast.Expressions) {
             if(statement.NodeName.Equals("TupleExpression")) {
-                resses.Add(MakeImg(statement).Img);
+                resses.AddLast(MakeImg(statement).Img);
             } else {
-                resses.Add(MakeImg(statement.Expression).Img);
+                resses.AddLast(MakeImg(statement.Expression).Img);
             }
-            width += resses[^1].Width;
-            height = Max(height, resses[^1].Height);
+            width += resses.Last!.Value.Width;
+            height = Max(height, resses.Last!.Value.Height);
         }
         var printer = new Bitmap(printerImg, new Size(printerImg.Width / (printerImg.Height / (height + 20)), height + 20));
         var res = new Bitmap(width + printer.Width + 20, printer.Height);
@@ -615,12 +664,12 @@ public static class AST {
         if(ast.Items.Length == 0){
             return new(new(1, txtHeight), (int)(txtHeight/2));
         }
-        List<Bitmap> resses = new();
+        LinkedList<Bitmap> resses = new();
         var (width, height) = (0, 0);
         foreach(var statement in ast.Items) {
-            resses.Add(MakeImg(statement).Img);
-            width += resses[^1].Width;
-            height = Max(height, resses[^1].Height);
+            resses.AddLast(MakeImg(statement).Img);
+            width += resses.Last!.Value.Width;
+            height = Max(height, resses.Last!.Value.Height);
         }
         int commaLen = MeasureWidth(",", boldFont);
         var res = new Bitmap(width + commaLen * (resses.Count - 1), height);
@@ -641,7 +690,7 @@ public static class AST {
     }
     //todo cleanup
     public static BM_Middle AssignmentStatement(dynamic ast) {
-        List<Bitmap> assignmentNames = new();
+        LinkedList<Bitmap> assignmentNames = new();
         var (h1, w1) = (0, 0);
         int lineWidth = 5;
         int gap = 5;
@@ -656,10 +705,11 @@ public static class AST {
             leftVal = new List<dynamic> { leftVal };
         }
         foreach(var item in leftVal) {
-            assignmentNames.Add(MakeImg(item).Img);
+            Bitmap img = MakeImg(item).Img;
+            assignmentNames.AddLast(img);
             if(h1 != 0) { h1 += gap; }
-            h1 += assignmentNames[^1].Height;
-            w1 = Max(w1, assignmentNames[^1].Width);
+            h1 += img.Height;
+            w1 = Max(w1, img.Width);
         }
         Bitmap valueName = MakeImg(ast.Right).Img;
         var (h2, w2) = (valueName.Height, valueName.Width);

@@ -27,7 +27,8 @@ using static GraphicIDE.KeyInput;
 // todo syntax highlighting
 // todo when renaming func rename all calls too
 // todo save/open
-// todo better gaps (also from side of screen)
+// todo change scaled images when text size changes (just set them to null)
+// todo make vars blue
 // todo add more visualizations
 // ? indexing + slicing
 // ? tuple + dict + generator
@@ -56,6 +57,7 @@ public partial class Form1: Form {
     public static int screenWidth = 0, screenHeight = 0, prevHeight, prevWidth;
     public static List<Window> windows = new();
     public static bool dragging = false, doubleClick = false;
+    // todo convert to linked list
     public static List<(Button btn, Func<(int w, int h), Point> calcPos)> buttonsOnScreen = new();
     public static Point screenPos;
     public static Form1 nonStatic = null!;
@@ -542,7 +544,7 @@ public partial class Form1: Form {
     #endregion
 }
 
-public record class BM_Middle(Bitmap Img, int Middle);
+public record struct BM_Middle(Bitmap Img, int Middle);
 public record struct Menu(Rectangle bgPos, SolidBrush bgColor, List<(Button btn, Func<(int X, int Y), Point> getPos)> buttons);
 static class CursorPos {
     public static int Line{ get; private set; } = 0;
