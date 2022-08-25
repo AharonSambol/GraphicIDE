@@ -71,20 +71,20 @@ public static class AST {
             int end = test.Width + gap * 4;
 
             var arr = new(Bitmap, Bitmap, int, Pen)[]{
-                (trueExp , shortArrowG, -1, greenP),
-                (falseExp, shortArrowR, +1, redListP   )
+                (trueExp , shortArrowG, -1, shortIfElseGP),
+                (falseExp, shortArrowR, +1, shortIfElseRP)
             };
             for (int i=0; i < arr.Length; i++) {
-                var (exp, arrow_, sign, pen) = arr[i];
-                Bitmap arrow = new(arrow_, txtHeight/2, txtHeight/2);
-                int y = middle + sign * (test.Height / 4);
+                var (exp, arrowUnsized, dir, pen) = arr[i];
+                Bitmap arrow = new(arrowUnsized, txtHeight/2, txtHeight/2);
+                int y = middle + dir * (test.Height / 4);
                 int startX = end;
                 int endX = end + txtHeight;
                 Point startP = new(startX, y);
                 Point endP   = new(endX, y);
                 g.DrawLine(pen, startP, endP);
                 startP = endP;
-                endP.Y = middle + sign * (exp.Height/2 + gap * 3);
+                endP.Y = middle + dir * (exp.Height/2 + gap * 3);
                 g.DrawLine(pen, startP, endP);
                 startP = endP;
                 endP.X = end + space - arrow.Width;
@@ -99,14 +99,13 @@ public static class AST {
                 g.DrawImage(exp, endP);
             }
         }
-
         return new(res, res.Height / 2);
     }
     private static BM_Middle Comprehension(dynamic ast, string open, string close, Brush brush, Color bg, Bitmap? ditem=null){
         int indent = indentW / 2;
         Bitmap item = ditem ?? MakeImg(ast.Item).Img;
         LinkedList<Bitmap> iterPics = new();
-        int totalHeight = 0, totalWidth = 0;
+        int totalHeight = item.Height, totalWidth = item.Width + indent;
         foreach(var iter in ast.Iterators) {
             if("ComprehensionFor".Equals(iter.NodeName)){
                 // todo make for image
@@ -134,7 +133,7 @@ public static class AST {
             }
         }
         int bracketHieght = txtHeight * 2;
-        Bitmap res = new(totalWidth, totalHeight + bracketHieght + item.Height);
+        Bitmap res = new(totalWidth, totalHeight + bracketHieght);
         using (var g = Graphics.FromImage(res)) {
             g.Clear(bg);
             g.DrawString(open, boldFont, brush, 0, 0);
