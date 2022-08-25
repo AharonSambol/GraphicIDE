@@ -10,6 +10,7 @@ using static GraphicIDE.Tabs;
 namespace GraphicIDE;
 
 public static class DrawScreen{
+    public const int WINDOW_LEFT_GAP = 6;
     public static bool isPic = false, skipDrawNewScreen = false;
     private static readonly Font titleFont = new(FontFamily.GenericMonospace, 35, FontStyle.Bold);
     public static void DrawPicScreen() {
@@ -35,8 +36,8 @@ public static class DrawScreen{
                     #region resize to fit screen
                     if(bm.Img.Height > curWindow.Size.height || bm.Img.Width > curWindow.Size.width){
                         (float newWidth, float newHeight) = (bm.Img.Width, bm.Img.Height);
-                        if(newWidth > curWindow.Size.width){
-                            newWidth = curWindow.Size.width;
+                        if(newWidth > curWindow.Size.width - 2 * WINDOW_LEFT_GAP){
+                            newWidth = curWindow.Size.width - 2 * WINDOW_LEFT_GAP;
                             newHeight /= (bm.Img.Width / newWidth);
                         }
                         if(newHeight > curWindow.Size.height - TAB_HEIGHT){
@@ -105,7 +106,7 @@ public static class DrawScreen{
             end += bm.Height;
             bitmaps.Add(bm);
         }
-        Bitmap newBitMap = new(Min(totalWidth, screenWidth), end);
+        Bitmap newBitMap = new(Min(totalWidth, (int)curWindow.Size.width - WINDOW_LEFT_GAP * 2), end);
         var gr = Graphics.FromImage(newBitMap);
         end = 0;
         foreach(var item in bitmaps) {
@@ -134,7 +135,7 @@ public static class DrawScreen{
                     g.Clear(Color.Black); // ? make back black
                     g.DrawImage(item.Function.DisplayImage!, 0, item.Offset);
                 }
-                e.Graphics.DrawImage(bm, item.Pos.x, drawPosY);
+                e.Graphics.DrawImage(bm, item.Pos.x + WINDOW_LEFT_GAP, drawPosY);
                 // ? draw frame
                 e.Graphics.DrawRectangle(new(Color.White, 2), item.Pos.x-2, item.Pos.y-2, item.Size.width+2, item.Size.height+2);
             }
