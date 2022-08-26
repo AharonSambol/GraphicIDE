@@ -19,9 +19,11 @@ public static class BrushesAndPens{
         opaqeForBlue    = Color.FromArgb(050, 095, 129, 199),
         shortIfElseG    = Color.FromArgb(255, 096, 202, 105),
         shortIfElseR    = Color.FromArgb(255, 171, 038, 020),
+        lblue           = Color.FromArgb(255, 145, 178, 221),
         opaqekeyOrange  = Color.FromArgb(050, 245, 190, 080),
         opaqeMathPurple = Color.FromArgb(050, 164, 128, 207);
     public static readonly SolidBrush
+        lblueBrush      = new(lblue),
         forBlueB        = new(forBlue),
         keyOrangeB      = new(keyOrange),
         mathPurpleB     = new(mathPurple),
@@ -35,7 +37,6 @@ public static class BrushesAndPens{
         curserBrush         = new(Color.WhiteSmoke),
         smokeWhiteBrush     = new(Color.WhiteSmoke),
         redBrush            = new(Color.FromArgb(255, 200, 049, 045)),
-        lblueBrush          = new(Color.FromArgb(255, 145, 178, 221)),
         intBrush            = new(Color.FromArgb(255, 207, 255, 182)),
         timeBrush           = new(Color.FromArgb(255, 100, 100, 100)),
         textBrush           = new(Color.FromArgb(255, 160, 160, 160)),
@@ -53,6 +54,7 @@ public static class BrushesAndPens{
         orangeDashed    = new(orangeOpaqe, 5)   { DashPattern = dashes },
         whiteP          = new(Color.Gray, 4),
         yellowP         = new(Color.Wheat, 5),
+        lblueP          = new(lblue, 4),
         redListP        = new(listRed, 5),
         forBlueP        = new(forBlue, 4),
         redOpaqeP       = new(redOpaqe, 5),

@@ -1,0 +1,12 @@
+import math
+
+a = [1.5, 3**5, math.sqrt(6/(3+2))]
+if a is None:
+    pass
+elif len(a) > 3:
+    arr = [x ** 2 for x in a if x % 2 == 0]
+else:
+    while sum(a) < 10:
+        a += [1]
+for x in a:
+    print(x)

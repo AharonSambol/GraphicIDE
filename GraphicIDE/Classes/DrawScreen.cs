@@ -133,9 +133,12 @@ public static class DrawScreen{
                 Bitmap bm = new((int)window.size.width, itemHeight);
                 using(var g = Graphics.FromImage(bm)){
                     g.Clear(Color.Black); // ? make back black
-                    g.DrawImage(
-                        window.function.displayImage!, 
-                        0, window.function.isPic ? 0 : window.offset);
+                    Bitmap img = window.function.displayImage!;
+                    if(window.function.isPic){
+                        g.DrawImage(img, bm.Width/2-img.Width/2, 0);
+                    } else {
+                        g.DrawImage(img, 0, window.offset);
+                    }
                 }
                 e.Graphics.DrawImage(bm, window.pos.x + WINDOW_LEFT_GAP, drawPosY);
                 // ? draw frame

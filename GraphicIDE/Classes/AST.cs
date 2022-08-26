@@ -1,3 +1,4 @@
+using System.Drawing.Drawing2D;
 using System.Text;
 
 using static GraphicIDE.Form1;
@@ -108,7 +109,6 @@ public static class AST {
         int totalHeight = item.Height, totalWidth = item.Width + indent;
         foreach(var iter in ast.Iterators) {
             if("ComprehensionFor".Equals(iter.NodeName)){
-                // todo make for image
                 Bitmap bm = ForTopPart(iter);
                 totalHeight += bm.Height;
                 totalWidth = Max(totalWidth, bm.Width + indent);
@@ -326,8 +326,17 @@ public static class AST {
     }
     private static BM_Middle WhileStatement(dynamic ast){
         Bitmap condition = MakeImg(ast.Test).Img;
+        int whileW = MeasureWidth("while ", boldFont);
+        Bitmap withWhile = new(
+            condition.Width + whileW, 
+            Max(txtHeight, condition.Height)
+        );
+        using(var g = Graphics.FromImage(withWhile)){
+            g.DrawString("while", boldFont, keyOrangeB, 0, withWhile.Height/2-txtHeight/2);
+            g.DrawImage(condition, whileW, withWhile.Height/2-condition.Height/2);
+        }
         Bitmap body = MakeImg(ast.Body).Img;
-        return WhileAndFor(condition, body, whileOrangeP, whileArrowUpImg, whileArrowDownImg);
+        return WhileAndFor(withWhile, body, whileOrangeP, whileArrowUpImg, whileArrowDownImg);
     }
     private static BM_Middle WhileAndFor(Bitmap condition, Bitmap body, Pen pen, Bitmap arUp, Bitmap arDown){
         int indent = 8, gap = 8;
@@ -372,15 +381,15 @@ public static class AST {
         static Bitmap MakeIfOrElif(Bitmap condition, Bitmap body, Pen pen) {
             Bitmap res = new(
                 width: Max(condition.Width + qWidth, body.Width + indentW),
-                height: condition.Height + body.Height + 5
+                height: condition.Height + body.Height + 5 + (int)pen.Width
             );
             var g = Graphics.FromImage(res);
-            g.DrawString("¿", boldFont, keyOrangeB, 0, (int)(condition.Height / 2 - qHeight / 2));
-            g.DrawImage(condition, upSideDownW, 0);
+            g.DrawString("¿", boldFont, keyOrangeB, 0, (int)(pen.Width + condition.Height / 2 - qHeight / 2));
+            g.DrawImage(condition, upSideDownW, pen.Width);
             g.DrawString(
                 "?", boldFont, keyOrangeB, 
                 condition.Width + upSideDownW, 
-                (int)(condition.Height / 2 - qHeight / 2)
+                (int)(pen.Width + condition.Height / 2 - qHeight / 2)
             );
             g.DrawLine(pen, 1, 0, 1, res.Height);
             g.DrawImage(body, indentW, condition.Height);
@@ -393,7 +402,7 @@ public static class AST {
         var ifBody = MakeImg(mainIf.Body).Img;
         var res = MakeIfOrElif(ifCond, ifBody, greenOpaqeP);
         var resG = Graphics.FromImage(res);
-        resG.DrawLine(lastColor, 4, 1, res.Width, 1);
+        resG.DrawLine(lastColor, 4, (int)lastColor.Width/2, res.Width, (int)lastColor.Width/2);
 
         if(ast.Tests.Length > 1) {
             lastColor = orangeDashed;
@@ -426,7 +435,7 @@ public static class AST {
         }
         return new(addPad, (int)(res.Height/2));
     }
-    private static BM_Middle? FunctionCall(dynamic ast) {
+    private static BM_Middle FunctionCall(dynamic ast) {
         if(ast.Target.Name.Equals("sqrt") && ast.Target.Target.Name.Equals("math")) {
             var val = ast.Args[0].Expression;
             var inside = MakeImg(val).Img;
@@ -486,7 +495,42 @@ public static class AST {
             }
             return new(res, (int)(res.Height / 2));
         }
-        return null;
+        else{
+            LinkedList<BM_Middle> args = new();
+            int commaW = MeasureWidth(",", boldFont);
+            int hTop = 0, hBottom = 0, width = -commaW;
+            Bitmap argsBm = new(1, Max(txtHeight/2, txtHeight - 10));
+            if(ast.Args.Length > 0){
+                foreach(var item in ast.Args) {
+                    var bm = MakeImg(item.Expression);
+                    args.AddLast(bm);
+                    width += commaW + bm.Img.Width;
+                    hTop = Max(hTop, bm.Middle);
+                    hBottom = Max(hBottom, bm.Img.Height - bm.Middle);
+                }
+                
+                argsBm = new(width, hTop + hBottom);
+                using(var g = Graphics.FromImage(argsBm)){
+                    int end = 0;
+                    foreach(var item in args) {
+                        g.DrawImage(item.Img, end, hTop - item.Middle);
+                        end += item.Img.Width;
+                        if(!item.Equals(args.Last!.Value)){
+                            g.DrawString(",", boldFont, whiteBrush, end, hTop - txtHeight/2);
+                            end += commaW;
+                        }
+                    }
+                }
+            }
+            Bitmap par = ParenthesisExpression(0, inside_: argsBm, pen: lblueP).Img;
+            Bitmap func = MakeImg(ast.Target).Img;
+            Bitmap res = new(par.Width + func.Width, Max(par.Height, func.Height));
+            using(var g = Graphics.FromImage(res)){
+                g.DrawImage(func, 0, res.Height/2-func.Height/2);
+                g.DrawImage(par, func.Width, res.Height/2-par.Height/2);
+            }
+            return new(res, res.Height/2);
+        }
     }
     private static BM_Middle UnaryExpression(dynamic ast) {
         var op = PythonOperatorToString(ast.Op);
@@ -747,8 +791,8 @@ public static class AST {
         }
         return new(res, (int)(res.Height / 2));
     }
-    private static BM_Middle ParenthesisExpression(dynamic ast) {
-        Bitmap inside = MakeImg(ast.Expression).Img;
+    private static BM_Middle ParenthesisExpression(dynamic ast, Bitmap? inside_=null, Pen? pen=null) {
+        Bitmap inside = inside_ ?? MakeImg(ast.Expression).Img;
         var width = inside.Width;
         var height = inside.Height;
         var parHeight = height + 10;
@@ -760,10 +804,13 @@ public static class AST {
 
         using(var g = Graphics.FromImage(res)) {
             var end = 10;
-            g.DrawArc(mathPurpleP, new Rectangle(end, 5, parWidth, parHeight), 90, 180);
+            g.SmoothingMode = SmoothingMode.HighQuality;
+            g.DrawArc(pen ?? mathPurpleP, new Rectangle(end, 5, parWidth, parHeight), 90, 180);
             end += parWidth + 5;
+            g.SmoothingMode = SmoothingMode.Default;
             g.DrawImage(inside, end, 10);
-            g.DrawArc(mathPurpleP, new Rectangle(
+            g.SmoothingMode = SmoothingMode.HighQuality;
+            g.DrawArc(pen ?? mathPurpleP, new Rectangle(
                 end + width + 5, 5, parWidth, parHeight
             ), 270, 180);
         }

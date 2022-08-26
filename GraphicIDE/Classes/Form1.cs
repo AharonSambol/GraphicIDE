@@ -33,18 +33,17 @@ using static GraphicIDE.KeyInput;
 // todo add / move / resize windows
 // todo ctrl z / y
 // todo add more visualizations
-// ? indexing + slicing
+// ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else
 // ? tuple + dict + generator(+comprehension)
+// ? indexing + slicing
 // ? import from\as
 // ? classes(+attributes)
 // ? try except raise
-// ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else
 // ? annotations
 // ? func call
 // ? break, continue
 // ? built in funcs
 // ? lambda 
-// ? short if else
 
 namespace GraphicIDE;
 

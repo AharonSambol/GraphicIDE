@@ -330,7 +330,6 @@ public static class KeyInput {
                 CursorPos.ChangeLine(CursorPos.line-1);
                 CursorPos.ChangeCol(linesText[CursorPos.line].Length - 1);
             }
-
         } else if(CursorPos.col == -1) {
             if(CursorPos.line != 0) {
                 var text = linesText[CursorPos.line];
@@ -340,8 +339,20 @@ public static class KeyInput {
                 linesText[CursorPos.line] += text;
             }
         } else {
-            linesText[CursorPos.line] = string.Concat(thisline.AsSpan(0, CursorPos.col), thisline.AsSpan(CursorPos.col + 1));
-            CursorPos.ChangeCol(CursorPos.col - 1);
+            if(CursorPos.col > 2 && thisline.AsSpan(CursorPos.col-3, 4).Equals("    ", StringComparison.Ordinal)){
+                //? if deleting tab
+                linesText[CursorPos.line] = string.Concat(
+                    thisline.AsSpan(0, CursorPos.col-3), 
+                    thisline.AsSpan(CursorPos.col + 1)
+                );
+                CursorPos.ChangeCol(CursorPos.col - 4);
+            } else {
+                linesText[CursorPos.line] = string.Concat(
+                    thisline.AsSpan(0, CursorPos.col), 
+                    thisline.AsSpan(CursorPos.col + 1)
+                );
+                CursorPos.ChangeCol(CursorPos.col - 1);
+            }
         }
     }
     
