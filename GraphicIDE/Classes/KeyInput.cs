@@ -276,6 +276,9 @@ public static class KeyInput {
         }
         string curLine = linesText[CursorPos.line];
         int indentC = (curLine.Length - curLine.TrimStart().Length) / 4;
+        if(CursorPos.col > -1 && curLine[CursorPos.col] == ':'){
+            indentC++;
+        }
         string indent = new(' ', 4 * indentC);
         if(CursorPos.col == curLine.Length - 1) {
             linesText.Insert(CursorPos.line + 1, indent);

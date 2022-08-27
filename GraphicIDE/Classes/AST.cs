@@ -277,23 +277,22 @@ public static class AST {
         int lineLen = 5;
         int gap = 5;
         LinkedList<BM_Middle> elements = new();
-        var (width, heightT, heightB) = (lineLen + gap, 0, 0);
+        var (width, height) = (lineLen + gap, 0);
         foreach(var item in ast.Items) {
             var img = MakeImg(item);
             var middle = img.Middle;
             elements.AddLast(img);
             width += lineLen + img.Img.Width + 2 * gap;
-            heightT = Max(heightT, middle);
-            heightB = Max(heightB, img.Img.Height - middle);
+            height = Max(height, img.Img.Height);
         }
-        Bitmap res = new(width, heightB + heightT + 20);
+        Bitmap res = new(width, height + (lineLen + gap) * 2);
         using(var g = Graphics.FromImage(res)) {
             var end = 2;
             foreach(var (img, _) in elements) {
                 end += gap;
                 g.DrawLine(redListP, end, 5, end, res.Height - 5);
                 end += lineLen;
-                g.DrawImage(img, end, (int)(res.Height / 2 - img.Height / 2));
+                g.DrawImage(img, end + (int)redListP.Width/2, res.Height / 2 - img.Height / 2);
                 end += img.Width + gap;
             }
             end += gap;
@@ -302,7 +301,6 @@ public static class AST {
             g.DrawLine(redListP, 5, res.Height - 5, res.Width, res.Height - 5);
         }
         return new(res, (int)(res.Height / 2));
-
     }
     private static BM_Middle? passPic = null;
     private static BM_Middle EmptyStatement() {
@@ -312,21 +310,36 @@ public static class AST {
         return (BM_Middle)passPic;
     }
     private static Bitmap ForTopPart(dynamic ast){
-        Bitmap var = MakeImg(ast.Left).Img;
+        Bitmap var;
+        try{
+            if(ast.Left.NodeName.Equals("NameExpression") 
+                || linesText[ast.Left.Start.Line - 1][ast.Left.Start.Column - 2] == '('
+            ){
+                var = MakeImg(ast.Left).Img;
+            } else {
+                throw new IndexOutOfRangeException();
+            }
+        } catch (IndexOutOfRangeException){
+            LinkedList<BM_Middle> args = new();
+            foreach(var item in ast.Left.Items) {
+                var bm = MakeImg(item);
+                args.AddLast(bm);    
+            }
+            var = NonTupleTuple(args).Img;
+        }
         Bitmap iter = MakeImg(ast.List).Img;
         int forW = MeasureWidth("for ", boldFont);
         int inW = MeasureWidth(" in ", boldFont);
         int iterHeight = Max(Max(var.Height, iter.Height), txtHeight);
         Bitmap condition = new(var.Width + iter.Width + forW + inW, iterHeight);
-        // todo center the var and iter?
         using(var g = Graphics.FromImage(condition)){
-            g.DrawString("for", boldFont, keyOrangeB, 0, 0);
+            g.DrawString("for", boldFont, keyOrangeB, 0, condition.Height/2-txtHeight/2);
             int end = forW;
-            g.DrawImage(var, end, 0);
+            g.DrawImage(var, end, condition.Height/2-var.Height/2);
             end += var.Width;
-            g.DrawString(" in", boldFont, mathPurpleB, end, 0);
+            g.DrawString(" in", boldFont, mathPurpleB, end, condition.Height/2-txtHeight/2);
             end += inW;
-            g.DrawImage(iter, end, 0);
+            g.DrawImage(iter, end, condition.Height/2-iter.Height/2);
         }
         return condition;
     }
@@ -447,6 +460,28 @@ public static class AST {
         }
         return new(addPad, (int)(res.Height/2));
     }
+    private static BM_Middle NonTupleTuple(LinkedList<BM_Middle> args){
+        int commaW = MeasureWidth(",", boldFont);
+        int hTop = 0, hBottom = 0, width = -commaW;
+        foreach(var item in args) {
+            width += commaW + item.Img.Width;
+            hTop = Max(hTop, item.Middle);
+            hBottom = Max(hBottom, item.Img.Height - item.Middle);
+        }
+        Bitmap argsBm = new(width, hTop + hBottom);
+        using(var g = Graphics.FromImage(argsBm)){
+            int end = 0;
+            foreach(var item in args) {
+                g.DrawImage(item.Img, end, hTop - item.Middle);
+                end += item.Img.Width;
+                if(!item.Equals(args.Last!.Value)){
+                    g.DrawString(",", boldFont, whiteBrush, end, hTop - txtHeight/2);
+                    end += commaW;
+                }
+            }
+        }
+        return new(argsBm, argsBm.Height/2);
+    }
     private static BM_Middle FunctionCall(dynamic ast) {
         if(ast.Target.Name.Equals("sqrt") /*&& ast.Target.Target.Name.Equals("math")*/) {
             var val = ast.Args[0].Expression;
@@ -508,31 +543,16 @@ public static class AST {
             return new(res, (int)(res.Height / 2));
         }
         else{
-            LinkedList<BM_Middle> args = new();
-            int commaW = MeasureWidth(",", boldFont);
-            int hTop = 0, hBottom = 0, width = -commaW;
-            Bitmap argsBm = new(1, Max(txtHeight/2, txtHeight - 10));
+            Bitmap argsBm;
             if(ast.Args.Length > 0){
+                LinkedList<BM_Middle> args = new();
                 foreach(var item in ast.Args) {
                     var bm = MakeImg(item.Expression);
-                    args.AddLast(bm);
-                    width += commaW + bm.Img.Width;
-                    hTop = Max(hTop, bm.Middle);
-                    hBottom = Max(hBottom, bm.Img.Height - bm.Middle);
+                    args.AddLast(bm);    
                 }
-                
-                argsBm = new(width, hTop + hBottom);
-                using(var g = Graphics.FromImage(argsBm)){
-                    int end = 0;
-                    foreach(var item in args) {
-                        g.DrawImage(item.Img, end, hTop - item.Middle);
-                        end += item.Img.Width;
-                        if(!item.Equals(args.Last!.Value)){
-                            g.DrawString(",", boldFont, whiteBrush, end, hTop - txtHeight/2);
-                            end += commaW;
-                        }
-                    }
-                }
+                argsBm = NonTupleTuple(args).Img;
+            } else {
+                argsBm = new(1, Max(txtHeight/2, txtHeight - 10));
             }
             Bitmap par = ParenthesisExpression(0, inside_: argsBm, pen: lblueP).Img;
             Bitmap func = MakeImg(ast.Target).Img;
@@ -776,12 +796,18 @@ public static class AST {
         }
         return new(res, (int)(res.Height / 2));
     }
+    // todo keywords (end, sep)
     private static BM_Middle PrintStatement(dynamic ast) {
         LinkedList<Bitmap> resses = new();
         var (width, height) = (0, 0);
         foreach(var statement in ast.Expressions) {
             if(statement.NodeName.Equals("TupleExpression")) {
-                resses.AddLast(MakeImg(statement).Img);
+                LinkedList<BM_Middle> args = new();
+                foreach(var item in statement.Items) {
+                    var bm = MakeImg(item);
+                    args.AddLast(bm);    
+                }
+                resses.AddLast(NonTupleTuple(args).Img);
             } else {
                 resses.AddLast(MakeImg(statement.Expression).Img);
             }
@@ -828,34 +854,72 @@ public static class AST {
         }
         return new(res, (int)(res.Height / 2));
     }
+    // todo (also assignment)
+    private static BM_Middle? emptyTupleScaled = null;
     private static BM_Middle TupleExpression(dynamic ast) {
         if(ast.Items.Length == 0){
-            return new(new(1, txtHeight), (int)(txtHeight/2));
-        }
-        LinkedList<Bitmap> resses = new();
-        var (width, height) = (0, 0);
-        foreach(var statement in ast.Items) {
-            resses.AddLast(MakeImg(statement).Img);
-            width += resses.Last!.Value.Width;
-            height = Max(height, resses.Last!.Value.Height);
-        }
-        int commaLen = MeasureWidth(",", boldFont);
-        var res = new Bitmap(width + commaLen * (resses.Count - 1), height);
-
-        using(var g = Graphics.FromImage(res)) {
-            bool putComma = false;
-            var end = 0;
-            foreach(var item in resses) {
-                if(putComma) {
-                    g.DrawString(",", boldFont, textBrush, end, 0);
-                    end += commaLen;
-                } else { putComma = true; }
-                g.DrawImage(item, end, 0);
-                end += item.Width;
+            if(emptyTupleScaled is BM_Middle bm && bm.Img.Height == txtHeight + 15) {
+                return bm;
             }
+            Bitmap emptyTuple = new(emptyTupleImg, (int)(emptyTupleImg.Width / (emptyTupleImg.Height / (txtHeight + 15))), txtHeight + 15);
+            Bitmap padded = new(emptyTuple.Width + 5, emptyTuple.Height);
+            using(var pg = Graphics.FromImage(padded)) {
+                pg.DrawImage(emptyTuple, 5, 0);
+            }
+            emptyTupleScaled = new(padded, (int)(padded.Height / 2));
+            return (BM_Middle)emptyTupleScaled;
+        }
+        int gap = 5;
+        int lineLen = 5;
+        LinkedList<BM_Middle> resses = new();
+        var (width, height) = (lineLen + gap, 0);
+        foreach(var statement in ast.Items) {
+            BM_Middle img = MakeImg(statement);
+            resses.AddLast(img);
+            width += lineLen + img.Img.Width + 2 * gap;
+            height = Max(height, img.Img.Height);
+        }
+        int resH = height + (lineLen + gap) * 2;
+        int curveWidth = (resH)/4;
+        Bitmap res = new(width + curveWidth * 2, resH);
+        int pW = (int)lblueP.Width/2;
+        using(var g = Graphics.FromImage(res)) {
+            var end = curveWidth;
+            foreach(var (img, _) in resses) {
+                end += gap;
+                if(!img.Equals(resses.First!.Value.Img)){
+                    g.DrawLine(lblueP, end + pW, 5, end + pW, res.Height - 5);
+                }
+                end += lineLen + gap;
+                g.DrawImage(img, end, res.Height / 2 - img.Height / 2);
+                end += img.Width;
+            }
+            g.DrawLine(lblueP,  curveWidth, 5, res.Width - curveWidth + pW, 5);
+            g.DrawLine(lblueP, curveWidth, res.Height - 5, res.Width - curveWidth + pW, res.Height - 5);
+            
+            // ? drawing the curves
+            g.SmoothingMode = SmoothingMode.HighQuality;
+            var (startX, startY) = (curveWidth, 5);
+            var (endX, endY) = (curveWidth, res.Height-5);
+            Point p1 = new(startX, startY);
+            Point p2 = new(startX - curveWidth, startY + curveWidth);
+            Point p3 = new(endX - curveWidth, endY - curveWidth);
+            Point p4 = new(endX, endY);
+            g.DrawBezier(lblueP, p1, p2, p3, p4);
+            
+            (startX, startY) = (res.Width - curveWidth, 5);
+            (endX, endY) = (res.Width - curveWidth, res.Height-5);
+            
+            p1 = new(startX, startY);
+            p2 = new(startX + curveWidth, startY + curveWidth);
+            p3 = new(endX + curveWidth, endY - curveWidth);
+            p4 = new(endX, endY);
+            g.DrawBezier(lblueP, p1, p2, p3, p4);
+            
         }
         return new(res, (int)(res.Height / 2));
     }
+    
     //todo cleanup
     private static BM_Middle AssignmentStatement(dynamic ast) {
         LinkedList<Bitmap> assignmentNames = new();
