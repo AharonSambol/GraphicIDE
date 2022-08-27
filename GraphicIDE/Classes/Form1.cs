@@ -17,16 +17,17 @@ using static GraphicIDE.KeyInput;
 // todo add cheat sheat
 // todo let them make custom img for functions
 // todo cache some of the textline images
+// todo only draw visable lines
 // todo add little icon to list/set.. comprehension to signal which type it is
 // todo have file system on right so dont need to have all tabs open
 // todo capslock shortcuts
 // todo scroll horizontal
 // todo when renaming func rename all calls too
-// todo save/open
+// todo save/open (file explorer)
 // todo console button changing size??
 // todo syntax highlighting
 // todo drag selection
-// todo change scaled images when text size changes (just set them to null)
+// todo change `scaled images` when text size changes (just set them to null)
 // todo when changing font size need to change pen sizes as well / just resize img
 // todo function args
 // todo print and exception

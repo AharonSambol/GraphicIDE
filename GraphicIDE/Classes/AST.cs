@@ -43,11 +43,23 @@ public static class AST {
                 "dict comprehension" => () => DictionaryComprehension(ast),
                 "ForStatement" => () => ForStatement(ast),
                 "conditional expression" => () => ShortIfElse(ast),
+                "MemberExpression" => () => MemberExpression(ast),
                 _ => () => null
             }))();
         } catch(Exception) { 
             return null;
         }
+    }
+    private static BM_Middle MemberExpression(dynamic ast){
+        Bitmap img = MakeImg(ast.Target).Img;
+        string name = $".{ ast.Name }";
+        int nameW = MeasureWidth(name, boldFont);
+        Bitmap res = new(img.Width + nameW, Max(txtHeight, img.Height));
+        using(var g = Graphics.FromImage(res)){
+            g.DrawImage(img, 0, 0);
+            g.DrawString(name, boldFont, lblueBrush, img.Width, 0);
+        }
+        return new(res, res.Height / 2);
     }
     private static BM_Middle ShortIfElse(dynamic ast){
         Bitmap test = MakeImg(ast.Test).Img;
@@ -436,7 +448,7 @@ public static class AST {
         return new(addPad, (int)(res.Height/2));
     }
     private static BM_Middle FunctionCall(dynamic ast) {
-        if(ast.Target.Name.Equals("sqrt") && ast.Target.Target.Name.Equals("math")) {
+        if(ast.Target.Name.Equals("sqrt") /*&& ast.Target.Target.Name.Equals("math")*/) {
             var val = ast.Args[0].Expression;
             var inside = MakeImg(val).Img;
             Bitmap res = new(
