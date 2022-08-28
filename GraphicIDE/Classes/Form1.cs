@@ -197,6 +197,7 @@ public partial class Form1: Form {
                 Keys.N => () => PromptMakeNewTab(),
                 Keys.R => () => PromptRenameTab(),
                 Keys.Z => () => CtrlZ(),
+                Keys.Y => () => CtrlY(),
                 Keys.Tab => () => CtrlTab(),
                 Keys.Oemtilde => () => ToggleConsole(),
                 Keys.Oemplus => () => ChangeFontSize((int)boldFont.Size + 1),

@@ -1,71 +1,113 @@
 using static GraphicIDE.Form1;
-using static GraphicIDE.BrushesAndPens;
-using static GraphicIDE.MyImages;
-using static GraphicIDE.Start;
 
 namespace GraphicIDE;
 
 public static class History {
-    #region Stack
     private const int historyAmount = 50;
-    private static List<Change>?[] history = new List<Change>?[historyAmount];
-    private static int pos = historyAmount-1;
-    private static void Push(List<Change> val){
-        pos = (pos+1) % historyAmount;
-        history[pos] = val;
-    }
-    private static List<Change> Pop(){
-        if(IsEmpty()){  throw new Exception(); }
-        var val = history[pos];
-        history[pos] = null;
-        pos = pos == 0 ? historyAmount - 1 : pos - 1;
-        return val!;
-    }
-    private static List<Change> Peek(){
-        if(IsEmpty()){  throw new Exception(); }
-        var val = history[pos];
-        return val!;
-    }
-    private static bool IsEmpty(){
-        return history[pos] is null;
-    }
-
-    #endregion
-
-    public static void CtrlZ(){
-        // todo pop into ctrl y
-        if(IsEmpty()){  return; }
-        var changes = Pop();
+    private static Stack<Change> history = new Stack<Change>(historyAmount); 
+    private static Stack<Change> future = new Stack<Change>(historyAmount); 
+    
+    public static void CtrlY(){
+        if(future.IsEmpty()){  return; }
+        var changes = future.Pop();
         (int, int) lastCursor = CursorPos.ToTuple();
         (int, int)? lastSelect = selectedLine;
-        LinkedList<int> linesRemoved = new();
-        foreach(var (typ, line, change, cursor, select) in changes) {
+        for (int i=0; i < changes.Count; i++) {
+            var (typ, line, change, cursor, select) = changes[i];
+            changes[i] = changes[i] with { cursor = lastCursor, select = lastSelect };
             lastCursor = cursor;
             lastSelect = select;
             switch (typ){
                 case ChangeType.del:
-                    linesText.Insert(line, change);
-                    break;
-                case ChangeType.add:
                     linesText.RemoveAt(line);
                     break;
+                case ChangeType.add:
+                    linesText.Insert(line, change);
+                    break;
                 case ChangeType.change:
+                    changes[i] = changes[i] with { change = linesText[line] };
                     linesText[line] = change;
                     break;
             }
         }
+        changes.Reverse();
+        history.Push(changes);
+        CursorPos.ChangeBoth(lastCursor);
+        selectedLine = lastSelect;
+        nonStatic.Invalidate();
+    }
+    public static void CtrlZ(){
+        if(history.IsEmpty()){  return; }
+        var changes = history.Pop();
+        (int, int) lastCursor = CursorPos.ToTuple();
+        (int, int)? lastSelect = selectedLine;
+        // future.Push(changes);
+        // LinkedList<Change> newchanges = new();
+        for (int i=0; i < changes.Count; i++) {
+            var (typ, line, change, cursor, select) = changes[i];
+            changes[i] = changes[i] with { cursor = lastCursor, select = lastSelect };
+            lastCursor = cursor;
+            lastSelect = select;
+            switch (typ){
+                case ChangeType.del:
+                    // newchanges.AddFirst(new Change(ChangeType.del, line, "", CursorPos.ToTuple(), selectedLine));
+                    linesText.Insert(line, change);
+                    break;
+                case ChangeType.add:
+                    // newchanges.AddFirst(new Change(ChangeType.add, line, linesText[line], CursorPos.ToTuple(), selectedLine));
+                    linesText.RemoveAt(line);
+                    break;
+                case ChangeType.change:
+                    changes[i] = changes[i] with { change = linesText[line] };
+                    // newchanges.AddFirst(new Change(ChangeType.change, line, linesText[line], CursorPos.ToTuple(),selectedLine));
+                    linesText[line] = change;
+                    break;
+            }
+        }
+        changes.Reverse();
+        future.Push(changes);
         CursorPos.ChangeBoth(lastCursor);
         selectedLine = lastSelect;
         nonStatic.Invalidate();
     }
     public static void AddChange(List<Change> val){
-        Push(val);
+        history.Push(val);
     }
     public static void AddChange(Change val){
-        Push(new(){ val });
+        history.Push(new(){ val });
     }
 }
 public record class Change(
     ChangeType typ, int line, string change, 
     (int line, int col) cursor, (int line, int col)? select);
 public enum ChangeType { del, add, change }
+class Stack<T>{
+    private List<T>?[] stack;
+    private int pos, size;
+
+    public Stack(int size){
+        stack = new List<T>?[size];
+        pos = size - 1;
+        this.size = size;
+    }
+    public void Push(List<T> val){
+        pos = (pos+1) % size;
+        stack[pos] = val;
+    }
+    public List<T> Pop(){
+        if(IsEmpty()){  throw new Exception(); }
+        var val = stack[pos];
+        stack[pos] = null;
+        pos = pos == 0 ? size - 1 : pos - 1;
+        return val!;
+    }
+    public List<T> Peek(){
+        if(IsEmpty()){  throw new Exception(); }
+        var val = stack[pos];
+        return val!;
+    }
+    public bool IsEmpty(){
+        return stack[pos] is null;
+    }
+
+}
