@@ -25,7 +25,7 @@ public static class AST {
                 AssignmentStatement as_ => () => AssignmentStatement(as_),
                 // "operator" => () => Operator(ast),
                 CallExpression ce => () => FunctionCall(ce),
-                BinaryExpression be => () => Comparison(be),
+                BinaryExpression be => () => BinaryExpression(be),
                 UnaryExpression ue => () => UnaryExpression(ue),
                 IfStatement is_ => () => IfExpression(is_),
                 WhileStatement ws => () => WhileStatement(ws),
@@ -494,7 +494,7 @@ public static class AST {
         if(ast.Target is MemberExpression tar2){    name = tar2.Name; }
         if(name is not null){
             try{
-                if(name.Equals("sqrt") /*&& ast.Target.Target.Name.Equals("math")*/) {
+                if(name.Equals("sqrt")) {
                     var val = ast.Args[0].Expression;
                     var inside = MakeImg(val).Img;
                     Bitmap res_ = new(
@@ -509,6 +509,18 @@ public static class AST {
                     }
                     return new(res_, (int)(res_.Height / 2));
                 }
+                else if(name.Equals("pow")){
+                    var bottom = MakeImg(ast.Args[0].Expression);
+                    var top = MakeImg(ast.Args[1].Expression);
+                    var pow = Power(bottom, top);
+                    if(ast.Args.Count > 2){
+                        var mod = MakeImg(ast.Args[2].Expression);
+                        var parenthesis = ParenthesisExpression(null, pow.Img);
+                        return BinaryExpression(null, "%", parenthesis, mod);
+                    }
+                    return pow;
+                } 
+                // todo start
                 else if(name.Equals("sum")) {
                     var val = ast.Args[0].Expression;
                     var inside = MakeImg(val).Img;
@@ -555,6 +567,7 @@ public static class AST {
                 }
             }catch(Exception){}
         } 
+        #region default
         Bitmap argsBm;
         if(ast.Args.Count > 0){
             LinkedList<BM_Middle> args = new();
@@ -574,10 +587,10 @@ public static class AST {
             g.DrawImage(par, func.Width, res.Height/2-par.Height/2);
         }
         return new(res, res.Height/2);
+        #endregion
     }
     private static BM_Middle UnaryExpression(UnaryExpression ast) {
         var op = PythonOperatorToString(ast.Op);
-        
         int gap = 5;
         var opWidth = MeasureWidth(op, boldFont);
         var opHeight = MeasureHeight(op, boldFont);
@@ -594,15 +607,15 @@ public static class AST {
         }
         return new(res, middle);
     }
-    private static BM_Middle Comparison(BinaryExpression ast) {
-        var op = PythonOperatorToString(ast.Operator);
+    private static BM_Middle BinaryExpression(BinaryExpression? ast, string? op_=null, BM_Middle? imgL_=null, BM_Middle? imgR_=null) {
+        var op = op_ ?? PythonOperatorToString(ast!.Operator);
         
         int gap = 5;
         var opWidth = MeasureWidth(op, boldFont) + gap * 2;
         var opHeight = MeasureHeight(op, boldFont);
-        var l = MakeImg(ast.Left);
+        var l = imgL_ ?? MakeImg(ast!.Left);
         (Bitmap left, int lmiddle) = (l.Img, l.Middle);
-        var r = MakeImg(ast.Right);
+        var r = imgR_ ?? MakeImg(ast!.Right);
         (Bitmap right, int rmiddle) = (r.Img, r.Middle);
         switch(op){
             case "**":

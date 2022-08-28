@@ -374,7 +374,10 @@ public static class KeyInput {
             }
         } else {
             History.AddChange(new Change(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine));
-            if(CursorPos.col > 2 && thisline.AsSpan(CursorPos.col-3, 4).Equals("    ", StringComparison.Ordinal)){
+            var before = thisline.AsSpan(0, CursorPos.col+1);
+            int spaces = before.Length - before.TrimEnd().Length;
+            bool isTab = spaces > 0 && spaces % 4 == 0;
+            if(CursorPos.col > 2 && isTab){
                 //? if deleting tab
                 linesText[CursorPos.line] = string.Concat(
                     thisline.AsSpan(0, CursorPos.col-3), 

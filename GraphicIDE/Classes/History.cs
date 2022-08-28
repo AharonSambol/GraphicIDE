@@ -4,8 +4,9 @@ namespace GraphicIDE;
 
 public static class History {
     private const int historyAmount = 100;
-    private static Stack<Change> history = new Stack<Change>(historyAmount); 
-    private static Stack<Change> future = new Stack<Change>(historyAmount); 
+    private static Stack<Change> 
+        history = new(historyAmount),
+        future = new(historyAmount); 
     
     public static void CtrlY(){
         if(future.IsEmpty()){  return; }

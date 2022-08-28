@@ -16,6 +16,8 @@ using static GraphicIDE.History;
 
 // todo git
 // todo add cheat sheat
+// todo group words in ctrl z
+// todo add in settings to change `history amount` (for ctrl+Z)
 // todo let them make custom img for functions
 // todo cache some of the textline images
 // todo only draw visable lines
@@ -26,17 +28,13 @@ using static GraphicIDE.History;
 // todo when renaming func rename all calls too
 // todo when hover mouse show what button is
 // todo save/open (file explorer)
-// todo console button changing size??
 // todo syntax highlighting
 // todo drag selection
 // todo change `scaled images` when text size changes (just set them to null)
 // todo when changing font size need to change pen sizes as well / just resize img
 // todo function args
 // todo print and exception
-// todo when deleting tab (in case of " "*5 delete the space first)
 // todo add / move / resize windows
-// todo group words in ctrl z
-// todo add more visualizations
 // ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else
 // ? dict + generator(+comprehension)
 // ? indexing + slicing
@@ -45,8 +43,52 @@ using static GraphicIDE.History;
 // ? try except raise
 // ? annotations
 // ? break, continue
-// ? built in funcs
 // ? lambda 
+#region built in funcs
+// aiter() anext() breakpoint() bytearray() bytes() callable() classmethod() compile() dir() frozenset() memoryview() property() repr() staticmethod() super() vars()
+// all()
+// any()
+// ascii()
+// bin()
+// bool()
+// chr()
+// complex()
+// delattr() getattr() hasattr() setattr()
+// dict()
+// divmod()
+// enumerate()
+// eval()
+// exec()
+// filter()
+// float()
+// format()
+// globals() locals()
+// hash()
+// help()
+// id()
+// input()
+// int()
+// isinstance() issubclass()
+// iter()
+// list()
+// map()
+// max() min()
+// next()
+// object()
+// oct() hex()
+// open()
+// ord()
+// range()
+// reversed()
+// round()
+// set()
+// slice()
+// sorted()
+// str()
+// tuple()
+// type()
+// zip()
+#endregion
 
 namespace GraphicIDE;
 
