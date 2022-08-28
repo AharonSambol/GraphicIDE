@@ -36,7 +36,6 @@ using static GraphicIDE.History;
 // todo when deleting tab (in case of " "*5 delete the space first)
 // todo add / move / resize windows
 // todo group words in ctrl z
-// todo ctrl z / y
 // todo add more visualizations
 // ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else
 // ? dict + generator(+comprehension)

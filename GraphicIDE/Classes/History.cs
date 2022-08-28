@@ -3,7 +3,7 @@ using static GraphicIDE.Form1;
 namespace GraphicIDE;
 
 public static class History {
-    private const int historyAmount = 50;
+    private const int historyAmount = 100;
     private static Stack<Change> history = new Stack<Change>(historyAmount); 
     private static Stack<Change> future = new Stack<Change>(historyAmount); 
     
@@ -41,8 +41,6 @@ public static class History {
         var changes = history.Pop();
         (int, int) lastCursor = CursorPos.ToTuple();
         (int, int)? lastSelect = selectedLine;
-        // future.Push(changes);
-        // LinkedList<Change> newchanges = new();
         for (int i=0; i < changes.Count; i++) {
             var (typ, line, change, cursor, select) = changes[i];
             changes[i] = changes[i] with { cursor = lastCursor, select = lastSelect };
@@ -50,16 +48,13 @@ public static class History {
             lastSelect = select;
             switch (typ){
                 case ChangeType.del:
-                    // newchanges.AddFirst(new Change(ChangeType.del, line, "", CursorPos.ToTuple(), selectedLine));
                     linesText.Insert(line, change);
                     break;
                 case ChangeType.add:
-                    // newchanges.AddFirst(new Change(ChangeType.add, line, linesText[line], CursorPos.ToTuple(), selectedLine));
                     linesText.RemoveAt(line);
                     break;
                 case ChangeType.change:
                     changes[i] = changes[i] with { change = linesText[line] };
-                    // newchanges.AddFirst(new Change(ChangeType.change, line, linesText[line], CursorPos.ToTuple(),selectedLine));
                     linesText[line] = change;
                     break;
             }
@@ -72,14 +67,17 @@ public static class History {
     }
     public static void AddChange(List<Change> val){
         history.Push(val);
+        future.Empty();
     }
     public static void AddChange(Change val){
         history.Push(new(){ val });
+        future.Empty();
     }
 }
-public record class Change(
+public record struct Change(
     ChangeType typ, int line, string change, 
-    (int line, int col) cursor, (int line, int col)? select);
+    (int line, int col) cursor, (int line, int col)? select
+);
 public enum ChangeType { del, add, change }
 class Stack<T>{
     private List<T>?[] stack;
@@ -106,8 +104,6 @@ class Stack<T>{
         var val = stack[pos];
         return val!;
     }
-    public bool IsEmpty(){
-        return stack[pos] is null;
-    }
-
+    public bool IsEmpty() => stack[pos] is null;
+    public void Empty() => stack[pos] = null;
 }
