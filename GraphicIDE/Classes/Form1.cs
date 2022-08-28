@@ -23,6 +23,7 @@ using static GraphicIDE.KeyInput;
 // todo capslock shortcuts
 // todo scroll horizontal
 // todo when renaming func rename all calls too
+// todo when hover mouse show what button is
 // todo save/open (file explorer)
 // todo console button changing size??
 // todo syntax highlighting
@@ -59,6 +60,7 @@ public partial class Form1: Form {
     public static int indentW, qWidth, qHeight, upSideDownW, txtHeight;
     public static int screenWidth = 0, screenHeight = 0, prevHeight, prevWidth;
     public static List<Window> windows = new();
+    public static HashSet<Menu> visibleMenues = new();
     public static bool dragging = false, doubleClick = false;
     // todo convert to linked list
     public static List<(Button btn, Func<(int w, int h), Point> calcPos)> buttonsOnScreen = new();
@@ -116,6 +118,7 @@ public partial class Form1: Form {
         AddDebugBtn();
         AddTabBtn();
         RenameTabBtn();
+        SettingsBtn();
 
         AddConsole();
         MakeExecTimeDisplay();
@@ -210,7 +213,7 @@ public partial class Form1: Form {
     #region Mouse
     public static Menu? rightClickMenu;
     private static Menu? staticRightClickMenu;
-    private static void RightClick(){
+    public static void RightClick(){
         int size = 80, gap = 10;
 
         bool addToControls = true;
@@ -238,7 +241,8 @@ public partial class Form1: Form {
         }
 
         rightClickMenu = new(bgPos, staticRightClickMenu!.Value.bgColor, staticRightClickMenu.Value.buttons);
-        BlockMouse(staticRightClickMenu!.Value.buttons[0].btn);
+        visibleMenues.Add((Menu)rightClickMenu);
+        BlockMouse(staticRightClickMenu!.Value.buttons[0].btn, rightClickMenu);
         nonStatic.Invalidate();
     }
     private static void MakeFirstRCMenu(){
@@ -248,7 +252,6 @@ public partial class Form1: Form {
         bg.FlatAppearance.MouseOverBackColor = Color.Transparent;
         bg.MouseDown += new MouseEventHandler((object? _, MouseEventArgs e) => {
             if(e.Button == MouseButtons.Right){
-                // ! could be optimized to just move it and not delete+create new
                 DisposeMenu(ref rightClickMenu);
                 RightClick();
             } else {
@@ -318,9 +321,9 @@ public partial class Form1: Form {
             (terminal, terminalGetPos), (run, runGetPos), (rename, renameGetPos)
         });
     }
-    private static async void BlockMouse(Button btn){
+    public static async void BlockMouse(Button btn, Menu? screen){
         int w = btn.Size.Width / 2, h = btn.Size.Height / 2;
-        while(rightClickMenu is not null){
+        while(screen is not null){
             await Task.Delay(10);
             btn.Location = new(Cursor.Position.X - screenPos.X - w, Cursor.Position.Y - screenPos.Y- h);
         }
@@ -330,6 +333,7 @@ public partial class Form1: Form {
             foreach(var item in m.buttons) {
                 nonStatic.Controls.Remove(item.btn);
             }
+            visibleMenues.Remove(m);
         }
         menu = null;
         nonStatic.Invalidate();

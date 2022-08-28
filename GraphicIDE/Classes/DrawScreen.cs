@@ -154,8 +154,8 @@ public static class DrawScreen{
             );
         }
         // ? right click menu
-        if(rightClickMenu is Menu m){
-            e.Graphics.FillRectangle(m.bgColor, m.bgPos);
+        foreach(var menu in visibleMenues) {
+            e.Graphics.FillRectangle(menu.bgColor, menu.bgPos);
         }
         // ? tab bar
         e.Graphics.FillRectangle(tabBarBrush, 0, 0, screenWidth, TAB_HEIGHT);

@@ -73,6 +73,16 @@ namespace GraphicIDE.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap brightnessBarSymbol {
+            get {
+                object obj = ResourceManager.GetObject("brightnessBarSymbol", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap bug {
             get {
                 object obj = ResourceManager.GetObject("bug", resourceCulture);
@@ -286,6 +296,16 @@ namespace GraphicIDE.Properties {
         internal static System.Drawing.Bitmap self {
             get {
                 object obj = ResourceManager.GetObject("self", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Settings {
+            get {
+                object obj = ResourceManager.GetObject("Settings", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

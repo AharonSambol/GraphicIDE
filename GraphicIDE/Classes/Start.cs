@@ -4,6 +4,7 @@ using static GraphicIDE.MyImages;
 using static GraphicIDE.Helpers;
 using static GraphicIDE.Tabs;
 using static GraphicIDE.Console;
+using static GraphicIDE.Settings;
 
 namespace GraphicIDE;
 
@@ -35,6 +36,12 @@ public static class Start{
         btn.Click += new EventHandler((_,_) => PromptRenameTab());
         nonStatic.Controls.Add(btn);
         buttonsOnScreen.Add((btn, (size) => new(size.w - 4 * (btn.Size.Width + 10), 0)));
+    }
+    public static void SettingsBtn() {
+        Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, settingsImg, streatch: true);        
+        btn.Click += new EventHandler((_,_) => ToggleSettings());
+        nonStatic.Controls.Add(btn);
+        buttonsOnScreen.Add((btn, (size) => new(size.w - 5 * (btn.Size.Width + 10), 0)));
     }
     public static void AddConsole() {
         var (height, width) = (screenHeight, screenWidth);
