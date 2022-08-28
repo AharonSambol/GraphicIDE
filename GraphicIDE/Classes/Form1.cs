@@ -12,6 +12,7 @@ using static GraphicIDE.Start;
 using static GraphicIDE.Tabs;
 using static GraphicIDE.Console;
 using static GraphicIDE.KeyInput;
+using static GraphicIDE.History;
 
 // todo git
 // todo add cheat sheat
@@ -32,11 +33,13 @@ using static GraphicIDE.KeyInput;
 // todo when changing font size need to change pen sizes as well / just resize img
 // todo function args
 // todo print and exception
+// todo when deleting tab (in case of " "*5 delete the space first)
 // todo add / move / resize windows
+// todo group words in ctrl z
 // todo ctrl z / y
 // todo add more visualizations
 // ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else
-// ? tuple + dict + generator(+comprehension)
+// ? dict + generator(+comprehension)
 // ? indexing + slicing
 // ? import from\as
 // ? classes(+attributes)
@@ -193,6 +196,7 @@ public partial class Form1: Form {
                 Keys.A => () => SelectAll(),
                 Keys.N => () => PromptMakeNewTab(),
                 Keys.R => () => PromptRenameTab(),
+                Keys.Z => () => CtrlZ(),
                 Keys.Tab => () => CtrlTab(),
                 Keys.Oemtilde => () => ToggleConsole(),
                 Keys.Oemplus => () => ChangeFontSize((int)boldFont.Size + 1),
@@ -577,6 +581,9 @@ static class CursorPos {
     public static void ChangeBoth((int line, int col) val){
         (CursorPos.line, CursorPos.col) = val;
         RealignWondow();
+    }
+    public static (int line, int col) ToTuple(){
+        return (CursorPos.line, CursorPos.col);
     }
 }
 public class Window {

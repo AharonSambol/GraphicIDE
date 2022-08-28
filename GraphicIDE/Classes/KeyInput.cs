@@ -81,12 +81,17 @@ public static class KeyInput {
         DrawTextScreen();
         nonStatic.Invalidate();
     }
+    // ? ctrl z safe
     public static void Tab(){
+        List<Change> changes = new();
+        var prevSelectedLine = selectedLine;
+        var prevCusor = CursorPos.ToTuple();
         if(IsShiftPressed()){
             var selectLine = selectedLine is null ? CursorPos.line : selectedLine.Value.line;
             var (bigger, smaller) = MaxMin(CursorPos.line, selectLine);
             for (int i=smaller; i <= bigger; i++) {
                 if(linesText[i].StartsWith("    ")){
+                    changes.Add(new(ChangeType.change, i, linesText[i], prevCusor, prevSelectedLine));
                     linesText[i] = linesText[i][4..];
                     if(i == CursorPos.line && CursorPos.col != -1){
                         CursorPos.ChangeCol(Max(-1, CursorPos.col - 4));
@@ -96,9 +101,11 @@ public static class KeyInput {
                     }
                 }
             }
+            History.AddChange(changes);
         } else if(selectedLine is (int, int) sl && sl.line != CursorPos.line){
             var (bigger, smaller) = MaxMin(CursorPos.line, sl.line);
             for (int i=smaller; i <= bigger; i++) {
+                changes.Add(new(ChangeType.change, i, linesText[i], prevCusor, prevSelectedLine));
                 linesText[i] = $"    { linesText[i] }";
                 if(i == CursorPos.line){
                     CursorPos.ChangeCol(CursorPos.col + 4);
@@ -107,6 +114,7 @@ public static class KeyInput {
                     selectedLine = (sl.line, sl.col + 4);
                 }
             }
+            History.AddChange(changes);
         } else {
             if(selectedLine == (CursorPos.line, CursorPos.col)) {
                 selectedLine = null;
@@ -266,6 +274,7 @@ public static class KeyInput {
         }
         CursorPos.ChangeBoth(AddString(change, (CursorPos.line, CursorPos.col)));
     }
+    // ? ctrl z safe
     public static void EnterKey(bool isCtrl=false) {
         if(isCtrl) {
             CursorPos.ChangeCol(-1);
@@ -281,8 +290,14 @@ public static class KeyInput {
         }
         string indent = new(' ', 4 * indentC);
         if(CursorPos.col == curLine.Length - 1) {
+            History.AddChange(new Change(ChangeType.add, CursorPos.line + 1, "", CursorPos.ToTuple(), selectedLine));
             linesText.Insert(CursorPos.line + 1, indent);
         } else {
+            List<Change> changes = new();
+            changes.Add(new(ChangeType.add, CursorPos.line + 1, "", CursorPos.ToTuple(), selectedLine));
+            changes.Add(new(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine));
+            History.AddChange(changes);
+
             linesText.Insert(CursorPos.line + 1, indent + curLine[(CursorPos.col + 1)..]);
             linesText[CursorPos.line] = linesText[CursorPos.line][..(CursorPos.col + 1)];
         }
@@ -291,6 +306,7 @@ public static class KeyInput {
             CursorPos.ChangeCol(-1 + 4 * indentC);
         }
     }
+    // ? ctrl z safe
     public static void DeleteKey(bool isAlt=false, bool isCtrl=false) {
         if(isCtrl) {
             if(selectedLine is not null) {
@@ -306,14 +322,22 @@ public static class KeyInput {
         var thisline = linesText[CursorPos.line];
         if(CursorPos.col == thisline.Length - 1) {
             if(CursorPos.line != linesText.Count - 1) {
+                List<Change> changes = new();
+                changes.Add(new(ChangeType.del, CursorPos.line + 1, "", CursorPos.ToTuple(), selectedLine));
+                changes.Add(new(ChangeType.change, CursorPos.line + 1, linesText[CursorPos.line+1], CursorPos.ToTuple(), selectedLine));
+                changes.Add(new(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine));
+                History.AddChange(changes);
+
                 var text = linesText[CursorPos.line+1];
                 linesText.RemoveAt(CursorPos.line + 1);
                 linesText[CursorPos.line] += text;
             }
         } else {
+            History.AddChange(new Change(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine));
             linesText[CursorPos.line] = string.Concat(thisline.AsSpan(0, CursorPos.col + 1), thisline.AsSpan(CursorPos.col + 2));
         }
     }
+    // ? ctrl z safe
     public static void BackSpaceKey(bool isAlt=false, bool isCtrl=false) {
         if(isCtrl) {
             if(selectedLine is not null) {
@@ -329,12 +353,19 @@ public static class KeyInput {
         var thisline = linesText[CursorPos.line];
         if(thisline.Length == 0) {
             if(CursorPos.line != 0) {
+                History.AddChange(new Change(ChangeType.del, CursorPos.line, "", CursorPos.ToTuple(), selectedLine));
                 linesText.RemoveAt(CursorPos.line);
                 CursorPos.ChangeLine(CursorPos.line-1);
                 CursorPos.ChangeCol(linesText[CursorPos.line].Length - 1);
             }
         } else if(CursorPos.col == -1) {
             if(CursorPos.line != 0) {
+                List<Change> changes = new();
+                changes.Add(new(ChangeType.del, CursorPos.line, "", CursorPos.ToTuple(), selectedLine));
+                changes.Add(new(ChangeType.change, CursorPos.line-1, linesText[CursorPos.line-1], CursorPos.ToTuple(), selectedLine));
+                changes.Add(new(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine));
+                History.AddChange(changes);
+
                 var text = linesText[CursorPos.line];
                 linesText.RemoveAt(CursorPos.line);
                 CursorPos.ChangeLine(CursorPos.line-1);
@@ -342,6 +373,7 @@ public static class KeyInput {
                 linesText[CursorPos.line] += text;
             }
         } else {
+            History.AddChange(new Change(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine));
             if(CursorPos.col > 2 && thisline.AsSpan(CursorPos.col-3, 4).Equals("    ", StringComparison.Ordinal)){
                 //? if deleting tab
                 linesText[CursorPos.line] = string.Concat(
@@ -377,6 +409,7 @@ public static class KeyInput {
         CursorPos.ChangeLine(linesText.Count - 1);
         CursorPos.ChangeCol(linesText[^1].Length - 1);
     }
+    // todo
     public static void Duplicate(bool isAltlKeyPressed) {
         if(selectedLine is null) {
             var txt = "\r\n" + linesText[CursorPos.line];
@@ -392,6 +425,7 @@ public static class KeyInput {
             CursorPos.ChangeBoth(AddString($"\r\n{ txt }", caretPos));
         }
     }
+    // todo
     public static void Cut(bool isAltlKeyPressed) {
         string txt;
         if(selectedLine is null) {
@@ -408,6 +442,7 @@ public static class KeyInput {
             Clipboard.SetText(txt);
         }
     }
+    // todo
     public static void Paste() {
         if(selectedLine is not null) {
             DeleteSelection();
@@ -433,11 +468,14 @@ public static class KeyInput {
         }
     }
     #endregion
-
+    // ? when called from backspace cursor pos gets messed up in history (ctrl z)
+    // ? ctrl z safe
     public static void DeleteSelection() {
         var selectedLine_ = ((int line, int col))selectedLine!;
         selectedLine = null;
         if(CursorPos.line == selectedLine_.line) {
+            History.AddChange(new Change(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine));
+
             (int bigger, int smaller) = MaxMin(CursorPos.col, selectedLine_.col);
                 
             linesText[CursorPos.line] = string.Concat(
@@ -450,12 +488,17 @@ public static class KeyInput {
                 = CursorPos.line > selectedLine_.line 
                     ? (selectedLine_, (CursorPos.line, CursorPos.col))
                     : ((CursorPos.line, CursorPos.col), selectedLine_);
+            LinkedList<Change> changes = new();
+            changes.AddFirst(new Change(ChangeType.change, smaller.line, linesText[smaller.line], CursorPos.ToTuple(), selectedLine));
             linesText[smaller.line] = string.Concat(
                 linesText[smaller.line].AsSpan(0, smaller.col + 1),
                 linesText[bigger.line].AsSpan(bigger.col + 1));
             for(int i = smaller.line + 1; i <= bigger.line; i++) {
+                changes.AddFirst(new Change(ChangeType.change, smaller.line + 1, linesText[smaller.line + 1], CursorPos.ToTuple(), selectedLine));
+                changes.AddFirst(new Change(ChangeType.del, smaller.line + 1, "", CursorPos.ToTuple(), selectedLine));
                 linesText.RemoveAt(smaller.line + 1);
             }
+            History.AddChange(changes.ToList());
             CursorPos.ChangeBoth(smaller);
         }
     }
@@ -503,7 +546,9 @@ public static class KeyInput {
         res.Append(linesText[bigger]);
         return res.ToString();
     }
+    // ? ctrl z safe
     public static (int, int) AddString(ReadOnlySpan<char> change, (int line, int col) pos) {
+        if(change.Equals("", StringComparison.Ordinal)){return pos;}
         bool containsRN = change.Contains("\r\n", StringComparison.Ordinal);
         bool containsN = change.Contains("\n", StringComparison.Ordinal);
         if(containsRN || containsN) {
@@ -517,13 +562,21 @@ public static class KeyInput {
             if(pos.col != linesText[pos.line].Length - 1) {
                 newLines[^1] = string.Concat(newLines[^1], linesText[pos.line].AsSpan(pos.col + 1));    
             }
+            LinkedList<Change> changes = new();
+            changes.AddFirst(new Change(ChangeType.change, pos.line, linesText[pos.line], CursorPos.ToTuple(), selectedLine));
+
             linesText[pos.line] = string.Concat(linesText[pos.line].AsSpan(0, pos.col + 1), newLines[0]);
             for(int i = 1; i < newLines.Length; i++) {
+                changes.AddFirst(new Change(ChangeType.add, pos.line + 1, "", CursorPos.ToTuple(), selectedLine));
+                changes.AddFirst(new Change(ChangeType.change, pos.line + 1, newLines[i], CursorPos.ToTuple(), selectedLine));
                 linesText.Insert(pos.line + 1, newLines[i]);
                 pos.line++;
             }
             pos.col = newCol;
+            History.AddChange(changes.ToList());
         } else {
+            History.AddChange(new Change(ChangeType.change, pos.line, linesText[pos.line], CursorPos.ToTuple(), selectedLine));
+
             var line = linesText[pos.line];
             var start = pos.col == -1 ? "" : line.AsSpan(0, pos.col+1);
             linesText[pos.line] = $"{start}{change}{line.AsSpan(pos.col + 1)}";
