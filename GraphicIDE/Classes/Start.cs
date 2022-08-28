@@ -9,7 +9,7 @@ using static GraphicIDE.Settings;
 namespace GraphicIDE;
 
 public static class Start{
-    public static void AddRunBtn() {
+    public static Button AddRunBtn() {
         int gap = 3;
         Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, play3dImg/*just temp*/, streatch: false);
         Bitmap b = new(btn.Size.Width, btn.Size.Height);
@@ -20,28 +20,33 @@ public static class Start{
         btn.BackgroundImage = b;
         btn.Click += new EventHandler(PythonFuncs.ExecuteBtn!);
         buttonsOnScreen.Add((btn, (size) => new(size.w - btn.Size.Width - 10, 0)));
+        return btn;
     }
-    public static void AddDebugBtn() {
+    public static Button AddDebugBtn() {
         Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, debugImg, streatch: true); 
         btn.Click += new EventHandler(PythonFuncs.ExecuteBtn!);
         buttonsOnScreen.Add((btn, (size) => new(size.w - 2 * (btn.Size.Width + 10), 0)));
+        return btn;
     }
-    public static void AddTabBtn() {
+    public static Button AddTabBtn() {
         Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, plusImg, streatch: true); 
         btn.Click += new EventHandler(AddTabEvent!);
         buttonsOnScreen.Add((btn, (size) => new(size.w - 3 * (btn.Size.Width + 10), 0)));
+        return btn;
     }
-    public static void RenameTabBtn() {
+    public static Button RenameTabBtn() {
         Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, renameImg, streatch: true);        
         btn.Click += new EventHandler((_,_) => PromptRenameTab());
         nonStatic.Controls.Add(btn);
         buttonsOnScreen.Add((btn, (size) => new(size.w - 4 * (btn.Size.Width + 10), 0)));
+        return btn;
     }
-    public static void SettingsBtn() {
+    public static Button SettingsBtn() {
         Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, settingsImg, streatch: true);        
         btn.Click += new EventHandler((_,_) => ToggleSettings());
         nonStatic.Controls.Add(btn);
         buttonsOnScreen.Add((btn, (size) => new(size.w - 5 * (btn.Size.Width + 10), 0)));
+        return btn;
     }
     public static void AddConsole() {
         var (height, width) = (screenHeight, screenWidth);
@@ -58,7 +63,7 @@ public static class Start{
         };
         nameToFunc[func.name] = console.function;
     }
-    public static void MakeExecTimeDisplay(){
+    public static Button MakeExecTimeDisplay(){
         var w = MeasureWidth(executedTime, boldFont); 
         var h = txtHeight; 
         Bitmap bm = new(w, h);
@@ -68,6 +73,7 @@ public static class Start{
         execTimeBtn = MakeButton(w, h, bm, streatch: false);
         execTimeBtn.Click += new EventHandler((object? s, EventArgs e) => ToggleTimeBtn());
         buttonsOnScreen.Add((execTimeBtn, ETBCalcPos));
+        return execTimeBtn;
     }
     public static Button MakeButton(int w, int h, Bitmap img, bool streatch){
         Button btn = new() {

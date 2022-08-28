@@ -26,6 +26,7 @@ public static class Tabs {
             Font = tabFont,
             FlatStyle = FlatStyle.Flat,
         };
+        toolTip.SetToolTip(btn, name);
         btn.FlatAppearance.BorderColor = lightGray;
         btn.Click += new EventHandler((object? sender, EventArgs e) => ChangeTab(sender!, window));
 

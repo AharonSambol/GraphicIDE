@@ -61,6 +61,7 @@ public static class Console {
                     errOpenButton.Click += new EventHandler(OpenErrLink!);
                     nonStatic.Controls.Add(errOpenButton);
                     buttonsOnScreen.Add((errOpenButton, EOBCalcPos));
+                    toolTip.SetToolTip(errOpenButton, "Google exception");
                 }
             }
         }
@@ -82,6 +83,7 @@ public static class Console {
             closeConsoleBtn.Click += new EventHandler(HideConsole!);
             nonStatic.Controls.Add(closeConsoleBtn);
             buttonsOnScreen.Add((closeConsoleBtn, CCBCalcPos));
+            toolTip.SetToolTip(closeConsoleBtn, "close console");
         }
         if(!windows[0].Equals(console)){
             windows.Add(windows[0]); windows[0] = console;
@@ -124,6 +126,7 @@ public static class Console {
         openConsoleBtn.Click += new EventHandler((object? s, EventArgs e) => ShowConsole());
         nonStatic.Controls.Add(openConsoleBtn);
         buttonsOnScreen.Add((openConsoleBtn, OCBCalcPos));
+        toolTip.SetToolTip(openConsoleBtn, "open console");
     }
     public static void RefreshTimeBtn(){
         int h = MeasureHeight(executedTime, boldFont);

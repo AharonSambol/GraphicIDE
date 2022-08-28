@@ -110,7 +110,13 @@ public partial class Form1: Form {
     public static List<(Button btn, Func<(int w, int h), Point> calcPos)> buttonsOnScreen = new();
     public static Point screenPos;
     public static Form1 nonStatic = null!;
-
+    public static ToolTip toolTip = new ToolTip(){
+        AutoPopDelay = 5000,
+        InitialDelay = 1000,
+        ReshowDelay = 500,
+        ShowAlways = true,
+        BackColor = Color.WhiteSmoke
+    };
     #endregion
 
     public Form1() {
@@ -158,14 +164,20 @@ public partial class Form1: Form {
         curFunc = mainFunc;
         ChangeTab(curFunc.name, prevWindow: window2);
 
-        AddRunBtn();
-        AddDebugBtn();
-        AddTabBtn();
-        RenameTabBtn();
-        SettingsBtn();
+        var run = AddRunBtn();
+        toolTip.SetToolTip(run, "run");
+        var debug = AddDebugBtn();
+        toolTip.SetToolTip(debug, "debug");
+        var tab = AddTabBtn();
+        toolTip.SetToolTip(tab, "new function\\tab");
+        var rename = RenameTabBtn();
+        toolTip.SetToolTip(rename, "rename function");
+        var settings = SettingsBtn();
+        toolTip.SetToolTip(settings, "settings");
 
         AddConsole();
-        MakeExecTimeDisplay();
+        var execTime = MakeExecTimeDisplay();
+        toolTip.SetToolTip(execTime, "Executed time");
 
         DrawTextScreen();
         Invalidate();
@@ -311,6 +323,7 @@ public partial class Form1: Form {
             DisposeMenu(ref rightClickMenu);
             Copy(IsAltlPressed());
         });
+        toolTip.SetToolTip(copy, "copy");
 
         Button paste = MakeButton(size, size, pasteImg, streatch: false);
         Func<(int X, int Y), Point> pasteGetPos = (pos) => new(pos.X + 2 * gap + 1 * size, pos.Y + gap);
@@ -320,6 +333,7 @@ public partial class Form1: Form {
             DrawTextScreen();
             nonStatic.Invalidate();
         });
+        toolTip.SetToolTip(paste, "paste");
 
         Button search = MakeButton(size, size, searchImg, streatch: false);
         Func<(int X, int Y), Point> searchGetPos = (pos) => new(pos.X + gap, pos.Y + 2 * gap + size);
@@ -339,13 +353,15 @@ public partial class Form1: Form {
                 );
             }
         });
+        toolTip.SetToolTip(search, "Google selected");
 
         Button terminal = MakeButton(size, size, consoleImg, streatch: false);
         Func<(int X, int Y), Point> terminalGetPos = (pos) => new(pos.X + 2 * gap + size, pos.Y + 2 * gap + size);
         terminal.Click += new EventHandler((_,_) => {
             DisposeMenu(ref rightClickMenu);
             Process.Start("CMD.exe");
-        });  
+        });
+        toolTip.SetToolTip(terminal, "open cmd");
 
         Button run = MakeButton(size, size, play3dImg, streatch: false);
         Func<(int X, int Y), Point> runGetPos = (pos) => new(pos.X + 3 * gap + 2 * size, pos.Y + gap);
@@ -353,13 +369,15 @@ public partial class Form1: Form {
             DisposeMenu(ref rightClickMenu);
             PythonFuncs.Execute();
         });
+        toolTip.SetToolTip(run, "run");
 
         Button rename = MakeButton(size, size, renameImg, streatch: false);
         Func<(int X, int Y), Point> renameGetPos = (pos) => new(pos.X + 3 * gap + 2 * size, pos.Y + 2 * gap + size);
         rename.Click += new EventHandler((_,_) => {
             DisposeMenu(ref rightClickMenu);
             // Todo
-        });      
+        });
+        toolTip.SetToolTip(rename, "rename");
 
         staticRightClickMenu = new(new(0,0,1,1), sandyBrush, new(){ 
             (bg, (_)=>new(0,0)),

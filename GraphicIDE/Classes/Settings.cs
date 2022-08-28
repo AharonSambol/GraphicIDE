@@ -54,6 +54,7 @@ public static class Settings {
             DisposeMenu(ref settingsScreen);
             MessageBox.Show("no.");
         });
+        toolTip.SetToolTip(lightmode, "light-mode");
 
         staticSettingsScreen = new(new(0,0,1,1), smokeWhiteBrush, new(){ 
             (bg, (_)=>new(0,0)),

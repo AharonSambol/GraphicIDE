@@ -81,7 +81,6 @@ public static class KeyInput {
         DrawTextScreen();
         nonStatic.Invalidate();
     }
-    // ? ctrl z safe
     public static void Tab(){
         List<Change> changes = new();
         var prevSelectedLine = selectedLine;
@@ -265,7 +264,6 @@ public static class KeyInput {
         if(isCtrlKeyPressed) { CursorPos.ChangeLine(linesText.Count - 1); }
         CursorPos.ChangeCol(linesText[CursorPos.line].Length - 1);
     }
-
     public static void CharKey(ReadOnlySpan<char> change) {
         if(change == null) { throw new Exception("input is null?"); }
         if(selectedLine is not null) {
@@ -274,7 +272,6 @@ public static class KeyInput {
         }
         CursorPos.ChangeBoth(AddString(change, (CursorPos.line, CursorPos.col)));
     }
-    // ? ctrl z safe
     public static void EnterKey(bool isCtrl=false) {
         if(isCtrl) {
             CursorPos.ChangeCol(-1);
@@ -306,7 +303,6 @@ public static class KeyInput {
             CursorPos.ChangeCol(-1 + 4 * indentC);
         }
     }
-    // ? ctrl z safe
     public static void DeleteKey(bool isAlt=false, bool isCtrl=false) {
         if(isCtrl) {
             if(selectedLine is not null) {
@@ -337,7 +333,6 @@ public static class KeyInput {
             linesText[CursorPos.line] = string.Concat(thisline.AsSpan(0, CursorPos.col + 1), thisline.AsSpan(CursorPos.col + 2));
         }
     }
-    // ? ctrl z safe
     public static void BackSpaceKey(bool isAlt=false, bool isCtrl=false) {
         if(isCtrl) {
             if(selectedLine is not null) {
@@ -394,7 +389,6 @@ public static class KeyInput {
         }
     }
     
-    
     #region ShortCuts
     public static void CtrlTab() {
         for(int i = 0; i < windows.Count; i++) {
@@ -412,7 +406,6 @@ public static class KeyInput {
         CursorPos.ChangeLine(linesText.Count - 1);
         CursorPos.ChangeCol(linesText[^1].Length - 1);
     }
-    // todo
     public static void Duplicate(bool isAltlKeyPressed) {
         if(selectedLine is null) {
             var txt = "\r\n" + linesText[CursorPos.line];
@@ -428,7 +421,6 @@ public static class KeyInput {
             CursorPos.ChangeBoth(AddString($"\r\n{ txt }", caretPos));
         }
     }
-    // todo
     public static void Cut(bool isAltlKeyPressed) {
         string txt;
         if(selectedLine is null) {
@@ -445,7 +437,6 @@ public static class KeyInput {
             Clipboard.SetText(txt);
         }
     }
-    // todo
     public static void Paste() {
         if(selectedLine is not null) {
             DeleteSelection();
@@ -471,8 +462,8 @@ public static class KeyInput {
         }
     }
     #endregion
+    
     // ? when called from backspace cursor pos gets messed up in history (ctrl z)
-    // ? ctrl z safe
     public static void DeleteSelection() {
         var selectedLine_ = ((int line, int col))selectedLine!;
         selectedLine = null;
@@ -549,7 +540,6 @@ public static class KeyInput {
         res.Append(linesText[bigger]);
         return res.ToString();
     }
-    // ? ctrl z safe
     public static (int, int) AddString(ReadOnlySpan<char> change, (int line, int col) pos) {
         if(change.Equals("", StringComparison.Ordinal)){return pos;}
         bool containsRN = change.Contains("\r\n", StringComparison.Ordinal);
