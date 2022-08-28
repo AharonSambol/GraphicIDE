@@ -41,7 +41,6 @@ using static GraphicIDE.KeyInput;
 // ? classes(+attributes)
 // ? try except raise
 // ? annotations
-// ? func call
 // ? break, continue
 // ? built in funcs
 // ? lambda 

@@ -705,7 +705,8 @@ public static class AST {
         if("None".Equals(ast.NodeName)){
             return None();
         }
-        return MakeTxtBM(ast.Type.Name.Equals("String") ? $"'{ast.Value}'": ast.Value.ToString(), 
+        return MakeTxtBM(
+            ast.Type.Name.Equals("String") ? $"'{ast.Value}'": ast.Value.ToString()!, 
             ast.Type.Name switch {
                 "String" => stringBrush,
                 "Int32" or "Double" or "BigInteger" => intBrush,
@@ -854,27 +855,29 @@ public static class AST {
         return new(res, (int)(res.Height / 2));
     }
     private static BM_Middle ParenthesisExpression(ParenthesisExpression? ast, Bitmap? inside_=null, Pen? pen=null) {
-        Bitmap inside = inside_ ?? MakeImg(ast.Expression).Img;
-        var width = inside.Width;
-        var height = inside.Height;
-        var parHeight = height + 10;
-        var parWidth = parHeight / 5;
-        Bitmap res = new(
-            width + 20 + (parWidth + 5) * 2,
-            height + 20
-        );
-
+        Bitmap inside = inside_ ?? MakeImg(ast!.Expression).Img;
+        int curveWidth = (inside.Height)/4;
+        int pW = (int)mathPurpleP.Width/2;
+        Bitmap res = new(inside.Width + curveWidth * 2 + pW*2, inside.Height);
         using(var g = Graphics.FromImage(res)) {
-            var end = 10;
+            g.DrawImage(inside, curveWidth + pW, 0);
+            
             g.SmoothingMode = SmoothingMode.HighQuality;
-            g.DrawArc(pen ?? mathPurpleP, new Rectangle(end, 5, parWidth, parHeight), 90, 180);
-            end += parWidth + 5;
-            g.SmoothingMode = SmoothingMode.Default;
-            g.DrawImage(inside, end, 10);
-            g.SmoothingMode = SmoothingMode.HighQuality;
-            g.DrawArc(pen ?? mathPurpleP, new Rectangle(
-                end + width + 5, 5, parWidth, parHeight
-            ), 270, 180);
+            var (startX, startY) = (curveWidth + pW, 0);
+            var (endX, endY) = (curveWidth + pW, res.Height);
+            Point p1 = new(startX, startY);
+            Point p2 = new(startX - curveWidth, startY + curveWidth);
+            Point p3 = new(endX - curveWidth, endY - curveWidth);
+            Point p4 = new(endX, endY);
+            g.DrawBezier(mathPurpleP, p1, p2, p3, p4);
+            
+            (startX, startY) = (res.Width - curveWidth - pW, 0);
+            (endX, endY) = (res.Width - curveWidth - pW, res.Height);
+            p1 = new(startX, startY);
+            p2 = new(startX + curveWidth, startY + curveWidth);
+            p3 = new(endX + curveWidth, endY - curveWidth);
+            p4 = new(endX, endY);
+            g.DrawBezier(mathPurpleP, p1, p2, p3, p4);
         }
         return new(res, (int)(res.Height / 2));
     }
