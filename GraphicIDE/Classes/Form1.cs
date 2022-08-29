@@ -13,6 +13,7 @@ using static GraphicIDE.Tabs;
 using static GraphicIDE.Console;
 using static GraphicIDE.KeyInput;
 using static GraphicIDE.History;
+using static GraphicIDE.Settings;
 
 // todo git
 // todo add cheat sheat
@@ -26,7 +27,6 @@ using static GraphicIDE.History;
 // todo capslock shortcuts
 // todo scroll horizontal
 // todo when renaming func rename all calls too
-// todo when hover mouse show what button is
 // todo save/open (file explorer)
 // todo syntax highlighting
 // todo drag selection
@@ -251,6 +251,7 @@ public partial class Form1: Form {
                 Keys.R => () => PromptRenameTab(),
                 Keys.Z => () => CtrlZ(),
                 Keys.Y => () => CtrlY(),
+                Keys.S => () => Save(),
                 Keys.Tab => () => CtrlTab(),
                 Keys.Oemtilde => () => ToggleConsole(),
                 Keys.Oemplus => () => ChangeFontSize((int)boldFont.Size + 1),

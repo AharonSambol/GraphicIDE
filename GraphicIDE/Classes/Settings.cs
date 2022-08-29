@@ -1,7 +1,10 @@
+using System.Text;
+
 using static GraphicIDE.Form1;
 using static GraphicIDE.BrushesAndPens;
 using static GraphicIDE.MyImages;
 using static GraphicIDE.Start;
+using static GraphicIDE.Tabs;
 
 namespace GraphicIDE;
 
@@ -60,5 +63,33 @@ public static class Settings {
             (bg, (_)=>new(0,0)),
             (lightmode, lightmodeGetPos),
         });
+    }
+    public static void Save(){
+        using(SaveFileDialog save = new SaveFileDialog()){
+            save.FileName = "AnAwsomeProgram.py";
+            save.Filter = "Python File | *.py | Text File | *.txt";
+            if (save.ShowDialog() == DialogResult.OK){
+                StringBuilder theScript = new(), main = new();
+                foreach(var func in nameToFunc.Values) {
+                    if(func.name.Equals(".Main")){
+                        foreach(var line in func.linesText) {
+                            main.AppendLine(line);
+                        }
+                    } else if(func.name.Equals(".console")){
+                        continue;
+                    } else {
+                        theScript.Append("def ").Append(func.name).Append(":\n");
+                        foreach(var line in func.linesText) {
+                            theScript.Append('\t').AppendLine(line);
+                        }
+                    }
+                }
+                theScript.Append("\n\n").Append(main);
+                StreamWriter writer = new StreamWriter(save.OpenFile());
+                writer.Write(theScript);
+                writer.Dispose();
+                writer.Close();
+            }
+        }
     }
 }

@@ -129,12 +129,12 @@ public static class AST {
                 totalHeight += bm.Height;
                 totalWidth = Max(totalWidth, bm.Width + indent);
                 using(var g = Graphics.FromImage(bm)){
-                    g.DrawString("¿", boldFont, keyOrangeB, 0, (int)(bm.Height / 2 - qHeight / 2));
+                    g.DrawString("¿", boldFont, keyOrangeB, 0, bm.Height / 2 - qHeight / 2);
                     g.DrawImage(condition, upSideDownW, 0);
                     g.DrawString(
                         "?", boldFont, keyOrangeB, 
                         condition.Width + upSideDownW, 
-                        (int)(bm.Height / 2 - qHeight / 2)
+                        bm.Height / 2 - qHeight / 2
                     );
                 }
                 iterPics.AddLast(bm);
@@ -157,7 +157,7 @@ public static class AST {
             g.DrawString(close, boldFont, brush, 0, end);
 
         }
-        return new(res, (int)(res.Height / 2));
+        return new(res, res.Height / 2);
     }
     private static BM_Middle ListComprehension(ListComprehension ast){
         return Comprehension(ast, "[", "]", keyOrangeB, opaqekeyOrange, MakeImg(ast.Item).Img);
@@ -180,7 +180,7 @@ public static class AST {
     private static BM_Middle? scaledNone;
     private static BM_Middle None(){
         if(scaledNone is null){
-            scaledNone = new(new(noneImg, txtHeight, txtHeight), (int)(txtHeight/2));
+            scaledNone = new(new(noneImg, txtHeight, txtHeight), txtHeight/2);
         }
         return (BM_Middle)scaledNone;
     }
@@ -193,10 +193,10 @@ public static class AST {
 
         Bitmap res = new(val.Width + scaledReturn.Width, Max(val.Height, scaledReturn.Height));
         using(var g = Graphics.FromImage(res)){
-            g.DrawImage(val, res.Width - val.Width, (int)(res.Height/2-val.Height/2));
-            g.DrawImage(scaledReturn, 0, (int)(res.Height/2-scaledReturn.Height/2));
+            g.DrawImage(val, res.Width - val.Width, res.Height/2-val.Height/2);
+            g.DrawImage(scaledReturn, 0, res.Height/2-scaledReturn.Height/2);
         }
-        return new(res, (int)res.Height/2);
+        return new(res, res.Height/2);
     }
     private static BM_Middle ImportStatement(ImportStatement ast){
         string name = ast.Names[0].Names[0];
@@ -223,7 +223,7 @@ public static class AST {
         using(var g = Graphics.FromImage(bm)){
             g.DrawImage(l.Img, andWidth + 10, 10);
             g.DrawImage(r.Img, andWidth + 10, l.Img.Height + 20);
-            int andPosY = (int)(l.Img.Height - txtHeight / 2);
+            int andPosY = l.Img.Height - txtHeight / 2;
             g.DrawLine(yellowP, 2, l.Img.Height + 15, 10, l.Img.Height + 15);
             g.DrawLine(yellowP, 10 + andWidth, l.Img.Height + 15, bm.Width - 2, l.Img.Height + 15);
             
@@ -246,7 +246,7 @@ public static class AST {
         using(var g = Graphics.FromImage(bm)){
             g.DrawImage(l.Img, orWidth + 10, 10);
             g.DrawImage(r.Img, orWidth + 10, l.Img.Height + 20);
-            int andPosY = (int)(l.Img.Height - txtHeight / 2);
+            int andPosY = l.Img.Height - txtHeight / 2;
             g.DrawLine(yellowP, 2, l.Img.Height + 15, 10, l.Img.Height + 15);
             g.DrawLine(yellowP, 10 + orWidth, l.Img.Height + 15, bm.Width - 2, l.Img.Height + 15);
             g.DrawString("or", boldFont, yellowB, 10, andPosY + 15);
@@ -264,12 +264,12 @@ public static class AST {
             if(emptyListScaled is BM_Middle bm && bm.Img.Height == txtHeight + 15) {
                 return bm;
             }
-            Bitmap emptyList = new(emptyListImg, (int)(emptyListImg.Width / (emptyListImg.Height / (txtHeight + 15))), txtHeight + 15);
+            Bitmap emptyList = new(emptyListImg, emptyListImg.Width / (emptyListImg.Height / (txtHeight + 15)), txtHeight + 15);
             Bitmap padded = new(emptyList.Width + 5, emptyList.Height);
             using(var pg = Graphics.FromImage(padded)) {
                 pg.DrawImage(emptyList, 5, 0);
             }
-            emptyListScaled = new(padded, (int)(padded.Height / 2));
+            emptyListScaled = new(padded, padded.Height / 2);
             return (BM_Middle)emptyListScaled;
         }
         int lineLen = 5;
@@ -298,13 +298,13 @@ public static class AST {
             g.DrawLine(redListP, 5, 5, res.Width, 5);
             g.DrawLine(redListP, 5, res.Height - 5, res.Width, res.Height - 5);
         }
-        return new(res, (int)(res.Height / 2));
+        return new(res, res.Height / 2);
     }
     private static BM_Middle? passPic = null;
     private static BM_Middle EmptyStatement() {
         if(passPic is BM_Middle bm && bm.Img.Height == txtHeight) {   return bm; }
-        Bitmap img = new(passImg, (int)(passImg.Width / (passImg.Height / txtHeight)), txtHeight);
-        passPic = new(img, (int)(img.Height / 2));
+        Bitmap img = new(passImg, passImg.Width / (passImg.Height / txtHeight), txtHeight);
+        passPic = new(img, img.Height / 2);
         return (BM_Middle)passPic;
     }
     private static Bitmap ForTopPart(Expression left, Expression list){
@@ -395,7 +395,7 @@ public static class AST {
 
             g.DrawLine(pen, arrowDown.Width, res.Height - 4, res.Width - arrowUp.Width, res.Height - 4);
         }
-        return new(res, (int)(res.Height / 2));
+        return new(res, res.Height / 2);
     }
     private static BM_Middle IfExpression(IfStatement ast) {
         static Graphics JoinIfAndElse(Pen lastColor, ref Bitmap res, Bitmap img) {
@@ -464,7 +464,7 @@ public static class AST {
         using(var g = Graphics.FromImage(addPad)) {
             g.DrawImage(res, 0, 0);
         }
-        return new(addPad, (int)(res.Height/2));
+        return new(addPad, res.Height / 2);
     }
     private static BM_Middle NonTupleTuple(LinkedList<BM_Middle> args){
         int commaW = MeasureWidth(",", boldFont);
@@ -507,7 +507,7 @@ public static class AST {
                         g.DrawLine(mathPurpleP, 15, 5, 15, res_.Height);
                         g.DrawLine(mathPurpleP, 5, res_.Height - 15, 15, res_.Height);
                     }
-                    return new(res_, (int)(res_.Height / 2));
+                    return new(res_, res_.Height / 2);
                 }
                 else if(name.Equals("pow")){
                     var bottom = MakeImg(ast.Args[0].Expression);
@@ -522,34 +522,10 @@ public static class AST {
                 } 
                 // todo start
                 else if(name.Equals("sum")) {
-                    var val = ast.Args[0].Expression;
-                    var inside = MakeImg(val).Img;
-                    Bitmap sum = new(sumImg, sumImg.Width / (sumImg.Height / inside.Height), inside.Height);
-                    Bitmap res_ = new(
-                        width: inside.Width + sum.Width + 10,
-                        height: inside.Height
-                    );
-                    using(var g = Graphics.FromImage(res_)) {
-                        g.FillRectangle(new SolidBrush(Color.FromArgb(100, 255, 255, 255)), 0, 0, res_.Width, res_.Height);
-                        g.DrawImage(sum, 5, 0);
-                        g.DrawImage(inside, sum.Width + 5, 0);
-                    }
-                    return new(res_, (int)(res_.Height / 2));
+                    return Func(ast.Args[0].Expression, sumImg, sumP);
                 }
-                else if(name.Equals("len")) {
-                    var val = ast.Args[0].Expression;
-                    var inside = MakeImg(val).Img;
-                    Bitmap ruler = new(rulerImg, rulerImg.Width / (rulerImg.Height / inside.Height), inside.Height);
-                    Bitmap res_ = new(
-                        width: inside.Width + ruler.Width + 10,
-                        height: inside.Height
-                    );
-                    using(var g = Graphics.FromImage(res_)) {
-                        g.FillRectangle(new SolidBrush(Color.FromArgb(100, 215, 206, 180)), 5 + ruler.Width, 0, res_.Width, res_.Height);
-                        g.DrawImage(ruler, 5, 0);
-                        g.DrawImage(inside, ruler.Width + 5, 0);
-                    }
-                    return new(res_, (int)(res_.Height / 2));
+                else if(name.Equals("len")){
+                    return Func(ast.Args[0].Expression, rulerImg, lenP);
                 }
                 else if(name.Equals("abs")) {
                     var val = ast.Args[0].Expression;
@@ -563,7 +539,10 @@ public static class AST {
                         g.DrawLine(mathPurpleP, res_.Width - 5, 0, res_.Width - 5, res_.Height);
                         g.DrawImage(inside, 15, 5);
                     }
-                    return new(res_, (int)(res_.Height / 2));
+                    return new(res_, res_.Height / 2);
+                }
+                else if(name.Equals("hash")){
+                    return Func(ast.Args[0].Expression, hashtagImg, hashP);
                 }
             }catch(Exception){}
         } 
@@ -589,6 +568,24 @@ public static class AST {
         return new(res, res.Height/2);
         #endregion
     }
+    private static BM_Middle Func(Expression val, Bitmap icon, Pen pen){
+        var inside = MakeImg(val).Img;
+        int gap = 4;
+        int penW = (int)pen.Width / 2;
+        icon = new(icon, icon.Width / (icon.Height / (inside.Height + 2 * penW)), inside.Height + 2 * penW);
+        Bitmap res_ = new(
+            width: inside.Width + icon.Width + 5 * gap + penW,
+            height: inside.Height + 2 * penW + 2 * gap
+        );
+        using (var g = Graphics.FromImage(res_)){
+            g.DrawImage(icon, gap, gap + penW);
+            int start = gap + icon.Width + gap;
+            g.DrawImage(inside, start + gap, penW + gap);
+            g.DrawRectangle(pen, start, gap + penW, res_.Width-start-gap-penW, res_.Height-2*gap);
+        }
+        return new(res_, res_.Height / 2);
+    }
+
     private static BM_Middle UnaryExpression(UnaryExpression ast) {
         var op = PythonOperatorToString(ast.Op);
         int gap = 5;
@@ -602,8 +599,8 @@ public static class AST {
             height: bmap.Height
         );
         using(var g = Graphics.FromImage(res)) {
-            g.DrawString(op, boldFont, mathPurpleB, x: gap, y: (int)(middle - opHeight / 2));
-            g.DrawImage(bmap, x: opWidth + gap, y: (int)(middle - top));
+            g.DrawString(op, boldFont, mathPurpleB, x: gap, y: middle - opHeight / 2);
+            g.DrawImage(bmap, x: opWidth + gap, y: middle - top);
         }
         return new(res, middle);
     }
@@ -635,48 +632,13 @@ public static class AST {
         );
         var resMiddle = Max(lTop, rTop);
         using(var g = Graphics.FromImage(res)) {
-            g.DrawImage(left, 0, y: (int)(resMiddle - lTop));
-            g.DrawString(op, boldFont, mathPurpleB, x: left.Width + gap, y: (int)(resMiddle - opHeight / 2));
-            g.DrawImage(right, x: left.Width + opWidth, y: (int)(resMiddle - rTop));
+            g.DrawImage(left, 0, y: resMiddle - lTop);
+            g.DrawString(op, boldFont, mathPurpleB, x: left.Width + gap, y: resMiddle - opHeight / 2);
+            g.DrawImage(right, x: left.Width + opWidth, y: resMiddle - rTop);
         }
         return new(res, resMiddle);
     }
-    // private static BM_Middle Operator(dynamic ast) {
-    //     #region OperatorSwitch
-    //     var op = PythonOperatorToString(ast.Operator);
-    //     #endregion
-        
-    //     int gap = 5;
-    //     var opWidth = MeasureWidth(op, boldFont) + gap * 2;
-    //     var opHeight = MeasureHeight(op, boldFont);
-    //     var l = MakeImg(ast.Left);
-    //     (Bitmap left, int lmiddle) = (l.Img, l.Middle);
-    //     var r = MakeImg(ast.Right);
-    //     (Bitmap right, int rmiddle) = (r.Img, r.Middle);
-    //     switch(op){
-    //         case "**":
-    //             return Power(l, r);
-    //         case "/":
-    //             return Divide(right, left);
-    //         case "//":
-    //             return FloorDivide(right, left);
-    //     }
-    //     var rBottom = right.Height - rmiddle;
-    //     var rTop = rmiddle;
-    //     var lBottom = left.Height - lmiddle;
-    //     var lTop = lmiddle;
-    //     Bitmap res = new(
-    //         width: left.Width + right.Width + opWidth,
-    //         height: Max(lTop, rTop) + Max(lBottom, rBottom)
-    //     );
-    //     var resMiddle = Max(lTop, rTop);
-    //     using(var g = Graphics.FromImage(res)) {
-    //         g.DrawImage(left, 0, y: (int)(resMiddle - lTop));
-    //         g.DrawString(op, boldFont, mathPurpleB, x: left.Width + gap, y: (int)(resMiddle - opHeight / 2));
-    //         g.DrawImage(right, x: left.Width + opWidth, y: (int)(resMiddle - rTop));
-    //     }
-    //     return new(res, resMiddle);
-    // }
+
     private static BM_Middle Power(BM_Middle bottom, BM_Middle top) {
         int topGap = top.Img.Height - top.Middle;
         Bitmap res = new(
@@ -687,7 +649,7 @@ public static class AST {
             g.DrawImage(bottom.Img, 0, y: res.Height - bottom.Img.Height);
             g.DrawImage(top.Img, x: bottom.Img.Width - 5, y: 0);
         }
-        return new(res, res.Height - (int)(bottom.Img.Height / 2));
+        return new(res, res.Height - bottom.Img.Height / 2);
     }
     private static BM_Middle FloorDivide(Bitmap bottom, Bitmap top) {
         Bitmap res = new(
@@ -695,10 +657,10 @@ public static class AST {
             height: top.Height + bottom.Height + 22
         );
         using(var g = Graphics.FromImage(res)) {
-            g.DrawImage(top, x: (int)((res.Width - top.Width) / 2), y: 0);
+            g.DrawImage(top, x: (res.Width - top.Width) / 2, y: 0);
             g.DrawLine(mathPurpleP, 5, top.Height + 5, res.Width, top.Height + 5);
             g.DrawLine(mathPurpleP, 5, top.Height + 11, res.Width, top.Height + 11);
-            g.DrawImage(bottom, x: (int)((res.Width - bottom.Width) / 2), y: top.Height + 22);
+            g.DrawImage(bottom, x: (res.Width - bottom.Width) / 2, y: top.Height + 22);
         }
         return new(res, top.Height + 11);
     }
@@ -708,9 +670,9 @@ public static class AST {
             height: top.Height + bottom.Height + 15
         );
         using(var g = Graphics.FromImage(res)) {
-            g.DrawImage(top, x: (int)((res.Width - top.Width) / 2), y: 0);
+            g.DrawImage(top, x: (res.Width - top.Width) / 2, y: 0);
             g.DrawLine(mathPurpleP, 5, top.Height + 5, res.Width, top.Height + 5);
-            g.DrawImage(bottom, x: (int)((res.Width - bottom.Width) / 2), y: top.Height + 15);
+            g.DrawImage(bottom, x: (res.Width - bottom.Width) / 2, y: top.Height + 15);
         }
         return new(res, top.Height + 7);
     }
@@ -750,7 +712,7 @@ public static class AST {
                 end += item.Height;
             }
         }
-        return new(res, (int)(res.Height / 2));
+        return new(res, res.Height / 2);
     }
     private static BM_Middle MainModule(ScopeStatement ast) {
         LinkedList<Bitmap> resses = new();
@@ -830,7 +792,7 @@ public static class AST {
                 end += item.Height;
             }
         }
-        return new(res, (int)(res.Height / 2));
+        return new(res, res.Height / 2);
     }
     // todo keywords (end, sep)
     private static BM_Middle PrintStatement(PrintStatement ast) {
@@ -865,7 +827,7 @@ public static class AST {
                 end += item.Width;
             }
         }
-        return new(res, (int)(res.Height / 2));
+        return new(res, res.Height / 2);
     }
     private static BM_Middle ParenthesisExpression(ParenthesisExpression? ast, Bitmap? inside_=null, Pen? pen=null) {
         Bitmap inside = inside_ ?? MakeImg(ast!.Expression).Img;
@@ -892,7 +854,7 @@ public static class AST {
             p4 = new(endX, endY);
             g.DrawBezier(mathPurpleP, p1, p2, p3, p4);
         }
-        return new(res, (int)(res.Height / 2));
+        return new(res, res.Height / 2);
     }
     private static BM_Middle? emptyTupleScaled = null;
     private static BM_Middle TupleExpression(TupleExpression ast) {
@@ -900,12 +862,12 @@ public static class AST {
             if(emptyTupleScaled is BM_Middle bm && bm.Img.Height == txtHeight + 15) {
                 return bm;
             }
-            Bitmap emptyTuple = new(emptyTupleImg, (int)(emptyTupleImg.Width / (emptyTupleImg.Height / (txtHeight + 15))), txtHeight + 15);
+            Bitmap emptyTuple = new(emptyTupleImg, emptyTupleImg.Width / (emptyTupleImg.Height / (txtHeight + 15)), txtHeight + 15);
             Bitmap padded = new(emptyTuple.Width + 5, emptyTuple.Height);
             using(var pg = Graphics.FromImage(padded)) {
                 pg.DrawImage(emptyTuple, 5, 0);
             }
-            emptyTupleScaled = new(padded, (int)(padded.Height / 2));
+            emptyTupleScaled = new(padded, padded.Height / 2);
             return (BM_Middle)emptyTupleScaled;
         }
         int gap = 5;
@@ -956,11 +918,11 @@ public static class AST {
             g.DrawBezier(lblueP, p1, p2, p3, p4);
             
             g.SmoothingMode = SmoothingMode.Default;
-            int size = Math.Clamp((int)(curveWidth*1.5), txtHeight, txtHeight*2);
+            int size = Math.Clamp((int)(curveWidth*1.5f), txtHeight, txtHeight*2);
             Bitmap padlock = new(lockImg, size, size);
             g.DrawImage(padlock, 0, res.Height-padlock.Height);
         }
-        return new(res, (int)(res.Height / 2));
+        return new(res, res.Height / 2);
     }
     
     //todo cleanup
@@ -1023,7 +985,7 @@ public static class AST {
                 height: height - lineWidth * 2
             );
         }
-        return new(res, (int)(res.Height / 2));
+        return new(res, res.Height / 2);
     }
     private static BM_Middle AugmentedAssignStatement(AugmentedAssignStatement ast) {
         int lineWidth = 4, gap = 4;
@@ -1045,12 +1007,12 @@ public static class AST {
             g.DrawRectangle(
                 new Pen(Color.WhiteSmoke, lineWidth), 
                 lineWidth/2, lineWidth/2,
-                width: (int)(w1 + gap * 2 + lineWidth + opWidth/2),
+                width: w1 + gap * 2 + lineWidth + opWidth/2,
                 height: height - lineWidth
             );
 
-            int opX = (int)(w1 + gap * 2 + lineWidth);
-            int opY = (int)(res.Height / 2 - opHeight / 2);
+            int opX = w1 + gap * 2 + lineWidth;
+            int opY = res.Height / 2 - opHeight / 2;
             g.FillRectangle(blackBrush, opX, opY, opWidth, opHeight);
             g.DrawString(op, boldFont, mathPurpleB, opX, opY);
 
@@ -1075,6 +1037,6 @@ public static class AST {
             );
 
         }
-        return new(res, (int)(res.Height / 2));
+        return new(res, res.Height / 2);
     }
 }

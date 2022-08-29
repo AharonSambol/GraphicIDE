@@ -16,6 +16,7 @@ public static class MyImages {
         settingsImg = new(Resources.Settings),
         printerImg = new(Resources.printer),
         consoleImg = new(Resources.console),
+        hashtagImg = new(Resources.hastag),
         searchImg = new(Resources.search),
         renameImg = new(Resources.rename),
         returnImg = new(Resources.Arrow),

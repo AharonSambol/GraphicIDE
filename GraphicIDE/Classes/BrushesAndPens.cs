@@ -3,6 +3,9 @@ namespace GraphicIDE;
 public static class BrushesAndPens{
     private static readonly float[] dashes = new[] { 5f, 2f };
     public static readonly Color
+        sumColor        = Color.FromArgb(255, 255, 255, 255),
+        lenColor        = Color.FromArgb(255, 215, 206, 180),
+        hashColor       = Color.FromArgb(255, 072, 158, 095),
         forBlue         = Color.FromArgb(255, 095, 129, 199),
         listRed         = Color.FromArgb(255, 157, 059, 052),
         redOpaqe        = Color.FromArgb(100, 255, 000, 000),
@@ -54,6 +57,9 @@ public static class BrushesAndPens{
         orangeDashed    = new(orangeOpaqe, 5)   { DashPattern = dashes },
         whiteP          = new(Color.Gray, 4),
         yellowP         = new(Color.Wheat, 5),
+        sumP            = new(sumColor, 2),
+        lenP            = new(lenColor, 2),
+        hashP           = new(hashColor, 2),
         lblueP          = new(lblue, 4),
         redListP        = new(listRed, 5),
         forBlueP        = new(forBlue, 4),
