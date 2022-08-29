@@ -11,7 +11,7 @@ using static GraphicIDE.MyMath;
 namespace GraphicIDE;
 
 public static class AST {
-    public static BM_Middle MakeImg(Node ast) {
+    public static BM_Middle MakeImg(Node ast){
         try {
             return ((Func<BM_Middle>)(ast switch {
                 PythonAst pa => () => MainModule(pa),
@@ -23,7 +23,6 @@ public static class AST {
                 TupleExpression te => () => TupleExpression(te),
                 NameExpression ne => () => MakeTxtBM(ne.Name.ToString(), brush: lblueBrush),
                 AssignmentStatement as_ => () => AssignmentStatement(as_),
-                // "operator" => () => Operator(ast),
                 CallExpression ce => () => FunctionCall(ce),
                 BinaryExpression be => () => BinaryExpression(be),
                 UnaryExpression ue => () => UnaryExpression(ue),
@@ -259,7 +258,7 @@ public static class AST {
         return new(bm, bm.Height / 2);
     }
     private static BM_Middle? emptyListScaled = null;
-    private static BM_Middle ListExpression(ListExpression ast) {
+    private static BM_Middle ListExpression(ListExpression ast){
         if(ast.Items.Count == 0) {
             if(emptyListScaled is BM_Middle bm && bm.Img.Height == txtHeight + 15) {
                 return bm;
@@ -301,7 +300,7 @@ public static class AST {
         return new(res, res.Height / 2);
     }
     private static BM_Middle? passPic = null;
-    private static BM_Middle EmptyStatement() {
+    private static BM_Middle EmptyStatement(){
         if(passPic is BM_Middle bm && bm.Img.Height == txtHeight) {   return bm; }
         Bitmap img = new(passImg, passImg.Width / (passImg.Height / txtHeight), txtHeight);
         passPic = new(img, img.Height / 2);
@@ -397,7 +396,7 @@ public static class AST {
         }
         return new(res, res.Height / 2);
     }
-    private static BM_Middle IfExpression(IfStatement ast) {
+    private static BM_Middle IfExpression(IfStatement ast){
         static Graphics JoinIfAndElse(Pen lastColor, ref Bitmap res, Bitmap img) {
             var (prevH, prevW) = (res.Height, res.Width);
             var prevImg = res;
@@ -488,88 +487,115 @@ public static class AST {
         }
         return new(argsBm, argsBm.Height/2);
     }
-    private static BM_Middle FunctionCall(CallExpression ast) {
+    private static Func<CallExpression, Bitmap> FirstToImg = (ast) => MakeImg(ast.Args[0].Expression).Img;
+    private static BM_Middle FunctionCall(CallExpression ast){   
         string? name = null;
-        if(ast.Target is NameExpression   tar1){    name = tar1.Name; }
-        if(ast.Target is MemberExpression tar2){    name = tar2.Name; }
-        if(name is not null){
-            try{
-                if(name.Equals("sqrt")) {
-                    var val = ast.Args[0].Expression;
-                    var inside = MakeImg(val).Img;
-                    Bitmap res_ = new(
-                        width: inside.Width + 30, 
-                        height: inside.Height + 15
-                    );
-                    using(var g = Graphics.FromImage(res_)) {
-                        g.DrawImage(inside, 20, 15);
-                        g.DrawLine(mathPurpleP, 15, 5, res_.Width, 5);
-                        g.DrawLine(mathPurpleP, 15, 5, 15, res_.Height);
-                        g.DrawLine(mathPurpleP, 5, res_.Height - 15, 15, res_.Height);
-                    }
-                    return new(res_, res_.Height / 2);
-                }
-                else if(name.Equals("pow")){
-                    var bottom = MakeImg(ast.Args[0].Expression);
-                    var top = MakeImg(ast.Args[1].Expression);
-                    var pow = Power(bottom, top);
-                    if(ast.Args.Count > 2){
-                        var mod = MakeImg(ast.Args[2].Expression);
-                        var parenthesis = ParenthesisExpression(null, pow.Img);
-                        return BinaryExpression(null, "%", parenthesis, mod);
-                    }
-                    return pow;
-                } 
-                // todo start
-                else if(name.Equals("sum")) {
-                    return Func(ast.Args[0].Expression, sumImg, sumP);
-                }
-                else if(name.Equals("len")){
-                    return Func(ast.Args[0].Expression, rulerImg, lenP);
-                }
-                else if(name.Equals("abs")) {
-                    var val = ast.Args[0].Expression;
-                    var inside = MakeImg(val).Img;
-                    Bitmap res_ = new(
-                        width: inside.Width + 30,
-                        height: inside.Height + 10
-                    );
-                    using(var g = Graphics.FromImage(res_)) {
-                        g.DrawLine(mathPurpleP, 10, 0, 10, res_.Height);
-                        g.DrawLine(mathPurpleP, res_.Width - 5, 0, res_.Width - 5, res_.Height);
-                        g.DrawImage(inside, 15, 5);
-                    }
-                    return new(res_, res_.Height / 2);
-                }
-                else if(name.Equals("hash")){
-                    return Func(ast.Args[0].Expression, hashtagImg, hashP);
-                }
-            }catch(Exception){}
-        } 
-        #region default
+        if (ast.Target is NameExpression tar1) { name = tar1.Name; }
+        if (ast.Target is MemberExpression tar2) { name = tar2.Name; }
+        if (name is null) { return DefaultFuncCall(ast); }
+        try {
+            return name switch {
+                "input" => Input(ast),
+                "sqrt" => Sqrt(ast),
+                "pow" => Pow(ast),
+                "abs" => Abs(ast),
+                "hash" => Func(FirstToImg(ast), hashtagImg, hashP),
+                "sum" => Func(FirstToImg(ast), sumImg, sumP),    // todo start
+                "len" => Func(FirstToImg(ast), rulerImg, lenP),
+                "divmod" => Func(
+                    NonTupleTuple(new(ast.Args.Select((x) => MakeImg(x.Expression)))).Img,
+                    divmodImg, divmodP
+                ),
+                "round" => Func(FirstToImg(ast), roundImg, divmodP),    // todo digits (precision)
+                "max" => MaxMin(ast, maxImg),
+                "min" => MaxMin(ast, minImg),
+                _ => DefaultFuncCall(ast),
+            };
+        } catch (Exception) {   return DefaultFuncCall(ast); }
+    }
+
+    private static BM_Middle DefaultFuncCall(CallExpression ast) {
         Bitmap argsBm;
-        if(ast.Args.Count > 0){
+        if (ast.Args.Count > 0) {
             LinkedList<BM_Middle> args = new();
-            foreach(var item in ast.Args) {
+            foreach (var item in ast.Args) {
                 var bm = MakeImg(item.Expression);
-                args.AddLast(bm);    
+                args.AddLast(bm);
             }
             argsBm = NonTupleTuple(args).Img;
         } else {
-            argsBm = new(1, Max(txtHeight/2, txtHeight - 10));
+            argsBm = new(5, txtHeight);
         }
         Bitmap par = ParenthesisExpression(null, inside_: argsBm, pen: lblueP).Img;
         Bitmap func = MakeImg(ast.Target).Img;
         Bitmap res = new(par.Width + func.Width, Max(par.Height, func.Height));
+        using (var g = Graphics.FromImage(res)) {
+            g.DrawImage(func, 0, res.Height / 2 - func.Height / 2);
+            g.DrawImage(par, func.Width, res.Height / 2 - par.Height / 2);
+        }
+        return new(res, res.Height / 2);
+    }
+    
+    private static BM_Middle MaxMin(CallExpression ast, Bitmap img) {        
+        var inside = NonTupleTuple(new(ast.Args.Select((x) => MakeImg(x.Expression)))).Img;
+        int gap = 2;
+        Bitmap res = new(img, inside.Width + 2 * gap, 2 * inside.Height + 2 * gap);
         using(var g = Graphics.FromImage(res)){
-            g.DrawImage(func, 0, res.Height/2-func.Height/2);
-            g.DrawImage(par, func.Width, res.Height/2-par.Height/2);
+            g.DrawImage(inside, gap, inside.Height + gap);
         }
         return new(res, res.Height/2);
-        #endregion
     }
-    private static BM_Middle Func(Expression val, Bitmap icon, Pen pen){
+    private static BM_Middle Input(CallExpression ast) {
+        var val = ast.Args[0].Expression;
         var inside = MakeImg(val).Img;
+        int gap = 10;
+        Bitmap res = new(keyboardImg, inside.Width + 2 * gap, inside.Height + 2 * gap);
+        using(var g = Graphics.FromImage(res)){
+            g.DrawImage(inside, gap, gap);
+        }
+        return new(res, res.Height/2);
+    }
+    private static BM_Middle Abs(CallExpression ast) {
+        var val = ast.Args[0].Expression;
+        var inside = MakeImg(val).Img;
+        Bitmap res_ = new(
+            width: inside.Width + 30,
+            height: inside.Height + 10
+        );
+        using (var g = Graphics.FromImage(res_)) {
+            g.DrawLine(mathPurpleP, 10, 0, 10, res_.Height);
+            g.DrawLine(mathPurpleP, res_.Width - 5, 0, res_.Width - 5, res_.Height);
+            g.DrawImage(inside, 15, 5);
+        }
+        return new(res_, res_.Height / 2);
+    }
+    private static BM_Middle Pow(CallExpression ast) {
+        var bottom = MakeImg(ast.Args[0].Expression);
+        var top = MakeImg(ast.Args[1].Expression);
+        var pow = Power(bottom, top);
+        if (ast.Args.Count > 2) {
+            var mod = MakeImg(ast.Args[2].Expression);
+            var parenthesis = ParenthesisExpression(null, pow.Img);
+            return BinaryExpression(null, "%", parenthesis, mod);
+        }
+        return pow;
+    }
+    private static BM_Middle Sqrt(CallExpression ast) {
+        var val = ast.Args[0].Expression;
+        var inside = MakeImg(val).Img;
+        Bitmap res_ = new(
+            width: inside.Width + 30,
+            height: inside.Height + 15
+        );
+        using (var g = Graphics.FromImage(res_)) {
+            g.DrawImage(inside, 20, 15);
+            g.DrawLine(mathPurpleP, 15, 5, res_.Width, 5);
+            g.DrawLine(mathPurpleP, 15, 5, 15, res_.Height);
+            g.DrawLine(mathPurpleP, 5, res_.Height - 15, 15, res_.Height);
+        }
+        return new(res_, res_.Height / 2);
+    }
+    private static BM_Middle Func(Bitmap inside, Bitmap icon, Pen pen){
         int gap = 4;
         int penW = (int)pen.Width / 2;
         icon = new(icon, icon.Width / (icon.Height / (inside.Height + 2 * penW)), inside.Height + 2 * penW);
@@ -832,7 +858,8 @@ public static class AST {
     private static BM_Middle ParenthesisExpression(ParenthesisExpression? ast, Bitmap? inside_=null, Pen? pen=null) {
         Bitmap inside = inside_ ?? MakeImg(ast!.Expression).Img;
         int curveWidth = (inside.Height)/4;
-        int pW = (int)mathPurpleP.Width/2;
+        pen = pen ?? mathPurpleP;
+        int pW = (int)pen.Width/2;
         Bitmap res = new(inside.Width + curveWidth * 2 + pW*2, inside.Height);
         using(var g = Graphics.FromImage(res)) {
             g.DrawImage(inside, curveWidth + pW, 0);
@@ -844,7 +871,7 @@ public static class AST {
             Point p2 = new(startX - curveWidth, startY + curveWidth);
             Point p3 = new(endX - curveWidth, endY - curveWidth);
             Point p4 = new(endX, endY);
-            g.DrawBezier(mathPurpleP, p1, p2, p3, p4);
+            g.DrawBezier(pen, p1, p2, p3, p4);
             
             (startX, startY) = (res.Width - curveWidth - pW, 0);
             (endX, endY) = (res.Width - curveWidth - pW, res.Height);
@@ -852,7 +879,7 @@ public static class AST {
             p2 = new(startX + curveWidth, startY + curveWidth);
             p3 = new(endX + curveWidth, endY - curveWidth);
             p4 = new(endX, endY);
-            g.DrawBezier(mathPurpleP, p1, p2, p3, p4);
+            g.DrawBezier(pen, p1, p2, p3, p4);
         }
         return new(res, res.Height / 2);
     }
