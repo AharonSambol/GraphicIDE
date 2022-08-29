@@ -73,6 +73,16 @@ namespace GraphicIDE.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap boolXY {
+            get {
+                object obj = ResourceManager.GetObject("boolXY", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap brightnessBarSymbol {
             get {
                 object obj = ResourceManager.GetObject("brightnessBarSymbol", resourceCulture);
@@ -143,6 +153,26 @@ namespace GraphicIDE.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap filter {
+            get {
+                object obj = ResourceManager.GetObject("filter", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap float12 {
+            get {
+                object obj = ResourceManager.GetObject("float12", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap forArrowDown {
             get {
                 object obj = ResourceManager.GetObject("forArrowDown", resourceCulture);
@@ -173,6 +203,16 @@ namespace GraphicIDE.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap int1234 {
+            get {
+                object obj = ResourceManager.GetObject("int1234", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap keyboard {
             get {
                 object obj = ResourceManager.GetObject("keyboard", resourceCulture);
@@ -186,6 +226,16 @@ namespace GraphicIDE.Properties {
         internal static System.Drawing.Bitmap lightbulb {
             get {
                 object obj = ResourceManager.GetObject("lightbulb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap list {
+            get {
+                object obj = ResourceManager.GetObject("list", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -413,6 +463,16 @@ namespace GraphicIDE.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap tuple {
+            get {
+                object obj = ResourceManager.GetObject("tuple", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap whileArrowDown {
             get {
                 object obj = ResourceManager.GetObject("whileArrowDown", resourceCulture);
@@ -426,6 +486,16 @@ namespace GraphicIDE.Properties {
         internal static System.Drawing.Bitmap whileArrowUp {
             get {
                 object obj = ResourceManager.GetObject("whileArrowUp", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap yarn {
+            get {
+                object obj = ResourceManager.GetObject("yarn", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

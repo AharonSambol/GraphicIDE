@@ -488,6 +488,7 @@ public static class AST {
         return new(argsBm, argsBm.Height/2);
     }
     private static Func<CallExpression, Bitmap> FirstToImg = (ast) => MakeImg(ast.Args[0].Expression).Img;
+    private static Func<CallExpression, Bitmap> argsToTuple = (ast) => NonTupleTuple(new(ast.Args.Select((x) => MakeImg(x.Expression)))).Img;
     private static BM_Middle FunctionCall(CallExpression ast){   
         string? name = null;
         if (ast.Target is NameExpression tar1) { name = tar1.Name; }
@@ -502,11 +503,15 @@ public static class AST {
                 "hash" => Func(FirstToImg(ast), hashtagImg, hashP),
                 "sum" => Func(FirstToImg(ast), sumImg, sumP),    // todo start
                 "len" => Func(FirstToImg(ast), rulerImg, lenP),
-                "divmod" => Func(
-                    NonTupleTuple(new(ast.Args.Select((x) => MakeImg(x.Expression)))).Img,
-                    divmodImg, divmodP
-                ),
+                "filter" => Func(argsToTuple(ast), filterImg, sumP),
+                "divmod" => Func(argsToTuple(ast), divmodImg, divmodP),
                 "round" => Func(FirstToImg(ast), roundImg, divmodP),    // todo digits (precision)
+                "int" => Func(FirstToImg(ast), intImg, intFuncP),
+                "str" => Func(FirstToImg(ast), strImg, strFuncP),
+                "bool" => Func(FirstToImg(ast), boolImg, boolFuncP),
+                "float" => Func(FirstToImg(ast), floatImg, intFuncP),
+                "list" => Func(FirstToImg(ast), listImg, listP),
+                "tuple" => Func(FirstToImg(ast), tupleImg, tupleP),
                 "max" => MaxMin(ast, maxImg),
                 "min" => MaxMin(ast, minImg),
                 _ => DefaultFuncCall(ast),

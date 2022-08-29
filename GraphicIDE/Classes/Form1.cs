@@ -26,6 +26,7 @@ using static GraphicIDE.Settings;
 // todo have file system on right so dont need to have all tabs open
 // todo capslock shortcuts
 // todo scroll horizontal
+// todo comments w drawing
 // todo when renaming func rename all calls too
 // todo save/open (file explorer)
 // todo syntax highlighting
@@ -46,13 +47,10 @@ using static GraphicIDE.Settings;
 // ? lambda 
 #region built in funcs
 // aiter() anext() breakpoint() bytearray() bytes() callable() classmethod() compile() dir() frozenset() memoryview() property() repr() staticmethod() super() vars()
-// bool() float() int() str()
-// dict() list() set() tuple()
+// dict() set()
 // chr() ord()
 // range() enumerate() zip()
 // all() any()
-// round()
-// filter()
 // map()
 // type()
 // reversed() sorted()

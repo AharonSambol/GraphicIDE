@@ -10,3 +10,12 @@ else:
         a += [1]
 for x in a:
     print(x)
+
+
+
+name = input("enter name")
+a = hash("wow")
+d, m = divmod(35, 2)
+x = round(34.5)
+mx = max(my_list)
+mn = min(my_list)

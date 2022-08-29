@@ -61,6 +61,8 @@ public static class BrushesAndPens{
         sumP            = new(sumColor, 2),
         lenP            = new(lenColor, 2),
         hashP           = new(hashColor, 2),
+        listP           = new(listRed, 2),
+        tupleP          = new(lblue, 2),
         lblueP          = new(lblue, 4),
         redListP        = new(listRed, 5),
         forBlueP        = new(forBlue, 4),
@@ -74,5 +76,8 @@ public static class BrushesAndPens{
         whileOrangeP    = new(whileOrange, 4),
         orangeOpaqeP    = new(orangeOpaqe, 5),
         shortIfElseGP   = new(shortIfElseG, 4),
+        intFuncP        = new(Color.FromArgb(255, 154, 232, 213), 2),
+        strFuncP        = new(Color.FromArgb(255, 130, 185, 131), 2),
+        boolFuncP       = new(Color.FromArgb(255, 189, 015, 000), 2),
         shortIfElseRP   = new(shortIfElseR, 4);
 }
