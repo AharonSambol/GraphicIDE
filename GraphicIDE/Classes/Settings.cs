@@ -12,7 +12,7 @@ namespace GraphicIDE;
 public static class Settings {
     public static Menu? settingsScreen;
     public static Menu? staticSettingsScreen;
-    private static string? savePath;
+    public static string? savePath;
     public static void ToggleSettings(){
         int size = 80, gap = 10;
 

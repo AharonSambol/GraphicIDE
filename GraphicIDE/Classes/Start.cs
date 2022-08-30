@@ -71,7 +71,7 @@ public static class Start{
             pos = (0, consolePos),
             size = (width, height - consolePos),
             asPlainText = true,
-            txtBrush = redBrush,
+            txtBrush = textBrush,
         };
         nameToFunc[func.name] = console.function;
     }

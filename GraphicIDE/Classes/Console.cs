@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using static GraphicIDE.Form1;
 using static GraphicIDE.BrushesAndPens;
 using static GraphicIDE.Helpers;
@@ -6,7 +8,7 @@ using static GraphicIDE.DrawScreen;
 
 namespace GraphicIDE;
 public static class Console {
-    public static (string txt, ConsoleTxtType typ) consoleTxt = ("", ConsoleTxtType.text);
+    public static (string txt, ConsoleTxtType typ)[] consoleTxt = new[]{("", ConsoleTxtType.text)};
     public static Window console = null!;
     public static string executedTime = "-------";
     public static bool isConsoleVisible = false;
@@ -33,35 +35,38 @@ public static class Console {
         console.size.width = width;
         Bitmap img = new(width, height);
         using(var g = Graphics.FromImage(img)) {
-            if(consoleTxt.typ == ConsoleTxtType.text) {
-                console.function.linesText = consoleTxt.txt.Split('\n').ToList();
-                g.DrawString(consoleTxt.txt, boldFont, textBrush, 0, 5);
-                int end = 5 + MeasureHeight(consoleTxt.txt, boldFont);
-                if(errOpenButton is not null) {
-                    buttonsOnScreen.Remove(buttonsOnScreen.Find((x)=>x.btn.Equals(errOpenButton)));
-                    nonStatic.Controls[nonStatic.Controls.IndexOf(errOpenButton)].Dispose();
-                    errOpenButton = null;
-                }
-            } else {
-                console.function.linesText = consoleTxt.txt.Split('\n').ToList();
-
-                g.DrawString(consoleTxt.txt, boldFont, redBrush, 0, 5);
-                if(errOpenButton is null) {
-                    errOpenButton = new() {
-                        Size = new(20, 20),
-                        BackColor = Color.Transparent,
-                        BackgroundImage = searchImg,
-                        FlatStyle = FlatStyle.Flat,
-                        BackgroundImageLayout = ImageLayout.Zoom,
-                    };
-                    errOpenButton.Location = EOBCalcPos((0, 0));
-                    errOpenButton.FlatAppearance.BorderSize = 0;
-                    errOpenButton.FlatAppearance.BorderColor = Color.White;
-                    errOpenButton.FlatAppearance.MouseOverBackColor = lightGray;
-                    errOpenButton.Click += new EventHandler(OpenErrLink!);
-                    nonStatic.Controls.Add(errOpenButton);
-                    buttonsOnScreen.Add((errOpenButton, EOBCalcPos));
-                    toolTip.SetToolTip(errOpenButton, "Google exception");
+            int end = 5;
+            console.function.linesText = new();
+            foreach(var item in consoleTxt) {
+                console.function.linesText.AddRange(item.txt.Split('\n'));
+                if(item.typ == ConsoleTxtType.text) {
+                    g.DrawString(item.txt, boldFont, textBrush, 0, end);
+                    end += MeasureHeight(item.txt, boldFont);
+                    if(errOpenButton is not null) {
+                        buttonsOnScreen.Remove(buttonsOnScreen.Find((x)=>x.btn.Equals(errOpenButton)));
+                        nonStatic.Controls[nonStatic.Controls.IndexOf(errOpenButton)].Dispose();
+                        errOpenButton = null;
+                    }
+                } else {
+                    g.DrawString(item.txt, boldFont, redBrush, 0, end);
+                    end += MeasureHeight(item.txt, boldFont);
+                    if(errOpenButton is null) {
+                        errOpenButton = new() {
+                            Size = new(20, 20),
+                            BackColor = Color.Transparent,
+                            BackgroundImage = searchImg,
+                            FlatStyle = FlatStyle.Flat,
+                            BackgroundImageLayout = ImageLayout.Zoom,
+                        };
+                        errOpenButton.Location = EOBCalcPos((0, 0));
+                        errOpenButton.FlatAppearance.BorderSize = 0;
+                        errOpenButton.FlatAppearance.BorderColor = Color.White;
+                        errOpenButton.FlatAppearance.MouseOverBackColor = lightGray;
+                        errOpenButton.Click += new EventHandler(OpenErrLink!);
+                        nonStatic.Controls.Add(errOpenButton);
+                        buttonsOnScreen.Add((errOpenButton, EOBCalcPos));
+                        toolTip.SetToolTip(errOpenButton, "Google exception");
+                    }
                 }
             }
         }
@@ -153,5 +158,10 @@ public static class Console {
         if(isConsoleVisible) { ShowConsole(); } else { HideConsole(null, new()); }
     }
 
+    public static void OpenErrLink(object? sender, EventArgs e) {
+        if(PythonFuncs.errLink is not null) {
+            Process.Start(new ProcessStartInfo("cmd", $"/c start {PythonFuncs.errLink}") { CreateNoWindow = true });
+        }
+    }
 }
 public enum ConsoleTxtType {   text, error }

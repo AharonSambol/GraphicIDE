@@ -115,11 +115,6 @@ public static class DrawScreen{
         }
         curFunc.displayImage = newBitMap;
     }
-    public static void OpenErrLink(object? sender, EventArgs e) {
-        if(PythonFuncs.errLink is not null) {
-            Process.Start(new ProcessStartInfo("cmd", $"/c start {PythonFuncs.errLink}") { CreateNoWindow = true });
-        }
-    }
     public static void Form1_Paint(object? sender, PaintEventArgs e) {
         foreach(var window in windows.AsEnumerable().Reverse()) {
             var itemHeight = (int)window.size.height - TAB_HEIGHT;

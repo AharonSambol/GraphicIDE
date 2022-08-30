@@ -5,6 +5,7 @@ using static GraphicIDE.MyMath;
 using static GraphicIDE.Tabs;
 using static GraphicIDE.DrawScreen;
 using static GraphicIDE.Helpers;
+using static GraphicIDE.Console;
 
 namespace GraphicIDE;
 

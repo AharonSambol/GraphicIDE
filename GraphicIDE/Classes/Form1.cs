@@ -34,8 +34,6 @@ using static GraphicIDE.Settings;
 // todo change `scaled images` when text size changes (just set them to null)
 // todo when changing font size need to change pen sizes as well / just resize img
 // todo function args
-// todo print and exception
-// todo display if saving (like the little dot at the top)
 // todo add / move / resize windows
 // ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else
 // ? dict + generator(+comprehension)
@@ -501,7 +499,10 @@ public partial class Form1: Form {
         }
     }
     public static int GetClickRow() {
-        double mouse = Cursor.Position.Y - (curWindow.pos.y + curWindow.offset) - screenPos.Y - TAB_HEIGHT;
+        double mouse = Cursor.Position.Y - (curWindow.pos.y + curWindow.offset) - screenPos.Y;
+        if(!curWindow.function.name.Equals(".console")){
+            mouse -= TAB_HEIGHT;
+        }
         int i = (int)Math.Floor(mouse / txtHeight);
         return Max(0, Min(linesText.Count - 1, i));
     }

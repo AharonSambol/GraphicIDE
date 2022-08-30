@@ -53,59 +53,52 @@ public static class PythonFuncs{
         Execute();
         textBox.Focus();
     }
-    public static void Execute() {
-        StringBuilder res = new(), errs = new();
-        string theScript = GetPythonStr();
+    public static async void Execute() {
+        Settings.Save(false);
+        if(Settings.savePath is null){  return; }
+        // Todo show running
+        
+        Func<((string txt, ConsoleTxtType typ)[], string, string)> func = () => {
+            ProcessStartInfo psi = new ProcessStartInfo("cmd", $"/c python { Settings.savePath }") { 
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            };
 
-        var engine = Python.CreateEngine();
-        MemoryStream ms = new();
-        EventRaisingStreamWriter outputWr = new(ms);
-        outputWr.StringWritten += new EventHandler<MyEvtArgs<string>>(sWr_StringWritten!);
-
-        MemoryStream ems = new();
-        EventRaisingStreamWriter errOutputWr = new(ems);
-        errOutputWr.StringWritten += new EventHandler<MyEvtArgs<string>>(errSWr_StringWritten!);
-
-
-        engine.Runtime.IO.SetOutput(ms, outputWr);
-        engine.Runtime.IO.SetErrorOutput(ems, errOutputWr);
-        console.function.curCol = -1;
-        console.function.curLine = 0;
-        try {
-            var source = engine.CreateScriptSourceFromString(theScript.ToString(), SourceCodeKind.File);
             Stopwatch sw = new();
             sw.Start();
-            source.Execute();
+            Process? p = Process.Start(psi);
             sw.Stop();
-            executedTime = $"Execute Time: { sw.ElapsedMilliseconds} ms";
-            consoleTxt = (res.ToString(), ConsoleTxtType.text);
-            console.txtBrush = textBrush;
-            ShowConsole();
-        } catch(Exception err) {
-            try {
-                consoleTxt = (
-                    $"Error in line {((dynamic)err).Line}:\n{(err.Message.Equals("unexpected EOF while parsing") ? "unclosed bracket\\parentheses\\quote" : err.Message)}",
-                    ConsoleTxtType.error
-                );
-            }catch(RuntimeBinderException) {
-                consoleTxt = (
-                    err.Message.Equals("unexpected EOF while parsing") ? "unclosed bracket\\parentheses\\quote" : err.Message,
-                    ConsoleTxtType.error
-                );
+
+            string output = p!.StandardOutput.ReadToEnd();
+            string err = p!.StandardError.ReadToEnd();
+
+            p.WaitForExit();
+            var exec = $"Execute Time: { sw.ElapsedMilliseconds} ms";
+            Func<string, string> MakeLink = (str) => @"https://www.google.com/search?q=Python" + WebUtility.UrlEncode(" " + str.TrimEnd().Split('\n')[^1]);
+            if(!output.Equals("") && !err.Equals("")){
+                return (new[]{ 
+                    (output, ConsoleTxtType.text), (err, ConsoleTxtType.error)
+                }, exec, MakeLink(err));
+            } else if(!err.Equals("")){
+                return (new[]{ (err, ConsoleTxtType.error)}, exec,  MakeLink(err));
+            } else if(!output.Equals("")){
+                return (new[]{ (output, ConsoleTxtType.text)}, exec, "");
             }
+            return (new (string, ConsoleTxtType)[0], exec, "");
+            
+        };
+        Task<((string txt, ConsoleTxtType typ)[] txt, string time, string link)> t = Task.Run(func);
 
-            errLink = @"https://www.google.com/search?q=Python" + WebUtility.UrlEncode(" " + err.Message);
-            console.txtBrush = redBrush;
-            ShowConsole();
+        while(!(t.IsCanceled || t.IsCompleted || t.IsCompletedSuccessfully || t.IsFaulted)){
+            await Task.Delay(100);
         }
-        if(execTimeBtn!.BackgroundImage is not null){
-            RefreshTimeBtn();
-        }
-
-        void sWr_StringWritten(object sender, MyEvtArgs<string> e) =>
-            res.Append(e.Value.Replace("\r\n", "\n"));
-        void errSWr_StringWritten(object sender, MyEvtArgs<string> e) =>
-            errs.Append(e.Value.Replace("\r\n", "\n"));
+        executedTime = t.Result.time;
+        consoleTxt = t.Result.txt;
+        errLink = t.Result.link;
+        RefreshTimeBtn();
+        ShowConsole();
+        // todo show finished running        
     }
     public static string GetPythonStr(){
         StringBuilder theScript = new(), main = new();
@@ -117,9 +110,16 @@ public static class PythonFuncs{
             } else if(func.name.Equals(".console")){
                 continue;
             } else {
+                bool changed = false;
                 theScript.Append("def ").Append(func.name).Append(":\n");
                 foreach(var line in func.linesText) {
+                    if(!changed && !line.Trim().Equals("")){
+                        changed = true;
+                    }
                     theScript.Append('\t').AppendLine(line);
+                }
+                if(!changed){
+                    theScript.AppendLine("\tpass");
                 }
             }
         }
