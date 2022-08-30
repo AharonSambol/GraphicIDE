@@ -116,10 +116,10 @@ public static class PythonFuncs{
                     if(!changed && !line.Trim().Equals("")){
                         changed = true;
                     }
-                    theScript.Append('\t').AppendLine(line);
+                    theScript.Append("    ").AppendLine(line);
                 }
                 if(!changed){
-                    theScript.AppendLine("\tpass");
+                    theScript.AppendLine("    pass");
                 }
             }
         }

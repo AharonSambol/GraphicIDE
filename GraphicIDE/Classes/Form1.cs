@@ -28,12 +28,13 @@ using static GraphicIDE.Settings;
 // todo scroll horizontal
 // todo comments w drawing
 // todo when renaming func rename all calls too
-// todo save/open (file explorer)
+// todo open (file explorer)
 // todo syntax highlighting
 // todo drag selection
 // todo change `scaled images` when text size changes (just set them to null)
 // todo when changing font size need to change pen sizes as well / just resize img
 // todo function args
+// todo delete function
 // todo add / move / resize windows
 // ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else
 // ? dict + generator(+comprehension)
@@ -231,6 +232,8 @@ public partial class Form1: Form {
                 Keys.Z => () => CtrlZ(),
                 Keys.Y => () => CtrlY(),
                 Keys.S => () => Save(isShift),
+                Keys.O => () => Open(),
+                Keys.Q => () => DeleteFunc(curFunc.name),
                 Keys.Tab => () => CtrlTab(),
                 Keys.Oemtilde => () => ToggleConsole(),
                 Keys.Oemplus => () => ChangeFontSize((int)boldFont.Size + 1),

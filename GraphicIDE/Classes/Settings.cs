@@ -80,6 +80,41 @@ public static class Settings {
             }
         }
     }
+    public static void Open(){
+        using(OpenFileDialog openFileDialog = new OpenFileDialog()){
+            openFileDialog.FileName = "AnAwsomeProgram.py";
+            openFileDialog.Filter = "Python File | *.py | Text File | *.txt";
+            if (openFileDialog.ShowDialog() == DialogResult.OK){
+                var filePath = openFileDialog.FileName;
+                var fileStream = openFileDialog.OpenFile();
+                string fileContent;
+                using (StreamReader reader = new StreamReader(fileStream)){
+                    fileContent = reader.ReadToEnd();
+                }
+                var funcs = fileContent.Split("\r\ndef");
+                if(funcs[0].StartsWith("def")){
+                    funcs[0] = funcs[0].Substring(3);
+                }
+                foreach(var func in funcs) {
+                    var lines = func.Split(new string[]{"\r\n", "\n"}, StringSplitOptions.None);
+                    if(func.Equals(funcs[^1])){
+                        var newFunc = NewFunc(lines[0].Trim().TrimEnd(':'));
+                        for (int i=1; i < lines.Length; i++) {
+                            if(!lines[i].StartsWith("\t") && !lines[i].StartsWith("    ")){
+                                newFunc.linesText = lines[1..i].Select((x)=>x.Substring(1).Replace("\t", "    ")).ToList();
+                                nameToFunc[".Main"].linesText = lines[i..].Select((x)=>x.Replace("\t", "    ")).ToList();
+                                break;
+                            }
+                        }
+                    } else {
+                        var newFunc = NewFunc(lines[0].Trim().TrimEnd(':'));
+                        newFunc.linesText = lines[1..].Select((x)=>x.Substring(1).Replace("\t", "    ")).ToList();
+                    }
+                }
+                nonStatic.Invalidate();
+            }
+        }
+    }
     private static async void SaveAsync(){
         await File.WriteAllTextAsync(savePath!, GetPythonStr());
         unsavedButton!.Hide();

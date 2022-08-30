@@ -5,6 +5,7 @@ using static GraphicIDE.MyMath;
 using static GraphicIDE.DrawScreen;
 using static GraphicIDE.Start;
 using static GraphicIDE.MyImages;
+using static GraphicIDE.KeyInput;
 
 namespace GraphicIDE;
 
@@ -67,11 +68,33 @@ public static class Tabs {
     }
     public static Function NewFunc(string name, bool isfirst=false) {
         Function func = new(name);
+        if(nameToFunc.ContainsKey(name)){
+            // todo ask if to override
+            DeleteFunc(name);
+        }
         nameToFunc.Add(name, func);
         func.displayImage = new(screenWidth, screenHeight);
         AddTabSelect(name, isfirst);
         if(!isfirst){   ChangeTab(name, curWindow); }
         return func;
+    }
+    public static void DeleteFunc(string name){
+        nameToFunc.Remove(name, out var func);
+        if(func is null){   return; }
+        var mainFunc = nameToFunc[".Main"];
+        if(func.Equals(curFunc)){
+            curFunc = mainFunc;
+        }
+        foreach(var window in windows) {
+            var tabBtn = window.tabButtons.Find((x) => x.Name.Equals(name));
+            if(tabBtn is not null){
+                window.tabButtons.Remove(tabBtn);
+                nonStatic.Controls.Remove(tabBtn);
+            }
+            if(window.function.name.Equals(name)){
+                window.function = mainFunc;
+            }
+        }
     }
     public static void ChangeTab(object sender, Window window){
         if(window.selectedTab is not null){
@@ -211,10 +234,10 @@ public static class Tabs {
             nonStatic.Controls.Remove(rp.tb);
             nonStatic.Controls.Remove(rp.cancel);
             buttonsOnScreen.Remove(buttonsOnScreen.Find((x) => x.btn.Equals(rp.cancel)));
+            prompt = visablePrompt = null;
             rp.tb.Dispose();
             rp.bm.Dispose();
             rp.cancel.Dispose();
-            prompt = visablePrompt = null;
             nonStatic.Invalidate();
         }
     }
