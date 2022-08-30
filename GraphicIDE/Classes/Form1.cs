@@ -35,6 +35,7 @@ using static GraphicIDE.Settings;
 // todo when changing font size need to change pen sizes as well / just resize img
 // todo function args
 // todo print and exception
+// todo display if saving (like the little dot at the top)
 // todo add / move / resize windows
 // ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else
 // ? dict + generator(+comprehension)
@@ -147,15 +148,12 @@ public partial class Form1: Form {
         ChangeTab(curFunc.name, prevWindow: window2);
 
         var run = AddRunBtn();
-        toolTip.SetToolTip(run, "run");
         var debug = AddDebugBtn();
-        toolTip.SetToolTip(debug, "debug");
         var tab = AddTabBtn();
-        toolTip.SetToolTip(tab, "new function\\tab");
         var rename = RenameTabBtn();
-        toolTip.SetToolTip(rename, "rename function");
         var settings = SettingsBtn();
-        toolTip.SetToolTip(settings, "settings");
+        var unsaved = AddUnsavedButton();
+        unsaved.Hide();
 
         AddConsole();
         var execTime = MakeExecTimeDisplay();
@@ -210,10 +208,11 @@ public partial class Form1: Form {
     }
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
         var keyCode = (Keys) (msg.WParam.ToInt32() & Convert.ToInt32(Keys.KeyCode));
-        if(msg.Msg == WM_KEYDOWN && ModifierKeys == Keys.Control) {
+        if(msg.Msg == WM_KEYDOWN && IsCtrlPressed()) {
             bool isAltlKeyPressed = IsAltlPressed();
             bool isShift = IsShiftPressed();
             bool refresh = true;
+            
             ((Action)(keyCode switch {
                 Keys.Delete => () => DeleteKey(isAltlKeyPressed, true),
                 Keys.Back => () => BackSpaceKey(isAltlKeyPressed, true),
@@ -233,7 +232,7 @@ public partial class Form1: Form {
                 Keys.R => () => PromptRenameTab(),
                 Keys.Z => () => CtrlZ(),
                 Keys.Y => () => CtrlY(),
-                Keys.S => () => Save(),
+                Keys.S => () => Save(isShift),
                 Keys.Tab => () => CtrlTab(),
                 Keys.Oemtilde => () => ToggleConsole(),
                 Keys.Oemplus => () => ChangeFontSize((int)boldFont.Size + 1),

@@ -54,22 +54,8 @@ public static class PythonFuncs{
         textBox.Focus();
     }
     public static void Execute() {
-        StringBuilder theScript = new(), res = new(), errs = new(), main = new();
-        foreach(var func in nameToFunc.Values) {
-            if(func.name.Equals(".Main")){
-                foreach(var line in func.linesText) {
-                    main.AppendLine(line);
-                }
-            } else if(func.name.Equals(".console")){
-                continue;
-            } else {
-                theScript.Append("def ").Append(func.name).Append(":\n");
-                foreach(var line in func.linesText) {
-                    theScript.Append('\t').AppendLine(line);
-                }
-            }
-        }
-        theScript.Append(main);
+        StringBuilder res = new(), errs = new();
+        string theScript = GetPythonStr();
 
         var engine = Python.CreateEngine();
         MemoryStream ms = new();
@@ -120,6 +106,25 @@ public static class PythonFuncs{
             res.Append(e.Value.Replace("\r\n", "\n"));
         void errSWr_StringWritten(object sender, MyEvtArgs<string> e) =>
             errs.Append(e.Value.Replace("\r\n", "\n"));
+    }
+    public static string GetPythonStr(){
+        StringBuilder theScript = new(), main = new();
+        foreach(var func in nameToFunc.Values) {
+            if(func.name.Equals(".Main")){
+                foreach(var line in func.linesText) {
+                    main.AppendLine(line);
+                }
+            } else if(func.name.Equals(".console")){
+                continue;
+            } else {
+                theScript.Append("def ").Append(func.name).Append(":\n");
+                foreach(var line in func.linesText) {
+                    theScript.Append('\t').AppendLine(line);
+                }
+            }
+        }
+        theScript.Append("\n\n").Append(main);
+        return theScript.ToString();
     }
 }
 

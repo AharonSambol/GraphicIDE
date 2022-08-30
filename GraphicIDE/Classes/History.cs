@@ -1,4 +1,5 @@
 using static GraphicIDE.Form1;
+using static GraphicIDE.Start;
 
 namespace GraphicIDE;
 
@@ -69,10 +70,12 @@ public static class History {
     public static void AddChange(List<Change> val){
         history.Push(val);
         future.Empty();
+        unsavedButton!.Show();
     }
     public static void AddChange(Change val){
         history.Push(new(){ val });
         future.Empty();
+        unsavedButton!.Show();
     }
 }
 public record struct Change(

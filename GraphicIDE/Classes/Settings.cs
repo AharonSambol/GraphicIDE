@@ -5,12 +5,14 @@ using static GraphicIDE.BrushesAndPens;
 using static GraphicIDE.MyImages;
 using static GraphicIDE.Start;
 using static GraphicIDE.Tabs;
+using static GraphicIDE.PythonFuncs;
 
 namespace GraphicIDE;
 
 public static class Settings {
     public static Menu? settingsScreen;
     public static Menu? staticSettingsScreen;
+    private static string? savePath;
     public static void ToggleSettings(){
         int size = 80, gap = 10;
 
@@ -64,32 +66,22 @@ public static class Settings {
             (lightmode, lightmodeGetPos),
         });
     }
-    public static void Save(){
+    public static void Save(bool isShift){
+        if(savePath is not null && !isShift){
+            SaveAsync();
+            return;
+        }
         using(SaveFileDialog save = new SaveFileDialog()){
             save.FileName = "AnAwsomeProgram.py";
             save.Filter = "Python File | *.py | Text File | *.txt";
             if (save.ShowDialog() == DialogResult.OK){
-                StringBuilder theScript = new(), main = new();
-                foreach(var func in nameToFunc.Values) {
-                    if(func.name.Equals(".Main")){
-                        foreach(var line in func.linesText) {
-                            main.AppendLine(line);
-                        }
-                    } else if(func.name.Equals(".console")){
-                        continue;
-                    } else {
-                        theScript.Append("def ").Append(func.name).Append(":\n");
-                        foreach(var line in func.linesText) {
-                            theScript.Append('\t').AppendLine(line);
-                        }
-                    }
-                }
-                theScript.Append("\n\n").Append(main);
-                StreamWriter writer = new StreamWriter(save.OpenFile());
-                writer.Write(theScript);
-                writer.Dispose();
-                writer.Close();
+                savePath = Path.GetFullPath(save.FileName);
+                SaveAsync();
             }
         }
+    }
+    private static async void SaveAsync(){
+        await File.WriteAllTextAsync(savePath!, GetPythonStr());
+        unsavedButton!.Hide();
     }
 }

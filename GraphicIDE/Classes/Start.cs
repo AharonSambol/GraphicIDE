@@ -20,18 +20,21 @@ public static class Start{
         btn.BackgroundImage = b;
         btn.Click += new EventHandler(PythonFuncs.ExecuteBtn!);
         buttonsOnScreen.Add((btn, (size) => new(size.w - btn.Size.Width - 10, 0)));
+        toolTip.SetToolTip(btn, "run");
         return btn;
     }
     public static Button AddDebugBtn() {
         Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, debugImg, streatch: true); 
         btn.Click += new EventHandler(PythonFuncs.ExecuteBtn!);
         buttonsOnScreen.Add((btn, (size) => new(size.w - 2 * (btn.Size.Width + 10), 0)));
+        toolTip.SetToolTip(btn, "debug");
         return btn;
     }
     public static Button AddTabBtn() {
         Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, plusImg, streatch: true); 
         btn.Click += new EventHandler(AddTabEvent!);
         buttonsOnScreen.Add((btn, (size) => new(size.w - 3 * (btn.Size.Width + 10), 0)));
+        toolTip.SetToolTip(btn, "new function\\tab");
         return btn;
     }
     public static Button RenameTabBtn() {
@@ -39,6 +42,7 @@ public static class Start{
         btn.Click += new EventHandler((_,_) => PromptRenameTab());
         nonStatic.Controls.Add(btn);
         buttonsOnScreen.Add((btn, (size) => new(size.w - 4 * (btn.Size.Width + 10), 0)));
+        toolTip.SetToolTip(btn, "rename function");
         return btn;
     }
     public static Button SettingsBtn() {
@@ -46,7 +50,15 @@ public static class Start{
         btn.Click += new EventHandler((_,_) => ToggleSettings());
         nonStatic.Controls.Add(btn);
         buttonsOnScreen.Add((btn, (size) => new(size.w - 5 * (btn.Size.Width + 10), 0)));
+        toolTip.SetToolTip(btn, "settings");
         return btn;
+    }
+    public static Button? unsavedButton;
+    public static Button AddUnsavedButton() {
+        unsavedButton = MakeButton(TAB_HEIGHT/2, TAB_HEIGHT/2, dotImg, streatch: true);
+        buttonsOnScreen.Add((unsavedButton, (size) => new(5, size.h - unsavedButton.Size.Height - 5)));
+        toolTip.SetToolTip(unsavedButton, "unsaved");
+        return unsavedButton;
     }
     public static void AddConsole() {
         var (height, width) = (screenHeight, screenWidth);

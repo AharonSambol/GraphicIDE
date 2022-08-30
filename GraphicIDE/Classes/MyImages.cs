@@ -40,6 +40,7 @@ public static class MyImages {
         plusImg = new(Resources.plus),
         passImg = new(Resources.pass),
         intImg = new(Resources.int1234),
+        dotImg = new(Resources.dot),
         sumImg = new(Resources.sum),
         maxImg = new(Resources.max),
         minImg = new(Resources.min),
