@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using static GraphicIDE.Form1;
 using static GraphicIDE.BrushesAndPens;
 using static GraphicIDE.Helpers;
@@ -69,8 +70,9 @@ public static class Tabs {
     public static Function NewFunc(string name, bool isfirst=false) {
         Function func = new(name);
         if(nameToFunc.ContainsKey(name)){
-            // todo ask if to override
-            DeleteFunc(name);
+            if(!DeleteFunc(name)){
+                return nameToFunc[name];
+            }
         }
         nameToFunc.Add(name, func);
         func.displayImage = new(screenWidth, screenHeight);
@@ -78,10 +80,20 @@ public static class Tabs {
         if(!isfirst){   ChangeTab(name, curWindow); }
         return func;
     }
-    public static void DeleteFunc(string name){
-        if(name.StartsWith(".")){   return; }
+    public static bool DeleteFunc(string name){
+        if(name.StartsWith(".")){   
+            MessageBox.Show($"You cannot delete { name }");
+            return false; 
+        }
+        
+        DialogResult result = MessageBox.Show(
+            $"Are you sure you want to delete `{ name }`?", 
+            "Warning", MessageBoxButtons.YesNo
+        );
+        if(result == DialogResult.No){  return false; }
+
         nameToFunc.Remove(name, out var func);
-        if(func is null){   return; }
+        if(func is null){   return false; }
         var mainFunc = nameToFunc[".Main"];
         if(func.Equals(curFunc)){
             curFunc = mainFunc;
@@ -94,14 +106,15 @@ public static class Tabs {
                 window.tabButtons.Remove(btn);
                 for (int i=tabBtn; i < window.tabButtons.Count; i++) {
                     var otherB = window.tabButtons[i];
-                    otherB.Location = new(otherB.Location.X - btn.Size.Width, otherB.Location.Y);
+                    otherB.Location = new(otherB.Location.X - btn.Size.Width - 10, otherB.Location.Y);
                 }
-                window.tabsEnd -= btn.Size.Width;
+                window.tabsEnd -= btn.Size.Width + 10;
             }
             if(window.function.name.Equals(name)){
-                window.function = mainFunc;
+                ChangeTab(window.tabButtons[^1], window);
             }
         }
+        return true;
     }
     public static void ChangeTab(object sender, Window window){
         if(window.selectedTab is not null){
@@ -184,11 +197,12 @@ public static class Tabs {
         visablePrompt = newTabPrompt = new(bm, textBox, cancel);
         nonStatic.Invalidate();
     }
+    private static Regex functionRegex = new(@"^\w+\s*\(\s*(\w+(\s*,\s*\w+)*\s*)?\)$", RegexOptions.Compiled);
     public static void EnterNewTab(object sender, KeyEventArgs e) {
         if(e.KeyCode == Keys.Enter) {
             var name = ((TextBox)sender).Text;
-            if(name.StartsWith(".")){
-                ((TextBox)sender).Text = "";
+            if(!functionRegex.IsMatch(name)){
+                MessageBox.Show($"Function name is not valid");
                 return;
             }
             var func = NewFunc(name);
@@ -252,6 +266,7 @@ public static class Tabs {
         if(e.KeyCode == Keys.Enter) {
             var name = renamePrompt!.Value.tb.Text;
             if(name.StartsWith(".")){
+                MessageBox.Show($"You cannot rename { name }");
                 renamePrompt!.Value.tb.Text = "";
                 return;
             }

@@ -55,7 +55,6 @@ public static class Start{
         toolTip.SetToolTip(btn, "save file");
         return btn;
     }
-    
     public static Button OpenBtn() {
         Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, openImg, streatch: true);        
         btn.Click += new EventHandler((_,_) => Open());
