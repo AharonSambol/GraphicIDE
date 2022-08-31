@@ -29,10 +29,8 @@ using static GraphicIDE.Settings;
 // todo drag selection
 // todo when renaming func rename all calls too
 // todo syntax highlighting
-// todo change `scaled images` when text size changes (just set them to null)
-// todo when changing font size need to change pen sizes as well / just resize img
 // todo function args
-// todo when deleting function ask if want to override or not
+// todo rename word
 // todo add / move / resize windows
 // ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else
 // ? dict + generator(+comprehension)
@@ -121,7 +119,7 @@ public partial class Form1: Form {
         textBox.Focus();
         SetTabWidth(textBox, 4);
 
-        ChangeFontSize(15);
+        FirstChangeFontSize(15);
 
         Controls.Add(textBox);
         textBox.TextChanged += new EventHandler(TextBox_TextChanged!);
@@ -236,8 +234,8 @@ public partial class Form1: Form {
                 Keys.O => () => Open(),
                 Keys.Tab => () => CtrlTab(),
                 Keys.Oemtilde => () => ToggleConsole(),
-                Keys.Oemplus => () => ChangeFontSize((int)boldFont.Size + 1),
-                Keys.OemMinus => () => ChangeFontSize((int)boldFont.Size - 1),
+                Keys.Oemplus => () => ChangeFontSize(1),
+                Keys.OemMinus => () => ChangeFontSize(-1),
                 Keys.Space => () => PythonFuncs.Execute(),
                 _ => () => refresh = false
             }))();
@@ -342,7 +340,7 @@ public partial class Form1: Form {
         Func<(int X, int Y), Point> terminalGetPos = (pos) => new(pos.X + 2 * gap + size, pos.Y + 2 * gap + size);
         terminal.Click += new EventHandler((_,_) => {
             DisposeMenu(ref rightClickMenu);
-            Process.Start("CMD.exe");
+            Process.Start(new ProcessStartInfo("cmd.exe"){ UseShellExecute = true });
         });
         toolTip.SetToolTip(terminal, "open cmd");
 

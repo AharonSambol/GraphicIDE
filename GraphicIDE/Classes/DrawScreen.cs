@@ -21,6 +21,7 @@ public static class DrawScreen{
                 var bm_ = MakeImg(PythonFuncs.ToAST());
                 
                 if(bm_ is BM_Middle bm) {
+                    bm.Img = new(bm.Img, (int)(bm.Img.Width * imgSize), (int)(bm.Img.Height * imgSize));
                     if(!curFunc.name.StartsWith(".")){
                         int w = MeasureWidth(curFunc.name, titleFont);
                         int h = MeasureHeight(curFunc.name, titleFont);
@@ -45,6 +46,7 @@ public static class DrawScreen{
                         bm = new(new(bm.Img, (int)newWidth, (int)newHeight), 0);
                     }
                     #endregion
+                    
                     curFunc.displayImage = bm.Img;
                     skipDrawNewScreen = true;
                     nonStatic.Invalidate();
@@ -111,6 +113,7 @@ public static class DrawScreen{
             gr.DrawImage(item, 0, end);
             end += item.Height;
         }
+        newBitMap = new(newBitMap, (int)(newBitMap.Width * imgSize), (int)(newBitMap.Height * imgSize));
         curFunc.displayImage = newBitMap;
     }
     public static void Form1_Paint(object? sender, PaintEventArgs e) {

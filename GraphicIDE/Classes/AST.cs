@@ -827,6 +827,7 @@ public static class AST {
     }
     // todo keywords (end, sep)
     private static BM_Middle PrintStatement(PrintStatement ast) {
+        int gap = 2;
         LinkedList<Bitmap> resses = new();
         var (width, height) = (0, 0);
         foreach(var statement in ast.Expressions) {
@@ -845,16 +846,16 @@ public static class AST {
             width += resses.Last!.Value.Width;
             height = Max(height, resses.Last!.Value.Height);
         }
-        var printer = new Bitmap(printerImg, new Size(printerImg.Width / (printerImg.Height / (height + 20)), height + 20));
-        var res = new Bitmap(width + printer.Width + 20, printer.Height);
+        var printer = new Bitmap(printerImg, new Size(printerImg.Width / (printerImg.Height / (height + gap * 4)), height + gap * 4));
+        var res = new Bitmap(width + printer.Width + gap * 3, printer.Height);
         using(var g = Graphics.FromImage(res)) {
             g.DrawImage(printer, 0, 0);
             var end = printer.Width;
-            g.DrawRectangle(new Pen(Color.White, 5), end, 2.5f, res.Width - printer.Width - 10, res.Height - 5);
+            g.DrawRectangle(new Pen(Color.White, 5), end, gap, res.Width - end - gap, res.Height - 2 * gap);
 
-            end += 5;
+            end += gap;
             foreach(var item in resses) {
-                g.DrawImage(item, end, 12);
+                g.DrawImage(item, end, gap * 2);
                 end += item.Width;
             }
         }

@@ -60,9 +60,9 @@ public static class KeyInput {
             textBox.SelectionLength = 0;
             return;
         }
-        ReadOnlySpan<char> change = null;
+        string change = "";
         try {
-            change = textBox.Text.AsSpan(1, textBox.Text.Length - 2);
+            change = textBox.Text.Substring(1, textBox.Text.Length - 2);
         } catch(IndexOutOfRangeException) { } catch(ArgumentOutOfRangeException) { }
         iChanged = true;
         textBox.Text = "()";
@@ -72,12 +72,11 @@ public static class KeyInput {
         if(selectedLine == (CursorPos.line, CursorPos.col)) {
             selectedLine = null;
         }
-        var changeSt = change.ToString();
         ((Action)(lastPressed switch {
             Keys.Back => () => BackSpaceKey(),
             Keys.Delete => () => DeleteKey(),
             Keys.Enter => () => EnterKey(),
-            _ => () => CharKey(changeSt)
+            _ => () => CharKey(change)
         }))();
         DrawTextScreen();
         nonStatic.Invalidate();
@@ -265,8 +264,25 @@ public static class KeyInput {
         if(isCtrlKeyPressed) { CursorPos.ChangeLine(linesText.Count - 1); }
         CursorPos.ChangeCol(linesText[CursorPos.line].Length - 1);
     }
-    public static void CharKey(ReadOnlySpan<char> change) {
+    private static Dictionary<string, string> opposites = new(){
+        {"\"", "\""}, {"'", "'"}, {"(", ")"}, {"[", "]"}, {"{", "}"},
+    };
+    public static void CharKey(string change) {
         if(change == null) { throw new Exception("input is null?"); }
+        if(selectedLine is (int,int) sl && opposites.TryGetValue(change, out var opposite)){
+            var (first, last) = IsBefore(CursorPos.ToTuple(), sl)
+                ? (CursorPos.ToTuple(), sl)
+                : (sl, CursorPos.ToTuple());
+            AddString(opposite, last);
+            AddString(change, first);
+            if(CursorPos.line <= sl.line){
+                CursorPos.ChangeCol(CursorPos.col + 1);
+            }
+            if(CursorPos.line >= sl.line){
+                selectedLine = (sl.line, sl.col + 1);
+            }
+            return;
+        }
         if(selectedLine is not null) {
             DeleteSelection();
             selectedLine = null;
@@ -541,10 +557,10 @@ public static class KeyInput {
         res.Append(linesText[bigger]);
         return res.ToString();
     }
-    public static (int, int) AddString(ReadOnlySpan<char> change, (int line, int col) pos) {
-        if(change.Equals("", StringComparison.Ordinal)){return pos;}
-        bool containsRN = change.Contains("\r\n", StringComparison.Ordinal);
-        bool containsN = change.Contains("\n", StringComparison.Ordinal);
+    public static (int, int) AddString(string change, (int line, int col) pos) {
+        if(change.Equals("")){return pos;}
+        bool containsRN = change.Contains("\r\n");
+        bool containsN = change.Contains("\n");
         if(containsRN || containsN) {
             string[] newLines;
             if(containsRN){

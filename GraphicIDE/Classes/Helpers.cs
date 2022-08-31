@@ -24,7 +24,7 @@ public static class Helpers {
             i, Form1.txtHeight - curWindow.function.displayImage!.Height, 0
         );
     }
-    public static void ChangeFontSize(int size){
+    public static void FirstChangeFontSize(int size){
         Form1.boldFont = new(FontFamily.GenericMonospace, size, FontStyle.Bold);
         Form1.indentW = MeasureWidth("    ", Form1.boldFont);
         Form1.qWidth = MeasureWidth("¿ ?", Form1.boldFont);
@@ -35,6 +35,10 @@ public static class Helpers {
             Form1.boldFont
         );
         Form1.nonStatic.Invalidate();
+    }
+    public static float imgSize = 1;
+    public static void ChangeFontSize(int size){
+        imgSize += size / 7f;
     }
     public static string PythonOperatorToString(PythonOperator po) => po switch{
         PythonOperator.In => "in",
@@ -84,7 +88,7 @@ public static class Helpers {
     public static bool IsNumeric(char val) => val == '_' || char.IsLetter(val) || char.IsDigit(val);
     public static bool IsAltNumeric(char val) => char.IsLower(val) || char.IsDigit(val);
     public static int MeasureWidth(string st, Font ft) {
-        if(st.Contains('\n', StringComparison.Ordinal)) {
+        if(st.Contains('\n')) {
             return st.Split("\n").Select(
                 (line) => MeasureWidth(line, Form1.boldFont)
             ).Max();
