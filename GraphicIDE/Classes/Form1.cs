@@ -31,14 +31,12 @@ using static GraphicIDE.Settings;
 // todo syntax highlighting
 // todo function args
 // todo rename word
+// ! keyword args
 // todo add / move / resize windows
-// ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else
+// ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else, annotations
 // ? dict + generator(+comprehension)
-// ? indexing + slicing
-// ? import from\as
 // ? classes(+attributes)
 // ? try except raise
-// ? annotations
 // ? break, continue
 // ? lambda 
 #region built in funcs

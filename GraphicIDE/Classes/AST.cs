@@ -12,7 +12,7 @@ namespace GraphicIDE;
 
 public static class AST {
     public static BM_Middle MakeImg(Node ast){
-        try {
+        try {   // ? I'm aware that it's bad practice to name the functions the same as the objects, but I'm too 😎 to care
             return ((Func<BM_Middle>)(ast switch {
                 PythonAst pa => () => MainModule(pa),
                 SuiteStatement ss => () => SuiteStatement(ss),
@@ -43,11 +43,73 @@ public static class AST {
                 ForStatement fs => () => ForStatement(fs),
                 ConditionalExpression ce => () => ShortIfElse(ce),
                 MemberExpression me => () => MemberExpression(me),
+                IndexExpression ie => () => IndexExpression(ie),
+                SliceExpression se => () => SliceExpression(se),
                 _ => () => throw new Exception(),
             }))();
         } catch(Exception) { 
             throw new Exception();
         }
+    }
+
+    private static BM_Middle SliceExpression(SliceExpression ast){
+        var start = ast.SliceStart is null ? null : MakeImg(ast.SliceStart).Img;
+        var stop =  ast.SliceStop is null ? null : MakeImg(ast.SliceStop).Img;
+        var step =  ast.SliceStep is null ? null : MakeImg(ast.SliceStep).Img;
+        var parts = new LinkedList<Bitmap?>();
+        parts.AddLast(start);
+        parts.AddLast(stop);
+        parts.AddLast(step);
+        while(parts.Last!.Value is null){
+            parts.RemoveLast();
+        }
+        var (w, h) = (0, 0);
+        foreach(var item in parts) {
+            if(item is null){   continue; }
+            w += item.Width;
+            h = Max(h, item.Height);
+        }
+        int colW = MeasureWidth(":", boldFont);
+        Bitmap res = new(w + (parts.Count-1) * colW, h);
+        using(var g = Graphics.FromImage(res)){
+            int end = 0;
+            foreach(var item in parts) {
+                if(item is not null){
+                    g.DrawImage(item, end, res.Height/2 - item.Height/2);
+                    end += item.Width;
+                }
+                if(!parts.Last.Value.Equals(item)){
+                    g.DrawString(":", boldFont, textBrush, end, res.Height/2 - txtHeight/2);
+                    end += colW;
+                }
+            }
+        }
+        return new(res, res.Height/2);
+    }
+    private static BM_Middle IndexExpression(IndexExpression ast){
+        var target = MakeImg(ast.Target).Img;
+        var index = MakeImg(ast.Index).Img;
+        int gap = 3;
+        int bGap = (int)(lblueP.Width/2);
+        Bitmap res = new(
+            target.Width + index.Width + gap * 4 + bGap * 2, 
+            Max(target.Height, index.Height + bGap * 2 + 2)
+        );
+        using(var g = Graphics.FromImage(res)){
+            g.DrawImage(target, 0, res.Height/2 - target.Height/2);
+            g.DrawImage(index, target.Width + gap * 2 + bGap, res.Height/2-index.Height/2);
+            int start = target.Width + gap;
+            int w = index.Width / 3;
+            g.DrawLines(lblueP, new Point[]{ 
+                new(start + w, bGap), new(start, bGap), 
+                new(start, res.Height-bGap), new(start + w, res.Height-bGap)
+            });
+            g.DrawLines(lblueP, new Point[]{ 
+                new(res.Width - w - bGap, bGap), new(res.Width - bGap, bGap), 
+                new(res.Width - bGap, res.Height-bGap), new(res.Width - w - bGap, res.Height-bGap)
+            });
+        }
+        return new(res, res.Height/2);
     }
     private static BM_Middle MemberExpression(MemberExpression ast){
         Bitmap img = MakeImg(ast.Target).Img;
