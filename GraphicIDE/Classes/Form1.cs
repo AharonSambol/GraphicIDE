@@ -19,22 +19,20 @@ using static GraphicIDE.Settings;
 // todo add cheat sheat
 // todo group words in ctrl z
 // todo add in settings to change `history amount` (for ctrl+Z)
-// todo let them make custom img for functions
 // todo cache some of the textline images
 // todo only draw visable lines
 // todo add little icon to list/set.. comprehension to signal which type it is
-// todo have file system on right so dont need to have all tabs open
 // todo capslock shortcuts
 // todo scroll horizontal
 // todo comments w drawing
-// todo when renaming func rename all calls too
-// todo open (file explorer)
-// todo syntax highlighting
+// todo have file system on right so dont need to have all tabs open
 // todo drag selection
+// todo when renaming func rename all calls too
+// todo syntax highlighting
 // todo change `scaled images` when text size changes (just set them to null)
 // todo when changing font size need to change pen sizes as well / just resize img
 // todo function args
-// todo delete function
+// todo when deleting function ask if want to override or not
 // todo add / move / resize windows
 // ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else
 // ? dict + generator(+comprehension)
@@ -146,12 +144,15 @@ public partial class Form1: Form {
         curFunc = mainFunc;
         ChangeTab(curFunc.name, prevWindow: window2);
 
-        var run = AddRunBtn();
-        var debug = AddDebugBtn();
-        var tab = AddTabBtn();
+        var run = RunBtn();
+        // var debug = AddDebugBtn();
+        var tab = TabBtn();
         var rename = RenameTabBtn();
         var settings = SettingsBtn();
-        var unsaved = AddUnsavedButton();
+        var unsaved = UnsavedButton();
+        var trash = TrashBtn();
+        var save = SaveBtn();
+        var open = OpenBtn();
         unsaved.Hide();
 
         AddConsole();
@@ -233,7 +234,6 @@ public partial class Form1: Form {
                 Keys.Y => () => CtrlY(),
                 Keys.S => () => Save(isShift),
                 Keys.O => () => Open(),
-                Keys.Q => () => DeleteFunc(curFunc.name),
                 Keys.Tab => () => CtrlTab(),
                 Keys.Oemtilde => () => ToggleConsole(),
                 Keys.Oemplus => () => ChangeFontSize((int)boldFont.Size + 1),

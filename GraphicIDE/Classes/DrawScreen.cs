@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 using static GraphicIDE.BrushesAndPens;
 using static GraphicIDE.MyMath;
 using static GraphicIDE.Helpers;

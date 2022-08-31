@@ -79,6 +79,7 @@ public static class Tabs {
         return func;
     }
     public static void DeleteFunc(string name){
+        if(name.StartsWith(".")){   return; }
         nameToFunc.Remove(name, out var func);
         if(func is null){   return; }
         var mainFunc = nameToFunc[".Main"];
@@ -86,10 +87,16 @@ public static class Tabs {
             curFunc = mainFunc;
         }
         foreach(var window in windows) {
-            var tabBtn = window.tabButtons.Find((x) => x.Name.Equals(name));
-            if(tabBtn is not null){
-                window.tabButtons.Remove(tabBtn);
-                nonStatic.Controls.Remove(tabBtn);
+            var tabBtn = window.tabButtons.FindIndex((x) => x.Name.Equals(name));
+            if(tabBtn != -1){
+                var btn = window.tabButtons[tabBtn];
+                nonStatic.Controls.Remove(btn);
+                window.tabButtons.Remove(btn);
+                for (int i=tabBtn; i < window.tabButtons.Count; i++) {
+                    var otherB = window.tabButtons[i];
+                    otherB.Location = new(otherB.Location.X - btn.Size.Width, otherB.Location.Y);
+                }
+                window.tabsEnd -= btn.Size.Width;
             }
             if(window.function.name.Equals(name)){
                 window.function = mainFunc;
@@ -128,13 +135,11 @@ public static class Tabs {
         }
         curWindow = actualWindow;
         curTextBrush = curWindow.txtBrush;
-        // curFunc.isPic = isPic;
         curFunc = func;
         curWindow.function = func;
         linesText = func.linesText;
         CursorPos.ChangeLine(func.curLine);
         CursorPos.ChangeCol(func.curCol);
-        // curFunc.isPic = func.isPic;
         skipDrawNewScreen = false;
         textBox.Focus();
         
@@ -147,7 +152,6 @@ public static class Tabs {
         if(curFunc.name.Equals(".console")){   return; }
 
         TextBox textBox = new(){
-            Multiline = true,
             Size = new(500, 40),
             Font = boldFont,
         };
@@ -183,6 +187,10 @@ public static class Tabs {
     public static void EnterNewTab(object sender, KeyEventArgs e) {
         if(e.KeyCode == Keys.Enter) {
             var name = ((TextBox)sender).Text;
+            if(name.StartsWith(".")){
+                ((TextBox)sender).Text = "";
+                return;
+            }
             var func = NewFunc(name);
             curWindow.function = func;
             DisposePrompt(ref newTabPrompt);
@@ -196,7 +204,6 @@ public static class Tabs {
         if(curFunc.name.StartsWith('.')){   return; }
         
         TextBox textBox = new(){
-            Multiline = true,
             Size = new(500, 40),
             Font = boldFont,
         };
@@ -244,6 +251,10 @@ public static class Tabs {
     public static void RenameTab(object sender, KeyEventArgs e){
         if(e.KeyCode == Keys.Enter) {
             var name = renamePrompt!.Value.tb.Text;
+            if(name.StartsWith(".")){
+                renamePrompt!.Value.tb.Text = "";
+                return;
+            }
             DisposePrompt(ref renamePrompt);
             nameToFunc.Remove(curFunc.name);
             nameToFunc[name] = curFunc;

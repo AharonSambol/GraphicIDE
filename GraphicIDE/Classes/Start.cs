@@ -9,28 +9,22 @@ using static GraphicIDE.Settings;
 namespace GraphicIDE;
 
 public static class Start{
-    public static Button AddRunBtn() {
-        int gap = 3;
-        Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, play3dImg/*just temp*/, streatch: false);
-        Bitmap b = new(btn.Size.Width, btn.Size.Height);
-        using(var g = Graphics.FromImage(b)) {
-            Bitmap scaled = new(play3dImg, btn.Size.Width - gap * 2, btn.Size.Height - gap * 2);
-            g.DrawImage(scaled, gap, gap);
-        }
-        btn.BackgroundImage = b;
+    public static Button RunBtn() {
+        Button btn = MakeButton(TAB_HEIGHT - 6, TAB_HEIGHT - 6, play3dImg, streatch: false);
         btn.Click += new EventHandler(PythonFuncs.ExecuteBtn!);
-        buttonsOnScreen.Add((btn, (size) => new(size.w - btn.Size.Width - 10, 0)));
+        buttonsOnScreen.Add((btn, (size) => new(3 + size.w - TAB_HEIGHT - 10, 3)));
         toolTip.SetToolTip(btn, "run");
         return btn;
     }
-    public static Button AddDebugBtn() {
-        Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, debugImg, streatch: true); 
-        btn.Click += new EventHandler(PythonFuncs.ExecuteBtn!);
+    public static Button SettingsBtn() {
+        Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, settingsImg, streatch: true);        
+        btn.Click += new EventHandler((_,_) => ToggleSettings());
+        nonStatic.Controls.Add(btn);
         buttonsOnScreen.Add((btn, (size) => new(size.w - 2 * (btn.Size.Width + 10), 0)));
-        toolTip.SetToolTip(btn, "debug");
+        toolTip.SetToolTip(btn, "settings");
         return btn;
     }
-    public static Button AddTabBtn() {
+    public static Button TabBtn() {
         Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, plusImg, streatch: true); 
         btn.Click += new EventHandler(AddTabEvent!);
         buttonsOnScreen.Add((btn, (size) => new(size.w - 3 * (btn.Size.Width + 10), 0)));
@@ -45,16 +39,33 @@ public static class Start{
         toolTip.SetToolTip(btn, "rename function");
         return btn;
     }
-    public static Button SettingsBtn() {
-        Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, settingsImg, streatch: true);        
-        btn.Click += new EventHandler((_,_) => ToggleSettings());
+    public static Button TrashBtn() {
+        Button btn = MakeButton(TAB_HEIGHT - 4, TAB_HEIGHT - 4, trashImg, streatch: true);        
+        btn.Click += new EventHandler((_,_) => DeleteFunc(curFunc.name));
         nonStatic.Controls.Add(btn);
-        buttonsOnScreen.Add((btn, (size) => new(size.w - 5 * (btn.Size.Width + 10), 0)));
-        toolTip.SetToolTip(btn, "settings");
+        buttonsOnScreen.Add((btn, (size) => new(2 + size.w - 5 * (TAB_HEIGHT + 10), 2)));
+        toolTip.SetToolTip(btn, "delete function");
+        return btn;
+    }
+    public static Button SaveBtn() {
+        Button btn = MakeButton(TAB_HEIGHT - 4, TAB_HEIGHT - 4, saveImg, streatch: true);        
+        btn.Click += new EventHandler((_,_) => Save(IsAltlPressed()));
+        nonStatic.Controls.Add(btn);
+        buttonsOnScreen.Add((btn, (size) => new(2 + size.w - 6 * (TAB_HEIGHT + 10), 2)));
+        toolTip.SetToolTip(btn, "save file");
+        return btn;
+    }
+    
+    public static Button OpenBtn() {
+        Button btn = MakeButton(TAB_HEIGHT, TAB_HEIGHT, openImg, streatch: true);        
+        btn.Click += new EventHandler((_,_) => Open());
+        nonStatic.Controls.Add(btn);
+        buttonsOnScreen.Add((btn, (size) => new(size.w - 7 * (TAB_HEIGHT + 10), 0)));
+        toolTip.SetToolTip(btn, "open file");
         return btn;
     }
     public static Button? unsavedButton;
-    public static Button AddUnsavedButton() {
+    public static Button UnsavedButton() {
         unsavedButton = MakeButton(TAB_HEIGHT/2, TAB_HEIGHT/2, dotImg, streatch: true);
         buttonsOnScreen.Add((unsavedButton, (size) => new(5, size.h - unsavedButton.Size.Height - 5)));
         toolTip.SetToolTip(unsavedButton, "unsaved");
