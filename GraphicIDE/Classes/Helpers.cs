@@ -34,6 +34,8 @@ public static class Helpers {
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`~!@#$%^&*()-_=+[]{};:'\"\\/?", 
             Form1.boldFont
         );
+        Form1.fromW = MeasureWidth("from ", Form1.boldFont);
+        Form1.colW = MeasureWidth(": ", Form1.boldFont);
         Form1.nonStatic.Invalidate();
     }
     public static float imgSize = 1;

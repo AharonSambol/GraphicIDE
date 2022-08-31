@@ -32,6 +32,7 @@ public static class AST {
                 ListExpression le => () => ListExpression(le),
                 AndExpression ae => () => AndExpression(ae),
                 OrExpression oe => () => OrExpression(oe),
+                FromImportStatement fis => () => FromImportStatement(fis),
                 ImportStatement is_ => () => ImportStatement(is_),
                 AugmentedAssignStatement aas => () => AugmentedAssignStatement(aas),
                 FunctionDefinition fd => () => MainModule(fd),
@@ -197,20 +198,92 @@ public static class AST {
         }
         return new(res, res.Height/2);
     }
-    private static BM_Middle ImportStatement(ImportStatement ast){
-        string name = ast.Names[0].Names[0];
-        int width = MeasureWidth(name, boldFont);
-        int gap = 6;
-        Bitmap truck = new(truckImg, txtHeight + gap * 2, txtHeight + gap * 2);
-        Bitmap res = new(gap * 2 + width + truck.Width, truck.Height + 8);
-        using(var g = Graphics.FromImage(res)){
-            g.FillRectangle(truckIBrush, 4, 6, res.Width - truck.Width - 6, res.Height - 4 - 8);
-            g.DrawRectangle(truckP, 2, 6, res.Width - truck.Width - 4, res.Height - 4 - 8);
-            g.DrawString(name, boldFont, blackBrush, gap, gap * 2);
-            g.DrawImage(truck, res.Width - truck.Width, gap);
+    // todo relative import (from .. import func)
+    private static BM_Middle FromImportStatement(FromImportStatement ast){
+        string fromName = string.Join('.', ast.Root.Names);
+        int fromNameW = MeasureWidth(fromName, boldFont);
+        int fromNameH = MeasureHeight(fromName, boldFont);
+        Bitmap import;
+        if(ast.AsNames is not null){
+            import = ImportStatement(null, ast.Names.ToArray(), ast.AsNames.ToArray()).Img;
+        } else {
+            import = new(MeasureWidth("EVERYTHING", boldFont), MeasureHeight("EVERYTHING", boldFont));
+            using(var g = Graphics.FromImage(import)){
+                g.DrawString("EVERYTHING", boldFont, keyOrangeB, 0, 0);
+            }
         }
-        return new(res, res.Height / 2);
+        Bitmap res = new(
+            import.Width + fromNameW + fromW + colW, 
+            Max(txtHeight, Max(import.Height, fromNameH))
+        );
+        using(var g = Graphics.FromImage(res)){
+            g.DrawImage(import, res.Width - import.Width, 0);
+            g.DrawString("from", boldFont, keyOrangeB, 0, res.Height / 2 - txtHeight / 2);
+            g.DrawString(fromName, boldFont, lblueBrush, fromW, res.Height / 2 - fromNameH / 2);
+            g.DrawString(":", boldFont, whiteBrush, fromW + fromNameW, res.Height / 2 - txtHeight / 2);
+        }
+        return new(res, res.Width/2);
+    }
+    private static BM_Middle ImportStatement(ImportStatement? ast, string[]? names=null, string?[]? asNames=null){
+        names ??= ast!.Names.Select((x) => string.Join('.', x.Names)).ToArray();
+        asNames ??= ast!.AsNames.ToArray();
+        int gap = 6;
+        var cars = new Bitmap[names.Length];
+        var (height, width) = (0, 0);
+        for (int i=0; i < cars.Length; i++) {
+            cars[i] = MakeCar(MakeName(names[i], asNames[i]));
+            height = Max(height, cars[i].Height);
+            width += cars[i].Width + gap;
+        }
 
+        
+        Bitmap truck = new(truckImg, height + 2 * gap, height + 2 * gap);
+        Bitmap bm = new(width + truck.Width, truck.Height);
+        using(var g = Graphics.FromImage(bm)){
+            g.DrawImage(truck, bm.Width-truck.Width, 0);
+            int end = 0;
+            foreach(var car in cars) {
+                g.DrawImage(car, end, gap);
+                end += car.Width;
+                g.DrawLine(truckP, end, bm.Height - 14, end + gap, bm.Height - 14);
+                end += gap;
+            }
+        }
+        return new(bm, bm.Height / 2);
+        Bitmap MakeName(string name, string? asName){
+            if(asName is null){
+                Bitmap res_ = new(MeasureWidth(name, boldFont), MeasureHeight(name, boldFont));
+                using(var g = Graphics.FromImage(res_)){
+                    g.DrawString(name, boldFont, blackBrush, 0, 0);
+                }
+                return res_;
+            }
+            int nameW = MeasureWidth(name, boldFont);
+            int asW = MeasureWidth(" as ", boldFont);
+            int asNameW = MeasureWidth(asName, boldFont);
+            int nameH = MeasureHeight(name, boldFont);
+            int asH = MeasureHeight(" as ", boldFont);
+            int asNameH = MeasureHeight(asName, boldFont);
+            Bitmap res = new(nameW + asW + asNameW, Max(nameH, Max(asH, asNameH)));
+            using(var g = Graphics.FromImage(res)){
+                g.DrawString(name, boldFont, blackBrush, 0, res.Height/2 - nameH/2);
+                g.DrawString(" as", boldFont, keyOrangeB, nameW, res.Height/2 - asH/2);
+                g.DrawString(asName, boldFont, blackBrush, nameW + asW, res.Height/2 - asNameH/2);
+            }
+            return res;
+        }
+        Bitmap MakeCar(Bitmap name){
+            var (w, h) = (name.Width, name.Height);
+            int outGap = (int)(truckP.Width/2);
+            int inGap = 4;
+            Bitmap res = new(w + outGap * 2 + inGap * 2, h + outGap * 2 + inGap * 2);
+            using(var g = Graphics.FromImage(res)){
+                g.FillRectangle(truckIBrush, outGap, outGap, res.Width - outGap * 2, res.Height - outGap * 2);
+                g.DrawRectangle(truckP, outGap, outGap, res.Width - outGap * 2, res.Height - outGap * 2);
+                g.DrawImage(name, outGap + inGap, outGap + inGap);
+            }
+            return res;
+        }
     }
     private static BM_Middle AndExpression(AndExpression ast){
         var l = MakeImg(ast.Left);
@@ -540,7 +613,6 @@ public static class AST {
         }
         return new(res, res.Height / 2);
     }
-    
     private static BM_Middle MaxMin(CallExpression ast, Bitmap img) {        
         var inside = NonTupleTuple(new(ast.Args.Select((x) => MakeImg(x.Expression)))).Img;
         int gap = 2;

@@ -79,7 +79,7 @@ public partial class Form1: Form {
     public static readonly StringFormat stringFormat = new();
     public static Font boldFont = null!;
     public const int WM_KEYDOWN = 0x100;
-    public static int indentW, qWidth, qHeight, upSideDownW, txtHeight;
+    public static int indentW, qWidth, qHeight, upSideDownW, txtHeight, fromW, colW;
     public static int screenWidth = 0, screenHeight = 0, prevHeight, prevWidth;
     public static List<Window> windows = new();
     public static HashSet<Menu> visibleMenues = new();
