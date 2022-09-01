@@ -9,9 +9,10 @@ else:
     while sum(a) < 10:
         a += [1]
 for x in a:
-    print(x)
+    print(x if x > 0 else "negative")
     if x > y:
         break
+
 
 
 

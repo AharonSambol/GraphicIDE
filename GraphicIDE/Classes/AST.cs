@@ -21,7 +21,8 @@ public static class AST {
                 ParenthesisExpression pe => () => ParenthesisExpression(pe),
                 ConstantExpression ce => () => Literal(ce),
                 TupleExpression te => () => TupleExpression(te),
-                NameExpression ne => () => MakeTxtBM(ne.Name.ToString(), brush: lblueBrush),
+                NameExpression ne => () => MakeTxtBM(ne.Name, brush: lblueBrush),
+                Parameter p => () => MakeTxtBM(p.Name, brush: lblueBrush),
                 AssignmentStatement as_ => () => AssignmentStatement(as_),
                 CallExpression ce => () => FunctionCall(ce),
                 BinaryExpression be => () => BinaryExpression(be),
@@ -47,11 +48,32 @@ public static class AST {
                 SliceExpression se => () => SliceExpression(se),
                 BreakStatement _ => () => BreakStatement(),
                 ContinueStatement _ => () => ContinueStatement(),
+                LambdaExpression le => () => LambdaExpression(le),
                 _ => () => throw new Exception(),
             }))();
-        } catch(Exception) { 
-            throw new Exception();
+        } catch (Exception){
+            throw;
         }
+    }
+    private static BM_Middle LambdaExpression(LambdaExpression ast) {
+        int gap = 6;
+        var body = MainModule(ast.Function, end_: 0).Img;
+        var param = NonTupleTuple(new(ast.Function.Parameters.Select((x) => MakeImg(x)))).Img;
+        Bitmap arrow = new(arrowImg, txtHeight, arrowImg.Width / (arrowImg.Width / txtHeight));
+        Bitmap res = new(
+            body.Width + param.Width + arrow.Width + gap * 4,
+            Max(body.Height, Max(param.Height, arrow.Height)) + gap * 2
+        );
+        using(var g = Graphics.FromImage(res)){
+            g.DrawImage(param, gap, res.Height/2-param.Height/2);
+            g.DrawRectangle(whiteP, gap/2, gap/2, param.Width + gap, res.Height - gap);
+            int end = param.Width + 2 * gap;
+            g.DrawImage(arrow, end, res.Height/2-arrow.Height/2);
+            end += arrow.Width;
+            g.DrawImage(body, end + gap, res.Height/2-body.Height/2);
+            g.DrawRectangle(whiteP, end + gap/2, gap/2, body.Width + gap, res.Height-gap);
+        }
+        return new(res, res.Height/2);
     }
     private static BM_Middle BreakStatement() => BreakContinue("break");
     private static BM_Middle ContinueStatement() => BreakContinue("continue");
@@ -903,14 +925,18 @@ public static class AST {
         }
         return new(res, res.Height / 2);
     }
-    private static BM_Middle MainModule(ScopeStatement ast) {
+    private static BM_Middle MainModule(ScopeStatement ast, int? end_=null) {
         LinkedList<Bitmap> resses = new();
         var (height, width) = (0, 0);
         IList<Statement> statements;
         if(ast is PythonAst pa){
             statements = ((SuiteStatement)pa.Body).Statements;
         } else if(ast is FunctionDefinition fd) {
-            statements = ((SuiteStatement)fd.Body).Statements;
+            if(fd.Body is SuiteStatement ss){
+                statements = ss.Statements;
+            } else {
+                statements = new Statement[]{ fd.Body };
+            }
         } else {
             throw new Exception();
         }
@@ -973,7 +999,7 @@ public static class AST {
             height += resses.Last!.Value.Size.Height;
             width = Max(width, resses.Last!.Value.Size.Width);
         }
-        var end = 20;
+        int end = end_ ?? 20;
         var res = new Bitmap(width, height + end);
         using(var g = Graphics.FromImage(res)) {
             foreach(var item in resses) {

@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Net;
-
+using System.Collections;
 
 using static GraphicIDE.BrushesAndPens;
 using static GraphicIDE.MyMath;
@@ -36,9 +36,8 @@ using static GraphicIDE.Settings;
 // todo have file system on right so dont need to have all tabs open
 // todo syntax highlighting
 // todo add / move / resize windows
-// todo select and comment
 // ! keyword args
-// ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else, annotations
+// ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else, annotations, decorators
 // ? classes(+attributes)
 // ? dict + generator(+comprehension)
 // ? try except raise

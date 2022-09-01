@@ -24,6 +24,7 @@ public static class MyImages {
         play3dImg = new(Resources.play1),
         divmodImg = new(Resources.divmod),
         filterImg = new(Resources.filter),
+        arrowImg = new(Resources.whiteArrow),
         floatImg = new(Resources.float12),
         rulerImg = new(Resources.ruler),
         roundImg = new(Resources.round),
