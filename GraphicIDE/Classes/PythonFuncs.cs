@@ -56,8 +56,11 @@ public static class PythonFuncs{
     public static async void Execute() {
         Settings.Save(false);
         if(Settings.savePath is null){  return; }
-        // Todo show running
-        
+
+        // ? to show that it's running
+        console.function.displayImage = new(1, 1);
+        nonStatic.Refresh();
+
         Func<((string txt, ConsoleTxtType typ)[], string, string)> func = () => {
             ProcessStartInfo psi = new ProcessStartInfo("cmd", $"/c python { Settings.savePath }") { 
                 UseShellExecute = false,
@@ -97,8 +100,7 @@ public static class PythonFuncs{
         consoleTxt = t.Result.txt;
         errLink = t.Result.link;
         RefreshTimeBtn();
-        ShowConsole();
-        // todo show finished running        
+        ShowConsole(); 
     }
     public static string GetPythonStr(){
         StringBuilder theScript = new(), main = new();

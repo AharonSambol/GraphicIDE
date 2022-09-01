@@ -79,5 +79,10 @@ public static class BrushesAndPens{
         intFuncP        = new(Color.FromArgb(255, 154, 232, 213), 2),
         strFuncP        = new(Color.FromArgb(255, 130, 185, 131), 2),
         boolFuncP       = new(Color.FromArgb(255, 189, 015, 000), 2),
-        shortIfElseRP   = new(shortIfElseR, 4);
+        shortIfElseRP   = new(shortIfElseR, 4),
+        loopColorB = new(Color.FromArgb(255, 132, 211, 230), 6),
+        loopColorG = new(Color.FromArgb(255, 132, 230, 161), 6),
+        loopColorY = new(Color.FromArgb(255, 230, 227, 132), 6),
+        loopColorP = new(Color.FromArgb(255, 227, 132, 230), 6);
+    public static (int pos, Pen[] pens) loopColors = (0, new[]{loopColorB, loopColorG, loopColorP, loopColorY});
 }

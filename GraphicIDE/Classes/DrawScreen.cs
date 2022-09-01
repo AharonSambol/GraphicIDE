@@ -18,6 +18,7 @@ public static class DrawScreen{
             curFunc.isPic = false;
         } else {
             try {
+                loopColors.pos = 0;
                 var bm_ = MakeImg(PythonFuncs.ToAST());
                 
                 if(bm_ is BM_Middle bm) {

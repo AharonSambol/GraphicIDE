@@ -15,29 +15,33 @@ using static GraphicIDE.KeyInput;
 using static GraphicIDE.History;
 using static GraphicIDE.Settings;
 
+
 // todo git
 // todo add cheat sheat
 // todo group words in ctrl z
+// todo auto save
 // todo add in settings to change `history amount` (for ctrl+Z)
 // todo cache some of the textline images
 // todo only draw visable lines
-// todo add little icon to list/set.. comprehension to signal which type it is
 // todo capslock shortcuts
-// todo scroll horizontal
+// todo add little icon to list/set.. comprehension to signal which type it is
 // todo comments w drawing
-// todo have file system on right so dont need to have all tabs open
-// todo drag selection
+// todo scroll horizontal
 // todo when renaming func rename all calls too
-// todo syntax highlighting
-// todo function args
 // todo rename word
-// ! keyword args
+// todo stop execution
+// todo drag selection
+// todo comments
+// ---------------------------------------------------------------------------
+// todo have file system on right so dont need to have all tabs open
+// todo syntax highlighting
 // todo add / move / resize windows
+// todo select and comment
+// ! keyword args
 // ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else, annotations
-// ? dict + generator(+comprehension)
 // ? classes(+attributes)
+// ? dict + generator(+comprehension)
 // ? try except raise
-// ? break, continue
 // ? lambda 
 #region built in funcs
 // aiter() anext() breakpoint() bytearray() bytes() callable() classmethod() compile() dir() frozenset() memoryview() property() repr() staticmethod() super() vars()
@@ -235,6 +239,7 @@ public partial class Form1: Form {
                 Keys.Oemplus => () => ChangeFontSize(1),
                 Keys.OemMinus => () => ChangeFontSize(-1),
                 Keys.Space => () => PythonFuncs.Execute(),
+                Keys.OemQuestion => () => Comment(),
                 _ => () => refresh = false
             }))();
             if(refresh){

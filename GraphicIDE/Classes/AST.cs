@@ -45,11 +45,27 @@ public static class AST {
                 MemberExpression me => () => MemberExpression(me),
                 IndexExpression ie => () => IndexExpression(ie),
                 SliceExpression se => () => SliceExpression(se),
+                BreakStatement _ => () => BreakStatement(),
+                ContinueStatement _ => () => ContinueStatement(),
                 _ => () => throw new Exception(),
             }))();
         } catch(Exception) { 
             throw new Exception();
         }
+    }
+    private static BM_Middle BreakStatement() => BreakContinue("break");
+    private static BM_Middle ContinueStatement() => BreakContinue("continue");
+
+    private static BM_Middle BreakContinue(string word){
+        int w = MeasureWidth(word, boldFont);
+        int h = MeasureHeight(word, boldFont);
+        int gap = 10;
+        Bitmap res = new(w + gap, h);
+        using (var g = Graphics.FromImage(res)){
+            g.DrawLine(loopColors.pens[loopColors.pos], gap / 2, 0, gap / 2, res.Height);
+            g.DrawString(word, boldFont, keyOrangeB, gap, 0);
+        }
+        return new(res, res.Height / 2);
     }
 
     private static BM_Middle SliceExpression(SliceExpression ast){
@@ -484,12 +500,16 @@ public static class AST {
         return condition;
     }
     private static BM_Middle ForStatement(ForStatement ast){
+        loopColors.pos = (loopColors.pos + 1) % loopColors.pens.Length;
         Bitmap body = MakeImg(ast.Body).Img;
         Bitmap condition = ForTopPart(ast.Left, ast.List);
-        return WhileAndFor(condition, body, forBlueP, forArrowUpImg, forArrowDownImg);
+        var res = WhileAndFor(condition, body, forBlueP, forArrowUpImg, forArrowDownImg);
+        loopColors.pos = (loopColors.pos == 0) ? loopColors.pens.Length - 1 : loopColors.pos - 1;
+        return res;
         // todo else
     }
     private static BM_Middle WhileStatement(WhileStatement ast){
+        loopColors.pos = (loopColors.pos + 1) % loopColors.pens.Length;
         Bitmap condition = MakeImg(ast.Test).Img;
         int whileW = MeasureWidth("while ", boldFont);
         Bitmap withWhile = new(
@@ -501,10 +521,12 @@ public static class AST {
             g.DrawImage(condition, whileW, withWhile.Height/2-condition.Height/2);
         }
         Bitmap body = MakeImg(ast.Body).Img;
-        return WhileAndFor(withWhile, body, whileOrangeP, whileArrowUpImg, whileArrowDownImg);
+        var res = WhileAndFor(withWhile, body, whileOrangeP, whileArrowUpImg, whileArrowDownImg);
+        loopColors.pos = (loopColors.pos == 0) ? loopColors.pens.Length - 1 : loopColors.pos - 1;
+        return res;
     }
     private static BM_Middle WhileAndFor(Bitmap condition, Bitmap body, Pen pen, Bitmap arUp, Bitmap arDown){
-        int indent = 8, gap = 8;
+        int indent = 8, gap = 8, marker = 10;
         Bitmap border = new(
             Max(condition.Width + 8, body.Width + indent),
             condition.Height + 8
@@ -517,14 +539,16 @@ public static class AST {
         Bitmap arrowUp = new(arUp, txtHeight * 2, body.Height + condition.Height);
         Bitmap arrowDown = new(arDown, txtHeight * 2, body.Height + condition.Height);
         Bitmap res = new(
-            width: Max(condition.Width, body.Width + indent) + arrowDown.Width + arrowUp.Width,
+            width: Max(condition.Width + marker, body.Width + indent) + arrowDown.Width + arrowUp.Width,
             height: condition.Height + body.Height + gap * 2 + 6
         );
         using (var g = Graphics.FromImage(res)) {
             g.DrawImage(arrowDown, 0, gap);
             g.DrawImage(arrowUp, res.Width - arrowUp.Width, gap);
 
-            g.DrawImage(condition, arrowDown.Width, gap);
+            g.DrawLine(loopColors.pens[loopColors.pos], arrowDown.Width + marker/2, gap, arrowDown.Width + marker/2, gap+condition.Height);
+            
+            g.DrawImage(condition, arrowDown.Width + marker, gap);
             g.DrawImage(body, indent + arrowDown.Width, condition.Height + gap);
 
             g.DrawLine(pen, arrowDown.Width, res.Height - 4, res.Width - arrowUp.Width, res.Height - 4);

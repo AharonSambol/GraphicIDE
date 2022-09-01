@@ -10,6 +10,8 @@ else:
         a += [1]
 for x in a:
     print(x)
+    if x > y:
+        break
 
 
 
@@ -26,4 +28,7 @@ s = str(x)
 b = bool(x)
 l = list(x)
 t = tuple(x)
+
+
+
 

@@ -23,7 +23,6 @@ public static class KeyInput {
         }
         bool isAltl = IsAltlPressed();
         bool isCtrl = IsCtrlPressed();
-        // todo bool isCaps = isCapsPressed();
         var refresh = true;
         ((Action)(lastPressed switch {
             Keys.CapsLock => () => refresh = false, // todo display that caps is pressed \ not pressed
@@ -38,11 +37,6 @@ public static class KeyInput {
             Keys.Tab => () => Tab(),
             _ => () => {lastCol = null; refresh = false;}
         }))();
-
-        // if(isCaps){
-        //     textBox.Text = "()";
-        //     MessageBox.Show("!");
-        // }
         
         if(refresh){
             DrawTextScreen();
@@ -269,24 +263,26 @@ public static class KeyInput {
     };
     public static void CharKey(string change) {
         if(change == null) { throw new Exception("input is null?"); }
-        if(selectedLine is (int,int) sl && opposites.TryGetValue(change, out var opposite)){
-            var (first, last) = IsBefore(CursorPos.ToTuple(), sl)
-                ? (CursorPos.ToTuple(), sl)
-                : (sl, CursorPos.ToTuple());
-            AddString(opposite, last);
-            AddString(change, first);
-            if(CursorPos.line <= sl.line){
-                CursorPos.ChangeCol(CursorPos.col + 1);
+        if(selectedLine is (int,int) sl){
+            if(opposites.TryGetValue(change, out var opposite)){
+                var (first, last) = IsBefore(CursorPos.ToTuple(), sl)
+                    ? (CursorPos.ToTuple(), sl)
+                    : (sl, CursorPos.ToTuple());
+                AddString(opposite, last);
+                AddString(change, first);
+                if(CursorPos.line <= sl.line){
+                    CursorPos.ChangeCol(CursorPos.col + 1);
+                }
+                if(CursorPos.line >= sl.line){
+                    selectedLine = (sl.line, sl.col + 1);
+                }
+                return;
+            } else {
+                DeleteSelection();
+                selectedLine = null;
             }
-            if(CursorPos.line >= sl.line){
-                selectedLine = (sl.line, sl.col + 1);
-            }
-            return;
         }
-        if(selectedLine is not null) {
-            DeleteSelection();
-            selectedLine = null;
-        }
+        
         CursorPos.ChangeBoth(AddString(change, (CursorPos.line, CursorPos.col)));
     }
     public static void EnterKey(bool isCtrl=false) {
@@ -477,6 +473,52 @@ public static class KeyInput {
         if(!txt.Equals("")) {
             Clipboard.SetText(txt);
         }
+    }
+    public static void Comment(){
+        if(selectedLine is null){   return; }
+        var sl = selectedLine.Value;
+        var (last, first) = MaxMin(CursorPos.line, sl.line);
+        bool comment = false;
+        for (int i=first; i <= last; i++) {
+            if(!linesText[i].TrimStart().StartsWith("#")){
+                comment = true;
+                break;
+            }
+        }
+        var prevCursor = CursorPos.ToTuple();
+        var prevSelectedLine = selectedLine;
+        List<Change> changes = new();
+        for (int i=first; i <= last; i++) {
+            var trimmed = linesText[i].TrimStart();
+            int indent = linesText[i].Length - trimmed.Length;
+            changes.Add(new(ChangeType.change, i, linesText[i], prevCursor, prevSelectedLine));
+            if(comment){
+                if(i == CursorPos.line){
+                    if(CursorPos.col >= indent) {
+                        CursorPos.ChangeCol(CursorPos.col + 2);
+                    }
+                } if(i == sl.line){
+                    if(sl.col >= indent) {
+                        selectedLine = (sl.line, sl.col + 2);
+                    }
+                }
+                linesText[i] = $"{ new string(' ', indent) }# { trimmed }";
+            } else {
+                bool two = trimmed.StartsWith("# ");
+                if(i == CursorPos.line){
+                    if(CursorPos.col >= indent) {
+                        CursorPos.ChangeCol(CursorPos.col - (two && CursorPos.col > indent ? 2 : 1));
+                    }
+                } if(i == sl.line){
+                    if(sl.col >= indent) {
+                        selectedLine = (sl.line, sl.col - (two && sl.col > indent ? 2 : 1));
+                    }
+                }
+                var removed = two ? trimmed.AsSpan(2) : trimmed.AsSpan(1);
+                linesText[i] = $"{ new string(' ', indent) }{ removed }";
+            }
+        }
+        History.AddChange(changes);
     }
     #endregion
     
