@@ -49,6 +49,8 @@ public static class AST {
                 BreakStatement _ => () => BreakStatement(),
                 ContinueStatement _ => () => ContinueStatement(),
                 LambdaExpression le => () => LambdaExpression(le),
+                DictionaryExpression de => () => DictExpression(de),
+                SetExpression se => () => SetExpression(se),
                 _ => () => throw new Exception(),
             }))();
         } catch (Exception){
@@ -429,48 +431,6 @@ public static class AST {
             g.DrawLine(yellowP, bm.Width - 2, bm.Height - 2, 2, bm.Height - 2);
         }
         return new(bm, bm.Height / 2);
-    }
-    private static BM_Middle? emptyListScaled = null;
-    private static BM_Middle ListExpression(ListExpression ast){
-        if(ast.Items.Count == 0) {
-            if(emptyListScaled is BM_Middle bm && bm.Img.Height == txtHeight + 15) {
-                return bm;
-            }
-            Bitmap emptyList = new(emptyListImg, emptyListImg.Width / (emptyListImg.Height / (txtHeight + 15)), txtHeight + 15);
-            Bitmap padded = new(emptyList.Width + 5, emptyList.Height);
-            using(var pg = Graphics.FromImage(padded)) {
-                pg.DrawImage(emptyList, 5, 0);
-            }
-            emptyListScaled = new(padded, padded.Height / 2);
-            return (BM_Middle)emptyListScaled;
-        }
-        int lineLen = 5;
-        int gap = 5;
-        LinkedList<BM_Middle> elements = new();
-        var (width, height) = (lineLen + gap, 0);
-        foreach(var item in ast.Items) {
-            var img = MakeImg(item);
-            var middle = img.Middle;
-            elements.AddLast(img);
-            width += lineLen + img.Img.Width + 2 * gap;
-            height = Max(height, img.Img.Height);
-        }
-        Bitmap res = new(width, height + (lineLen + gap) * 2);
-        using(var g = Graphics.FromImage(res)) {
-            var end = 2;
-            foreach(var (img, _) in elements) {
-                end += gap;
-                g.DrawLine(redListP, end, 5, end, res.Height - 5);
-                end += lineLen;
-                g.DrawImage(img, end + (int)redListP.Width/2, res.Height / 2 - img.Height / 2);
-                end += img.Width + gap;
-            }
-            end += gap;
-            g.DrawLine(redListP, end, 5, end, res.Height - 5);
-            g.DrawLine(redListP, 5, 5, res.Width, 5);
-            g.DrawLine(redListP, 5, res.Height - 5, res.Width, res.Height - 5);
-        }
-        return new(res, res.Height / 2);
     }
     private static BM_Middle? passPic = null;
     private static BM_Middle EmptyStatement(){
@@ -1103,75 +1063,171 @@ public static class AST {
         }
         return new(res, res.Height / 2);
     }
-    private static BM_Middle? emptyTupleScaled = null;
-    private static BM_Middle TupleExpression(TupleExpression ast) {
+    
+    private static BM_Middle DictExpression(DictionaryExpression ast) {
         if(ast.Items.Count == 0){
-            if(emptyTupleScaled is BM_Middle bm && bm.Img.Height == txtHeight + 15) {
-                return bm;
-            }
-            Bitmap emptyTuple = new(emptyTupleImg, emptyTupleImg.Width / (emptyTupleImg.Height / (txtHeight + 15)), txtHeight + 15);
-            Bitmap padded = new(emptyTuple.Width + 5, emptyTuple.Height);
-            using(var pg = Graphics.FromImage(padded)) {
-                pg.DrawImage(emptyTuple, 5, 0);
-            }
-            emptyTupleScaled = new(padded, padded.Height / 2);
-            return (BM_Middle)emptyTupleScaled;
+            return MakeEmpty(ref emptyDictScaled, emptyDictImg); // TODO
         }
+        Sequence(ast, yellowP, out int curveWidth, out Bitmap res);
+        using(var g = Graphics.FromImage(res)) {
+            // ? drawing the curves
+            g.SmoothingMode = SmoothingMode.HighQuality;
+            var (startX, startY) = (curveWidth, 4);
+            var (endX, endY) = (curveWidth, res.Height-5);
+            var middle = startY + (endY - startY) / 2;
+            Point p1 = new(startX, startY);
+            Point p2 = new(startX - curveWidth, startY + curveWidth);
+            Point p3 = new(endX + curveWidth, middle + 1 - curveWidth);
+            Point p4 = new(endX - curveWidth/2, middle + 1);
+            g.DrawBezier(yellowP, p1, p2, p3, p4);
+            p1 = new(startX - curveWidth/2, middle - 1);
+            p2 = new(startX + curveWidth, middle - 1 + curveWidth);
+            p3 = new(endX - curveWidth, endY - curveWidth);
+            p4 = new(endX, endY);
+            g.DrawBezier(yellowP, p1, p2, p3, p4);
+            
+            startX = res.Width - curveWidth;
+            endX = res.Width - curveWidth;
+            p1 = new(startX, startY);
+            p2 = new(startX + curveWidth, startY + curveWidth);
+            p3 = new(endX - curveWidth, middle + 1 - curveWidth);
+            p4 = new(endX + curveWidth/2, middle + 1);
+            g.DrawBezier(yellowP, p1, p2, p3, p4);
+            p1 = new(startX + curveWidth/2, middle - 1);
+            p2 = new(startX - curveWidth, middle - 1 + curveWidth);
+            p3 = new(endX + curveWidth, endY - curveWidth);
+            p4 = new(endX, endY);
+            g.DrawBezier(yellowP, p1, p2, p3, p4);
+        }
+        return new(res, res.Height / 2);
+    }
+    private static BM_Middle SetExpression(SetExpression ast) {
+        Sequence(ast, orangeP, out var curveWidth, out var res);
+        using(var g = Graphics.FromImage(res)) {
+            // ? drawing the curves
+            g.SmoothingMode = SmoothingMode.HighQuality;
+            var (startX, startY) = (curveWidth, 4);
+            var (endX, endY) = (curveWidth, res.Height-5);
+            var middle = startY + (endY - startY) / 2;
+            Point p1 = new(startX, startY);
+            Point p2 = new(startX - curveWidth, startY + curveWidth);
+            Point p3 = new(endX + curveWidth, middle + 1 - curveWidth);
+            Point p4 = new(endX - curveWidth/2, middle + 1);
+            g.DrawBezier(orangeP, p1, p2, p3, p4);
+            p1 = new(startX - curveWidth/2, middle - 1);
+            p2 = new(startX + curveWidth, middle - 1 + curveWidth);
+            p3 = new(endX - curveWidth, endY - curveWidth);
+            p4 = new(endX, endY);
+            g.DrawBezier(orangeP, p1, p2, p3, p4);
+            
+            startX = res.Width - curveWidth;
+            endX = res.Width - curveWidth;
+            p1 = new(startX, startY);
+            p2 = new(startX + curveWidth, startY + curveWidth);
+            p3 = new(endX - curveWidth, middle + 1 - curveWidth);
+            p4 = new(endX + curveWidth/2, middle + 1);
+            g.DrawBezier(orangeP, p1, p2, p3, p4);
+            p1 = new(startX + curveWidth/2, middle - 1);
+            p2 = new(startX - curveWidth, middle - 1 + curveWidth);
+            p3 = new(endX + curveWidth, endY - curveWidth);
+            p4 = new(endX, endY);
+            g.DrawBezier(orangeP, p1, p2, p3, p4);
+        }
+        return new(res, res.Height / 2);
+    }
+    private static BM_Middle TupleExpression(TupleExpression ast) {
+        if (ast.Items.Count == 0) {
+            return MakeEmpty(ref emptyTupleScaled, emptyTupleImg);
+        }
+        Sequence(ast, lblueP, out var curveWidth, out var res);
+        using (var g = Graphics.FromImage(res)) {
+            // ? drawing the curves
+            g.SmoothingMode = SmoothingMode.HighQuality;
+            var (startX, startY) = (curveWidth, 4);
+            var (endX, endY) = (curveWidth, res.Height - 5);
+            Point p1 = new(startX, startY);
+            Point p2 = new(startX - curveWidth, startY + curveWidth);
+            Point p3 = new(endX - curveWidth, endY - curveWidth);
+            Point p4 = new(endX, endY);
+            g.DrawBezier(lblueP, p1, p2, p3, p4);
+
+            startX = res.Width - curveWidth;
+            endX = res.Width - curveWidth;
+
+            p1 = new(startX, startY);
+            p2 = new(startX + curveWidth, startY + curveWidth);
+            p3 = new(endX + curveWidth, endY - curveWidth);
+            p4 = new(endX, endY);
+            g.DrawBezier(lblueP, p1, p2, p3, p4);
+
+            g.SmoothingMode = SmoothingMode.Default;
+            int size = Math.Clamp((int)(curveWidth * 1.5f), txtHeight, txtHeight * 2);
+            Bitmap padlock = new(lockImg, size, size);
+            g.DrawImage(padlock, 0, res.Height - padlock.Height);
+        }
+        return new(res, res.Height / 2);
+    }
+    private static BM_Middle ListExpression(ListExpression ast){
+        if(ast.Items.Count == 0) {
+            return MakeEmpty(ref emptyListScaled, emptyListImg);
+        }
+        Sequence(ast, redListP, out var curveWidth, out var res, noCurve: true);
+        using(var g = Graphics.FromImage(res)) {
+            g.DrawLine(redListP, curveWidth, 3, curveWidth, res.Height-2);
+            g.DrawLine(redListP, res.Width-curveWidth, 3, res.Width-curveWidth, res.Height-2);
+        }
+        return new(res, res.Height / 2);
+    }
+    private static BM_Middle? emptyListScaled, emptyTupleScaled, emptyDictScaled;
+    private static BM_Middle MakeEmpty(ref BM_Middle? scaled, Bitmap notScaled) {
+        if (scaled is BM_Middle bm && bm.Img.Height == txtHeight + 15) {
+            return bm;
+        }
+        Bitmap newSize = new(notScaled, notScaled.Width / (notScaled.Height / (txtHeight + 15)), txtHeight + 15);
+        Bitmap padded = new(newSize.Width + 5, newSize.Height);
+        using (var pg = Graphics.FromImage(padded)) {
+            pg.DrawImage(newSize, 5, 0);
+        }
+        scaled = new(padded, padded.Height / 2);
+        return (BM_Middle)scaled;
+    }
+    private static void Sequence(Expression ast, Pen pen, out int curveWidth, out Bitmap res, bool noCurve=false) {
         int gap = 5;
         int lineLen = 5;
         LinkedList<BM_Middle> resses = new();
         var (width, height) = (lineLen + gap, 0);
-        foreach(var statement in ast.Items) {
+        var items = ast switch{
+            SequenceExpression se => se.Items,
+            SetExpression se => se.Items,
+            DictionaryExpression de => de.Items.Cast<Expression>(),
+            _ => throw new(),
+        };
+        foreach (var statement in items) {
             BM_Middle img = MakeImg(statement);
             resses.AddLast(img);
             width += lineLen + img.Img.Width + 2 * gap;
             height = Max(height, img.Img.Height);
         }
         int resH = height + (lineLen + gap) * 2;
-        int curveWidth = (resH)/4;
-        Bitmap res = new(width + curveWidth * 2, resH);
-        int pW = (int)lblueP.Width/2;
-        using(var g = Graphics.FromImage(res)) {
+        curveWidth = noCurve ? 5 : (resH) / 4;
+        res = new(width + curveWidth * 2, resH);
+        int pW = (int)pen.Width / 2;
+        using (var g = Graphics.FromImage(res)) {
             var end = curveWidth;
-            foreach(var (img, _) in resses) {
+            foreach (var (img, _) in resses) {
                 end += gap;
-                if(!img.Equals(resses.First!.Value.Img)){
-                    g.DrawLine(lblueP, end + pW, 5, end + pW, res.Height - 5);
+                if (!img.Equals(resses.First!.Value.Img)) {
+                    g.DrawLine(pen, end + pW, 5, end + pW, res.Height - 5);
                 }
                 end += lineLen + gap;
                 g.DrawImage(img, end, res.Height / 2 - img.Height / 2);
                 end += img.Width;
             }
-            g.DrawLine(lblueP,  curveWidth, 5, res.Width - curveWidth + pW, 5);
-            g.DrawLine(lblueP, curveWidth, res.Height - 5, res.Width - curveWidth + pW, res.Height - 5);
-            
-            // ? drawing the curves
-            g.SmoothingMode = SmoothingMode.HighQuality;
-            var (startX, startY) = (curveWidth, 5);
-            var (endX, endY) = (curveWidth, res.Height-5);
-            Point p1 = new(startX, startY);
-            Point p2 = new(startX - curveWidth, startY + curveWidth);
-            Point p3 = new(endX - curveWidth, endY - curveWidth);
-            Point p4 = new(endX, endY);
-            g.DrawBezier(lblueP, p1, p2, p3, p4);
-            
-            (startX, startY) = (res.Width - curveWidth, 5);
-            (endX, endY) = (res.Width - curveWidth, res.Height-5);
-            
-            p1 = new(startX, startY);
-            p2 = new(startX + curveWidth, startY + curveWidth);
-            p3 = new(endX + curveWidth, endY - curveWidth);
-            p4 = new(endX, endY);
-            g.DrawBezier(lblueP, p1, p2, p3, p4);
-            
-            g.SmoothingMode = SmoothingMode.Default;
-            int size = Math.Clamp((int)(curveWidth*1.5f), txtHeight, txtHeight*2);
-            Bitmap padlock = new(lockImg, size, size);
-            g.DrawImage(padlock, 0, res.Height-padlock.Height);
+            g.DrawLine(pen, curveWidth, 5, res.Width - curveWidth + pW, 5);
+            g.DrawLine(pen, curveWidth, res.Height - 5, res.Width - curveWidth + pW, res.Height - 5);
         }
-        return new(res, res.Height / 2);
     }
-    
+
     //todo cleanup
     private static BM_Middle AssignmentStatement(AssignmentStatement ast) {
         LinkedList<Bitmap> assignmentNames = new();
@@ -1203,7 +1259,7 @@ public static class AST {
         Bitmap res = new(width, height);
 
         using(var g = Graphics.FromImage(res)){
-            var end = (height - h1) / 2  - lineWidth;
+            var end = (height - lineWidth) / 2 - h1 / 2;
             foreach(var item in assignmentNames) {
                 g.DrawImage(
                     item,
@@ -1220,15 +1276,16 @@ public static class AST {
                 y: (height - h2) / 2 - lineWidth,
                 valueName.Width, valueName.Height
             );
-
+            Pen pen = new(Color.WhiteSmoke, lineWidth);
+            int pW = (int)(pen.Width/2);
             g.DrawRectangle(
-                new(Color.WhiteSmoke, lineWidth), 0, 0,
+                pen, pW, pW,
                 width: w1 + gap * 2 + lineWidth * 2,
                 height: height - lineWidth * 2
             );
             g.DrawRectangle(
-                new(Color.WhiteSmoke, lineWidth), 0, 0,
-                width: w1 + w2 + gap * 4 + lineWidth * 3,
+                pen, pW, pW,
+                width: width - pW * 2,
                 height: height - lineWidth * 2
             );
         }
@@ -1251,11 +1308,12 @@ public static class AST {
         Bitmap res = new(width, height);
 
         using(var g = Graphics.FromImage(res)){
+            Pen pen = new(Color.WhiteSmoke, lineWidth);
             g.DrawRectangle(
-                new Pen(Color.WhiteSmoke, lineWidth), 
+                pen, 
                 lineWidth/2, lineWidth/2,
                 width: w1 + gap * 2 + lineWidth + opWidth/2,
-                height: height - lineWidth
+                height: height - lineWidth * 2
             );
 
             int opX = w1 + gap * 2 + lineWidth;
@@ -1264,22 +1322,22 @@ public static class AST {
             g.DrawString(op, boldFont, mathPurpleB, opX, opY);
 
             g.DrawRectangle(
-                new Pen(Color.WhiteSmoke, lineWidth), 
+                pen, 
                 lineWidth/2, lineWidth/2,
                 width: res.Width - lineWidth,
-                height: res.Height - lineWidth
+                height: res.Height - lineWidth * 2
             );
             g.DrawImage(
                 leftImg,
                 lineWidth + gap,
-                res.Height / 2 - leftImg.Height / 2,
+                (res.Height - lineWidth) / 2 - leftImg.Height / 2,
                 leftImg.Width, leftImg.Height
             );
 
             g.DrawImage(
                 image: valueName,
                 x: w1 + lineWidth + gap * 3 + opWidth,
-                y: lineWidth + gap,
+                y: lineWidth/2 + gap,
                 width: valueName.Width, height: valueName.Height
             );
 

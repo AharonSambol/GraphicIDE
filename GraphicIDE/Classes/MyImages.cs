@@ -8,6 +8,7 @@ public static class MyImages {
         whileArrowUpImg = new(Resources.whileArrowUp),
         forArrowDownImg = new(Resources.forArrowDown),
         forArrowUpImg = new(Resources.forArrowUp),
+        emptyDictImg = new(Resources.emptyDict),
         emptyListImg = new(Resources.emptyList),
         emptyTupleImg = new(Resources.emptyTuple),
         lightmodeImg = new(Resources.brightnessBarSymbol),

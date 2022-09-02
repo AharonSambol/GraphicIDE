@@ -58,6 +58,7 @@ public static class BrushesAndPens{
         orangeDashed    = new(orangeOpaqe, 5)   { DashPattern = dashes },
         whiteP          = new(Color.Gray, 4),
         yellowP         = new(Color.Wheat, 5),
+        orangeP         = new(Color.FromArgb(255, 233, 166, 109), 5),
         sumP            = new(sumColor, 2),
         lenP            = new(lenColor, 2),
         hashP           = new(hashColor, 2),
