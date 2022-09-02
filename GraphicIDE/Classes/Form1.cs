@@ -36,12 +36,10 @@ using static GraphicIDE.Settings;
 // todo have file system on right so dont need to have all tabs open
 // todo syntax highlighting
 // todo add / move / resize windows
-// ! keyword args
 // ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else, annotations, decorators
 // ? classes(+attributes)
 // ? dict + generator(+comprehension)
 // ? try except raise
-// ? lambda 
 #region built in funcs
 // aiter() anext() breakpoint() bytearray() bytes() callable() classmethod() compile() dir() frozenset() memoryview() property() repr() staticmethod() super() vars()
 // dict() set()

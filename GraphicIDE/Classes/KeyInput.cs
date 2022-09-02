@@ -130,6 +130,8 @@ public static class KeyInput {
                 return;
             }
             selectedLine = null;
+        } else if (selectedLine is null){
+            selectedLine = (CursorPos.line, CursorPos.col);
         }
         if(isCtrlKeyPressed) {
             GoInDirCtrl(GetNextL, isAltlKeyPressed);
@@ -159,6 +161,8 @@ public static class KeyInput {
                 return;
             }
             selectedLine = null;
+        } else if (selectedLine is null){
+            selectedLine = (CursorPos.line, CursorPos.col);
         }
         if(isCtrlKeyPressed) {
             GoInDirCtrl(GetNextR, isAltlKeyPressed);
@@ -198,7 +202,7 @@ public static class KeyInput {
                 CursorPos.ChangeLine(selectedLine.Value.line);
             }
             selectedLine = null;
-        }
+        } 
         if(CursorPos.line == linesText.Count - 1) {
             CursorPos.ChangeCol(linesText[^1].Length - 1);
         } else {
@@ -241,6 +245,9 @@ public static class KeyInput {
     }
     public static void HomeKey(bool isShift, bool isCtrlKeyPressed) {
         if(!isShift) { selectedLine = null; }
+        else if (selectedLine is null){
+            selectedLine = (CursorPos.line, CursorPos.col);
+        }
         if(isCtrlKeyPressed) {
             CursorPos.ChangeLine(0);
             CursorPos.ChangeCol(-1);
@@ -255,6 +262,9 @@ public static class KeyInput {
     }
     public static void EndKey(bool isShift, bool isCtrlKeyPressed) {
         if(!isShift) { selectedLine = null; }
+        else if (selectedLine is null){
+            selectedLine = (CursorPos.line, CursorPos.col);
+        }
         if(isCtrlKeyPressed) { CursorPos.ChangeLine(linesText.Count - 1); }
         CursorPos.ChangeCol(linesText[CursorPos.line].Length - 1);
     }

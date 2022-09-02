@@ -682,11 +682,11 @@ public static class AST {
                 "pow" => Pow(ast),
                 "abs" => Abs(ast),
                 "hash" => Func(FirstToImg(ast), hashtagImg, hashP),
-                "sum" => Func(FirstToImg(ast), sumImg, sumP),    // todo start
+                "sum" => Func(FirstToImgWithOptionalKWArg(ast), sumImg, sumP),    // todo start
                 "len" => Func(FirstToImg(ast), rulerImg, lenP),
                 "filter" => Func(argsToTuple(ast), filterImg, sumP),
                 "divmod" => Func(argsToTuple(ast), divmodImg, divmodP),
-                "round" => Func(FirstToImg(ast), roundImg, divmodP),    // todo digits (precision)
+                "round" => Func(FirstToImgWithOptionalKWArg(ast), roundImg, divmodP),    // todo digits (precision)
                 "int" => Func(FirstToImg(ast), intImg, intFuncP),
                 "str" => Func(FirstToImg(ast), strImg, strFuncP),
                 "bool" => Func(FirstToImg(ast), boolImg, boolFuncP),
@@ -699,6 +699,26 @@ public static class AST {
             };
         } catch (Exception) {   return DefaultFuncCall(ast); }
     }
+    private static Bitmap FirstToImgWithOptionalKWArg(CallExpression ast){
+        var first = FirstToImg(ast);
+        if(ast.Args.Count < 2){     return first; }
+        var kwarg = ast.Args[1];
+        var val = MakeImg(kwarg.Expression).Img;
+        var name = kwarg.Name is null ? "": $"{kwarg.Name}=";
+        int nameW = MeasureWidth(name, boldFont);
+        int commaW = MeasureWidth(",", boldFont);
+        Bitmap res = new(
+            first.Width + commaW + val.Width + nameW, 
+            Max(first.Height, Max(val.Height, txtHeight))
+        );
+        using(var g = Graphics.FromImage(res)){
+            g.DrawImage(first, 0, res.Height/2-first.Height/2);
+            g.DrawString(",", boldFont, textBrush, first.Width, res.Height/2-txtHeight/2);
+            g.DrawString(name, boldFont, truckIBrush, first.Width + commaW, res.Height/2-txtHeight/2);
+            g.DrawImage(val, first.Width + commaW + nameW, res.Height/2-val.Height/2);
+        }
+        return res;
+    }
 
     private static BM_Middle DefaultFuncCall(CallExpression ast) {
         Bitmap argsBm;
@@ -706,6 +726,16 @@ public static class AST {
             LinkedList<BM_Middle> args = new();
             foreach (var item in ast.Args) {
                 var bm = MakeImg(item.Expression);
+                if(item.Name is not null){
+                    var name = $"{item.Name}=";
+                    int nameW = MeasureWidth(name, boldFont);
+                    Bitmap newBm = new(bm.Img.Width + nameW, Max(bm.Img.Height, txtHeight));
+                    using(var g = Graphics.FromImage(newBm)){
+                        g.DrawString(name, boldFont, truckIBrush, 0, newBm.Height/2-txtHeight/2);
+                        g.DrawImage(bm.Img, nameW, newBm.Height/2-bm.Img.Height/2);
+                    }
+                    bm = new(newBm, newBm.Height/2);
+                }
                 args.AddLast(bm);
             }
             argsBm = NonTupleTuple(args).Img;
