@@ -49,6 +49,7 @@ public static class BrushesAndPens{
         greenBrush          = new(Color.FromArgb(255, 110, 255, 130)),
         selectBrush         = new(Color.FromArgb(100, 000, 100, 255)),
         stringBrush         = new(Color.FromArgb(255, 255, 204, 116)),
+        predictionBrush     = new(Color.FromArgb(100, 160, 160, 160)),
         parenthesiesBrush   = new(Color.FromArgb(255, 076, 175, 104));
     public static SolidBrush curTextBrush = textBrush;
     public static readonly Pen

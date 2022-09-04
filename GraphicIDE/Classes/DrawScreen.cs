@@ -4,6 +4,7 @@ using static GraphicIDE.Helpers;
 using static GraphicIDE.Form1;
 using static GraphicIDE.AST;
 using static GraphicIDE.Tabs;
+using static GraphicIDE.Prediction;
 
 namespace GraphicIDE;
 
@@ -150,6 +151,15 @@ public static class DrawScreen{
                 (int)(screenHeight / 2 - p.bm.Height + p.tb.Height / 2 + 20)
             );
         }
+        // ? prediction display
+        if(predictionMenu is (Bitmap, string[]) pm){
+            e.Graphics.DrawImage(
+                pm.bm,
+                curWindow.pos.x + WINDOW_LEFT_GAP + MeasureWidth(linesText[CursorPos.line][..(CursorPos.col+1)], boldFont),
+                curWindow.pos.y + TAB_HEIGHT + txtHeight * CursorPos.line
+            );
+        }
+
         // ? right click menu
         foreach(var menu in visibleMenues) {
             e.Graphics.FillRectangle(menu.bgColor, menu.bgPos);

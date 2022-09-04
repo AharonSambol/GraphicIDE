@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 using System.Text;
 
 using static GraphicIDE.Form1;
@@ -6,6 +8,7 @@ using static GraphicIDE.Tabs;
 using static GraphicIDE.DrawScreen;
 using static GraphicIDE.Helpers;
 using static GraphicIDE.Console;
+using static GraphicIDE.Prediction;
 
 namespace GraphicIDE;
 
@@ -25,7 +28,9 @@ public static class KeyInput {
         bool isCtrl = IsCtrlPressed();
         var refresh = true;
         ((Action)(lastPressed switch {
-            Keys.CapsLock => () => refresh = false, // todo display that caps is pressed \ not pressed
+            Keys.CapsLock => () => {
+                refresh = false;
+            }, // todo display that caps is pressed \ not pressed
             Keys.Insert => () => DrawPicScreen(),
             Keys.End => () => EndKey(isShift, isCtrl),
             Keys.Home => () => HomeKey(isShift, isCtrl),
@@ -33,9 +38,12 @@ public static class KeyInput {
             Keys.Down => () => DownKey(isShift, isAltl),
             Keys.Right => () => RightKey(isShift, isAltl, isCtrl),
             Keys.Left => () => LeftKey(isShift, isAltl, isCtrl),
-            Keys.F1 => () => OpenErrLink(null, new()),
+            Keys.F1 => () => {
+                refresh = false;
+                OpenErrLink(null, new());
+            },
             Keys.Tab => () => Tab(),
-            _ => () => {lastCol = null; refresh = false;}
+            _ => () => { lastCol = null; refresh = false;}
         }))();
         
         if(refresh){
@@ -43,6 +51,8 @@ public static class KeyInput {
             nonStatic.Invalidate();
         }
     }
+
+
     public static void TextBox_TextChanged(object? sender, EventArgs e) {
         if(iChanged) {
             iChanged = false;
@@ -76,6 +86,13 @@ public static class KeyInput {
         nonStatic.Invalidate();
     }
     public static void Tab(){
+        if(predictionMenu is (Bitmap, string[]) pm){
+            AddString(
+                pm.predictions[0].EndsWith('(') ? pm.predictions[0] : $"{ pm.predictions[0] } ", 
+                CursorPos.ToTuple(), true
+            );
+            return;
+        }
         List<Change> changes = new();
         var prevSelectedLine = selectedLine;
         var prevCusor = CursorPos.ToTuple();
@@ -180,6 +197,16 @@ public static class KeyInput {
         lastCol = null;
     }
     public static void DownKey(bool isShift, bool isAltlKeyPressed) {
+        if(predictionMenu is (Bitmap, string[]) pm){
+            var first = pm.predictions[0];
+            for (int i=1; i < pm.predictions.Length; i++) {
+                pm.predictions[i-1] = pm.predictions[i];
+            }
+            pm.predictions[^1] = first;
+            RedrawPredictionMenu();
+            return;
+        }
+
         if(isAltlKeyPressed) {
             if(selectedLine is (int, int) sl) {
                 var (maxLine, minLine) = MaxMin(sl.line, CursorPos.line);
@@ -207,10 +234,20 @@ public static class KeyInput {
             CursorPos.ChangeCol(linesText[^1].Length - 1);
         } else {
             CursorPos.ChangeLine(CursorPos.line+1);
-            GetClosestForCaret();
+            GetClosestForCursor();
         }
     }
     public static void UpKey(bool isShift, bool isAltlKeyPressed) {
+        if(predictionMenu is (Bitmap, string[]) pm){
+            var last = pm.predictions[^1];
+            for (int i=pm.predictions.Length-2; i >= 0; i--) {
+                pm.predictions[i+1] = pm.predictions[i];
+            }
+            pm.predictions[0] = last;
+            RedrawPredictionMenu();
+            return;
+        }
+
         if(isAltlKeyPressed) {
             if(selectedLine is (int, int) sl) {
                 var (maxLine, minLine) = MaxMin(sl.line, CursorPos.line);
@@ -240,7 +277,7 @@ public static class KeyInput {
             CursorPos.ChangeCol(-1);
         } else {
             CursorPos.ChangeLine(CursorPos.line-1);
-            GetClosestForCaret();
+            GetClosestForCursor();
         }
     }
     public static void HomeKey(bool isShift, bool isCtrlKeyPressed) {
@@ -278,8 +315,8 @@ public static class KeyInput {
                 var (first, last) = IsBefore(CursorPos.ToTuple(), sl)
                     ? (CursorPos.ToTuple(), sl)
                     : (sl, CursorPos.ToTuple());
-                AddString(opposite, last);
-                AddString(change, first);
+                AddString(opposite, last, false);
+                AddString(change, first, false);
                 if(CursorPos.line <= sl.line){
                     CursorPos.ChangeCol(CursorPos.col + 1);
                 }
@@ -293,7 +330,7 @@ public static class KeyInput {
             }
         }
         
-        CursorPos.ChangeBoth(AddString(change, (CursorPos.line, CursorPos.col)));
+        AddString(change, (CursorPos.line, CursorPos.col), true);
     }
     public static void EnterKey(bool isCtrl=false) {
         if(isCtrl) {
@@ -305,21 +342,23 @@ public static class KeyInput {
         }
         string curLine = linesText[CursorPos.line];
         int indentC = (curLine.Length - curLine.TrimStart().Length) / 4;
-        if(CursorPos.col > -1 && curLine[CursorPos.col] == ':'){
+        if(CursorPos.col > -1 && curLine[..CursorPos.col].TrimEnd().EndsWith(':')){
             indentC++;
         }
         string indent = new(' ', 4 * indentC);
         if(CursorPos.col == curLine.Length - 1) {
-            History.AddChange(new Change(ChangeType.add, CursorPos.line + 1, "", CursorPos.ToTuple(), selectedLine));
+            var historyChange = new Change(ChangeType.add, CursorPos.line + 1, "", CursorPos.ToTuple(), selectedLine);
             linesText.Insert(CursorPos.line + 1, indent);
+            History.AddChange(historyChange);
         } else {
             List<Change> changes = new();
             changes.Add(new(ChangeType.add, CursorPos.line + 1, "", CursorPos.ToTuple(), selectedLine));
             changes.Add(new(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine));
-            History.AddChange(changes);
 
             linesText.Insert(CursorPos.line + 1, indent + curLine[(CursorPos.col + 1)..]);
             linesText[CursorPos.line] = linesText[CursorPos.line][..(CursorPos.col + 1)];
+            
+            History.AddChange(changes);
         }
         if(!isCtrl) {
             CursorPos.ChangeLine(CursorPos.line+1);
@@ -345,15 +384,17 @@ public static class KeyInput {
                 changes.Add(new(ChangeType.del, CursorPos.line + 1, "", CursorPos.ToTuple(), selectedLine));
                 changes.Add(new(ChangeType.change, CursorPos.line + 1, linesText[CursorPos.line+1], CursorPos.ToTuple(), selectedLine));
                 changes.Add(new(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine));
-                History.AddChange(changes);
 
                 var text = linesText[CursorPos.line+1];
                 linesText.RemoveAt(CursorPos.line + 1);
                 linesText[CursorPos.line] += text;
+                
+                History.AddChange(changes);
             }
         } else {
-            History.AddChange(new Change(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine));
+            var historyChange = new Change(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine);
             linesText[CursorPos.line] = string.Concat(thisline.AsSpan(0, CursorPos.col + 1), thisline.AsSpan(CursorPos.col + 2));
+            History.AddChange(historyChange);
         }
     }
     public static void BackSpaceKey(bool isAlt=false, bool isCtrl=false) {
@@ -371,10 +412,11 @@ public static class KeyInput {
         var thisline = linesText[CursorPos.line];
         if(thisline.Length == 0) {
             if(CursorPos.line != 0) {
-                History.AddChange(new Change(ChangeType.del, CursorPos.line, "", CursorPos.ToTuple(), selectedLine));
+                var historyChange = new Change(ChangeType.del, CursorPos.line, "", CursorPos.ToTuple(), selectedLine);
                 linesText.RemoveAt(CursorPos.line);
                 CursorPos.ChangeLine(CursorPos.line-1);
                 CursorPos.ChangeCol(linesText[CursorPos.line].Length - 1);
+                History.AddChange(historyChange);
             }
         } else if(CursorPos.col == -1) {
             if(CursorPos.line != 0) {
@@ -382,16 +424,17 @@ public static class KeyInput {
                 changes.Add(new(ChangeType.del, CursorPos.line, "", CursorPos.ToTuple(), selectedLine));
                 changes.Add(new(ChangeType.change, CursorPos.line-1, linesText[CursorPos.line-1], CursorPos.ToTuple(), selectedLine));
                 changes.Add(new(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine));
-                History.AddChange(changes);
 
                 var text = linesText[CursorPos.line];
                 linesText.RemoveAt(CursorPos.line);
                 CursorPos.ChangeLine(CursorPos.line-1);
                 CursorPos.ChangeCol(linesText[CursorPos.line].Length - 1);
                 linesText[CursorPos.line] += text;
+                
+                History.AddChange(changes);
             }
         } else {
-            History.AddChange(new Change(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine));
+            var historyChange = new Change(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine);
             var before = thisline.AsSpan(0, CursorPos.col+1);
             int spaces = before.Length - before.TrimEnd().Length;
             bool isTab = spaces > 0 && spaces % 4 == 0;
@@ -409,6 +452,7 @@ public static class KeyInput {
                 );
                 CursorPos.ChangeCol(CursorPos.col - 1);
             }
+            History.AddChange(historyChange);
         }
     }
     
@@ -432,7 +476,7 @@ public static class KeyInput {
     public static void Duplicate(bool isAltlKeyPressed) {
         if(selectedLine is null) {
             var txt = "\r\n" + linesText[CursorPos.line];
-            AddString(txt, (CursorPos.line, linesText[CursorPos.line].Length - 1));
+            AddString(txt, (CursorPos.line, linesText[CursorPos.line].Length - 1), false);
         } else {
             var caretPos = (CursorPos.line, CursorPos.col);
             if(selectedLine.Value.line > CursorPos.line ||
@@ -441,7 +485,7 @@ public static class KeyInput {
                 caretPos = selectedLine.Value;
             }
             var txt = GetSelectedLines();
-            CursorPos.ChangeBoth(AddString($"\r\n{ txt }", caretPos));
+            AddString($"\r\n{ txt }", caretPos, true);
         }
     }
     public static void Cut(bool isAltlKeyPressed) {
@@ -449,7 +493,7 @@ public static class KeyInput {
         if(selectedLine is null) {
             txt = linesText[CursorPos.line].Trim();
             linesText.RemoveAt(CursorPos.line);
-            GetClosestForCaret();
+            GetClosestForCursor();
         } else {
             var select = selectedLine;
             txt = GetSelectedText();
@@ -475,7 +519,7 @@ public static class KeyInput {
                 txt = String.Join($"\r\n{ tabs }", txt.Split("\n"));
             }
         }
-        CursorPos.ChangeBoth(AddString(txt, (CursorPos.line, CursorPos.col)));
+        AddString(txt, (CursorPos.line, CursorPos.col), true);
     }
     public static void Copy(bool isAltlKeyPressed) {
         string txt;
@@ -537,7 +581,7 @@ public static class KeyInput {
         var selectedLine_ = ((int line, int col))selectedLine!;
         selectedLine = null;
         if(CursorPos.line == selectedLine_.line) {
-            History.AddChange(new Change(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine));
+            var historyChange = new Change(ChangeType.change, CursorPos.line, linesText[CursorPos.line], CursorPos.ToTuple(), selectedLine);
 
             (int bigger, int smaller) = MaxMin(CursorPos.col, selectedLine_.col);
                 
@@ -546,6 +590,8 @@ public static class KeyInput {
                 linesText[CursorPos.line].AsSpan(bigger + 1)
             );
             CursorPos.ChangeCol(smaller);
+            
+            History.AddChange(historyChange);
         } else {
             ((int line, int col) smaller, (int line, int col) bigger) 
                 = CursorPos.line > selectedLine_.line 
@@ -561,11 +607,11 @@ public static class KeyInput {
                 changes.AddFirst(new Change(ChangeType.del, smaller.line + 1, "", CursorPos.ToTuple(), selectedLine));
                 linesText.RemoveAt(smaller.line + 1);
             }
-            History.AddChange(changes.ToList());
             CursorPos.ChangeBoth(smaller);
+            History.AddChange(changes.ToList());
         }
     }
-    public static void GetClosestForCaret() {
+    public static void GetClosestForCursor() {
         if(lastCol is not null) {
             CursorPos.ChangeCol(Min((int)lastCol, linesText[CursorPos.line].Length - 1));
         } else {
@@ -609,8 +655,8 @@ public static class KeyInput {
         res.Append(linesText[bigger]);
         return res.ToString();
     }
-    public static (int, int) AddString(string change, (int line, int col) pos) {
-        if(change.Equals("")){return pos;}
+    public static void AddString(string change, (int line, int col) pos, bool updateCursor) {
+        if(change.Equals("")){  return; }
         bool containsRN = change.Contains("\r\n");
         bool containsN = change.Contains("\n");
         if(containsRN || containsN) {
@@ -635,16 +681,22 @@ public static class KeyInput {
                 pos.line++;
             }
             pos.col = newCol;
+            if(updateCursor){
+                CursorPos.ChangeBoth(pos);
+            }
             History.AddChange(changes.ToList());
         } else {
-            History.AddChange(new Change(ChangeType.change, pos.line, linesText[pos.line], CursorPos.ToTuple(), selectedLine));
-
+            Change historyChange = new(ChangeType.change, pos.line, linesText[pos.line], CursorPos.ToTuple(), selectedLine);
             var line = linesText[pos.line];
             var start = pos.col == -1 ? "" : line.AsSpan(0, pos.col+1);
             linesText[pos.line] = $"{start}{change}{line.AsSpan(pos.col + 1)}";
             pos.col += change.Length;
+            if(updateCursor){
+                CursorPos.ChangeBoth(pos);
+            }
+            History.AddChange(historyChange);
         }
-        return (pos.line, pos.col);
+        
     }
     
 }

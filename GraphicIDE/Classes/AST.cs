@@ -51,11 +51,18 @@ public static class AST {
                 LambdaExpression le => () => LambdaExpression(le),
                 DictionaryExpression de => () => DictExpression(de),
                 SetExpression se => () => SetExpression(se),
+                TryStatement ts => () => TryStatement(ts),
                 _ => () => throw new Exception(),
             }))();
         } catch (Exception){
-            throw;
+            throw; // ? just for debugging
         }
+    }
+    private static BM_Middle TryStatement(TryStatement ast) {
+        // .Body
+        // .Else
+        // .Finally
+        throw new();
     }
     private static BM_Middle LambdaExpression(LambdaExpression ast) {
         int gap = 6;
@@ -79,7 +86,6 @@ public static class AST {
     }
     private static BM_Middle BreakStatement() => BreakContinue("break");
     private static BM_Middle ContinueStatement() => BreakContinue("continue");
-
     private static BM_Middle BreakContinue(string word){
         int w = MeasureWidth(word, boldFont);
         int h = MeasureHeight(word, boldFont);

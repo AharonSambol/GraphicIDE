@@ -14,6 +14,7 @@ using static GraphicIDE.Console;
 using static GraphicIDE.KeyInput;
 using static GraphicIDE.History;
 using static GraphicIDE.Settings;
+using static GraphicIDE.Prediction;
 
 
 // todo git
@@ -25,20 +26,21 @@ using static GraphicIDE.Settings;
 // todo only draw visable lines
 // todo capslock shortcuts
 // todo add little icon to list/set.. comprehension to signal which type it is
-// todo comments w drawing
 // todo scroll horizontal
 // todo when renaming func rename all calls too
 // todo rename word
 // todo stop execution
 // todo drag selection
+// todo comments w drawing
 // todo comments
+// ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else, annotations, decorators, generator(+comprehension)
 // ---------------------------------------------------------------------------
 // todo have file system on right so dont need to have all tabs open
 // todo syntax highlighting
+// todo predictions
 // todo add / move / resize windows
-// ? del, global, *, assert, yield\yeild from, with, formatStr, finally, for-else, annotations, decorators
+// todo rename cursor => caret
 // ? classes(+attributes)
-// ? dict + generator(+comprehension)
 // ? try except raise
 #region built in funcs
 // aiter() anext() breakpoint() bytearray() bytes() callable() classmethod() compile() dir() frozenset() memoryview() property() repr() staticmethod() super() vars()
@@ -104,6 +106,8 @@ public partial class Form1: Form {
         this.BackColor = Color.Black;
         this.DoubleBuffered = true;
         screenPos = GetScreenPos();
+
+        Prediction.Start();
 
         textBox.AcceptsReturn = true;
         textBox.AcceptsTab = true;
@@ -290,12 +294,10 @@ public partial class Form1: Form {
         Button bg = MakeButton(40, 40, new(1, 1), streatch: false);
         bg.FlatAppearance.MouseOverBackColor = Color.Transparent;
         bg.MouseDown += new MouseEventHandler((object? _, MouseEventArgs e) => {
+            DisposeMenu(ref rightClickMenu);
             if(e.Button == MouseButtons.Right){
-                DisposeMenu(ref rightClickMenu);
                 RightClick();
-            } else {
-                DisposeMenu(ref rightClickMenu);
-            }
+            } 
         });
 
         Button copy = MakeButton(size, size, copyImg, streatch: false);
@@ -617,14 +619,17 @@ static class CursorPos {
     public static void ChangeLine(int i){
         CursorPos.line = i;
         RealignWondow();
+        predictionMenu = null;
     }
     public static void ChangeCol(int i){
         CursorPos.col = i;
         RealignWondow();
+        predictionMenu = null;
     }
     public static void ChangeBoth((int line, int col) val){
         (CursorPos.line, CursorPos.col) = val;
         RealignWondow();
+        predictionMenu = null;
     }
     public static (int line, int col) ToTuple(){
         return (CursorPos.line, CursorPos.col);

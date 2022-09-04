@@ -4,6 +4,7 @@ using static GraphicIDE.Start;
 namespace GraphicIDE;
 
 public static class History {
+    // todo each list should only have one cursorPos, selectedLine
     private const int historyAmount = 100;
     private static Stack<Change> 
         history = new(historyAmount),
@@ -71,12 +72,9 @@ public static class History {
         history.Push(val);
         future.Empty();
         unsavedButton!.Show();
+        Prediction.Predict();
     }
-    public static void AddChange(Change val){
-        history.Push(new(){ val });
-        future.Empty();
-        unsavedButton!.Show();
-    }
+    public static void AddChange(Change val) => AddChange(new List<Change>(){ val });
 }
 public record struct Change(
     ChangeType typ, int line, string change, 
