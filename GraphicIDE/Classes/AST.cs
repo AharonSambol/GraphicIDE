@@ -1,12 +1,4 @@
-using IronPython.Compiler.Ast;
 using System.Drawing.Drawing2D;
-using System.Text;
-
-using static GraphicIDE.Form1;
-using static GraphicIDE.BrushesAndPens;
-using static GraphicIDE.Helpers;
-using static GraphicIDE.MyImages;
-using static GraphicIDE.MyMath;
 
 namespace GraphicIDE;
 
@@ -634,8 +626,8 @@ public static class AST {
         }
         return new(argsBm, argsBm.Height/2);
     }
-    private static Func<CallExpression, Bitmap> FirstToImg = (ast) => MakeImg(ast.Args[0].Expression).Img;
-    private static Func<CallExpression, Bitmap> argsToTuple = (ast) => NonTupleTuple(new(ast.Args.Select((x) => MakeImg(x.Expression)))).Img;
+    private static readonly Func<CallExpression, Bitmap> FirstToImg = (ast) => MakeImg(ast.Args[0].Expression).Img;
+    private static readonly Func<CallExpression, Bitmap> argsToTuple = (ast) => NonTupleTuple(new(ast.Args.Select((x) => MakeImg(x.Expression)))).Img;
     private static BM_Middle FunctionCall(CallExpression ast){   
         string? name = null;
         if (ast.Target is NameExpression tar1) { name = tar1.Name; }

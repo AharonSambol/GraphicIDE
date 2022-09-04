@@ -1,11 +1,3 @@
-using static GraphicIDE.Form1;
-using static GraphicIDE.BrushesAndPens;
-using static GraphicIDE.MyImages;
-using static GraphicIDE.Helpers;
-using static GraphicIDE.Tabs;
-using static GraphicIDE.Console;
-using static GraphicIDE.Settings;
-
 namespace GraphicIDE;
 
 public static class Start{

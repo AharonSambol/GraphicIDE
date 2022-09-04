@@ -1,5 +1,3 @@
-using GraphicIDE.Properties;
-
 namespace GraphicIDE;
 
 public static class MyImages {

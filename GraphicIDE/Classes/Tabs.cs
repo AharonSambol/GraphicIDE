@@ -1,13 +1,3 @@
-using System.Text.RegularExpressions;
-using static GraphicIDE.Form1;
-using static GraphicIDE.BrushesAndPens;
-using static GraphicIDE.Helpers;
-using static GraphicIDE.MyMath;
-using static GraphicIDE.DrawScreen;
-using static GraphicIDE.Start;
-using static GraphicIDE.MyImages;
-using static GraphicIDE.KeyInput;
-
 namespace GraphicIDE;
 
 public static class Tabs {

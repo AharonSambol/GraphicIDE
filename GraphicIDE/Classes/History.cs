@@ -1,6 +1,3 @@
-using static GraphicIDE.Form1;
-using static GraphicIDE.Start;
-
 namespace GraphicIDE;
 
 public static class History {

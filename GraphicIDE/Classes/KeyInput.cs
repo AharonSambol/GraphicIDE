@@ -1,15 +1,3 @@
-using System.Runtime.InteropServices;
-
-using System.Text;
-
-using static GraphicIDE.Form1;
-using static GraphicIDE.MyMath;
-using static GraphicIDE.Tabs;
-using static GraphicIDE.DrawScreen;
-using static GraphicIDE.Helpers;
-using static GraphicIDE.Console;
-using static GraphicIDE.Prediction;
-
 namespace GraphicIDE;
 
 public static class KeyInput {
@@ -28,9 +16,6 @@ public static class KeyInput {
         bool isCtrl = IsCtrlPressed();
         var refresh = true;
         ((Action)(lastPressed switch {
-            Keys.CapsLock => () => {
-                refresh = false;
-            }, // todo display that caps is pressed \ not pressed
             Keys.Insert => () => DrawPicScreen(),
             Keys.End => () => EndKey(isShift, isCtrl),
             Keys.Home => () => HomeKey(isShift, isCtrl),
@@ -38,11 +23,11 @@ public static class KeyInput {
             Keys.Down => () => DownKey(isShift, isAltl),
             Keys.Right => () => RightKey(isShift, isAltl, isCtrl),
             Keys.Left => () => LeftKey(isShift, isAltl, isCtrl),
+            Keys.Tab => () => Tab(),
             Keys.F1 => () => {
                 refresh = false;
                 OpenErrLink(null, new());
             },
-            Keys.Tab => () => Tab(),
             _ => () => { lastCol = null; refresh = false;}
         }))();
         
@@ -51,8 +36,6 @@ public static class KeyInput {
             nonStatic.Invalidate();
         }
     }
-
-
     public static void TextBox_TextChanged(object? sender, EventArgs e) {
         if(iChanged) {
             iChanged = false;
@@ -85,6 +68,7 @@ public static class KeyInput {
         DrawTextScreen();
         nonStatic.Invalidate();
     }
+
     public static void Tab(){
         if(predictionMenu is (Bitmap, string[]) pm){
             AddString(
@@ -305,7 +289,7 @@ public static class KeyInput {
         if(isCtrlKeyPressed) { CursorPos.ChangeLine(linesText.Count - 1); }
         CursorPos.ChangeCol(linesText[CursorPos.line].Length - 1);
     }
-    private static Dictionary<string, string> opposites = new(){
+    private static readonly Dictionary<string, string> opposites = new(){
         {"\"", "\""}, {"'", "'"}, {"(", ")"}, {"[", "]"}, {"{", "}"},
     };
     public static void CharKey(string change) {
@@ -342,7 +326,7 @@ public static class KeyInput {
         }
         string curLine = linesText[CursorPos.line];
         int indentC = (curLine.Length - curLine.TrimStart().Length) / 4;
-        if(CursorPos.col > -1 && curLine[..CursorPos.col].TrimEnd().EndsWith(':')){
+        if(CursorPos.col > -1 && curLine[..(CursorPos.col+1)].TrimEnd().EndsWith(':')){
             indentC++;
         }
         string indent = new(' ', 4 * indentC);
@@ -698,5 +682,4 @@ public static class KeyInput {
         }
         
     }
-    
 }

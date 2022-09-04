@@ -1,13 +1,3 @@
-using System.Text;
-
-using static GraphicIDE.Form1;
-using static GraphicIDE.BrushesAndPens;
-using static GraphicIDE.MyImages;
-using static GraphicIDE.Start;
-using static GraphicIDE.Tabs;
-using static GraphicIDE.PythonFuncs;
-using static GraphicIDE.DrawScreen;
-
 namespace GraphicIDE;
 
 public static class Settings {
@@ -103,7 +93,7 @@ public static class Settings {
                             var newFunc = NewFunc(lines[0].Trim().TrimEnd(':'));
                             for (int i=1; i < lines.Length; i++) {
                                 if(!lines[i].StartsWith("\t") && !lines[i].StartsWith("    ")){
-                                    newFunc.linesText = lines[1..i].Select((x)=>x.Substring(1).Replace("\t", "    ")).ToList();
+                                    newFunc.linesText = lines[1..i].Select((x)=>x.Replace("\t", "    ").Substring(4)).ToList();
                                     var main = nameToFunc[".Main"];
                                     main.linesText = lines[i..].Select((x)=>x.Replace("\t", "    ")).ToList();
                                     (main.curLine, main.curCol) = (0, -1);
@@ -113,7 +103,7 @@ public static class Settings {
                             ChangeTab(curWindow.tabButtons[^1], curWindow);
                         } else {
                             var newFunc = NewFunc(lines[0].Trim().TrimEnd(':'));
-                            newFunc.linesText = lines[1..].Select((x)=>x.Substring(1).Replace("\t", "    ")).ToList();
+                            newFunc.linesText = lines[1..].Select((x)=>x.Replace("\t", "    ").Substring(4)).ToList();
                         }
                     }
                 } catch (Exception){}

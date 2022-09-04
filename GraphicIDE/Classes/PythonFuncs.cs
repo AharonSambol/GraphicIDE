@@ -1,22 +1,9 @@
-using System.Net;
-using System.Text;
-using System.Diagnostics;
-
 using IronPython;
 using IronPython.Hosting;
-using IronPython.Compiler;
-using IronPython.Compiler.Ast;
-
 using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Hosting.Providers;
-using Microsoft.CSharp.RuntimeBinder;
-
-using static GraphicIDE.BrushesAndPens;
-using static GraphicIDE.Form1;
-using static GraphicIDE.Tabs;
-using static GraphicIDE.Console;
 
 namespace GraphicIDE;
 

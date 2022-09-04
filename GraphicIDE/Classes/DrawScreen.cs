@@ -1,11 +1,3 @@
-using static GraphicIDE.BrushesAndPens;
-using static GraphicIDE.MyMath;
-using static GraphicIDE.Helpers;
-using static GraphicIDE.Form1;
-using static GraphicIDE.AST;
-using static GraphicIDE.Tabs;
-using static GraphicIDE.Prediction;
-
 namespace GraphicIDE;
 
 public static class DrawScreen{

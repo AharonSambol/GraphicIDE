@@ -1,11 +1,3 @@
-using System.Diagnostics;
-
-using static GraphicIDE.Form1;
-using static GraphicIDE.BrushesAndPens;
-using static GraphicIDE.Helpers;
-using static GraphicIDE.MyImages;
-using static GraphicIDE.DrawScreen;
-
 namespace GraphicIDE;
 public static class Console {
     public static (string txt, ConsoleTxtType typ)[] consoleTxt = new[]{("", ConsoleTxtType.text)};
@@ -13,7 +5,7 @@ public static class Console {
     public static string executedTime = "-------";
     public static bool isConsoleVisible = false;
     public static Button? closeConsoleBtn, openConsoleBtn, errOpenButton, execTimeBtn;
-    public static Func<(int w, int h), Point> 
+    public static readonly Func<(int w, int h), Point> 
         ETBCalcPos = (size) => new(size.w - execTimeBtn!.Width - 35 /*open console btn size*/ - 20, size.h - execTimeBtn!.Height - 5),
         CCBCalcPos = (_) => new((int)(console.pos.x + console.size.width) - closeConsoleBtn!.Width - 10, (int)console.pos.y + 10),
         EOBCalcPos = (_) => new((int)(console.pos.x + console.size.width) - errOpenButton!.Width - 10, (int)console.pos.y + 40),

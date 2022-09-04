@@ -1,20 +1,29 @@
-﻿using System.Runtime.InteropServices;
-using System.Diagnostics;
-using System.Net;
-using System.Collections;
+﻿global using static GraphicIDE.BrushesAndPens;
+global using static GraphicIDE.MyMath;
+global using static GraphicIDE.MyImages;
+global using static GraphicIDE.Helpers;
+global using static GraphicIDE.DrawScreen;
+global using static GraphicIDE.Start;
+global using static GraphicIDE.Tabs;
+global using static GraphicIDE.Console;
+global using static GraphicIDE.KeyInput;
+global using static GraphicIDE.History;
+global using static GraphicIDE.Settings;
+global using static GraphicIDE.Prediction;
+global using static GraphicIDE.AST;
+global using static GraphicIDE.PythonFuncs;
+global using static GraphicIDE.Form1;
 
-using static GraphicIDE.BrushesAndPens;
-using static GraphicIDE.MyMath;
-using static GraphicIDE.MyImages;
-using static GraphicIDE.Helpers;
-using static GraphicIDE.DrawScreen;
-using static GraphicIDE.Start;
-using static GraphicIDE.Tabs;
-using static GraphicIDE.Console;
-using static GraphicIDE.KeyInput;
-using static GraphicIDE.History;
-using static GraphicIDE.Settings;
-using static GraphicIDE.Prediction;
+global using GraphicIDE.Properties;
+
+global using System.Text;
+global using System.Diagnostics;
+global using System.Net;
+global using IronPython.Compiler.Ast;
+global using IronPython.Compiler;
+global using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
+
 
 
 // todo git
@@ -37,9 +46,7 @@ using static GraphicIDE.Prediction;
 // ---------------------------------------------------------------------------
 // todo have file system on right so dont need to have all tabs open
 // todo syntax highlighting
-// todo predictions
 // todo add / move / resize windows
-// todo rename cursor => caret
 // ? classes(+attributes)
 // ? try except raise
 #region built in funcs

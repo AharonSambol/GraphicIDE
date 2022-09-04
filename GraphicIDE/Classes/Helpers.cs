@@ -1,9 +1,3 @@
-using IronPython.Compiler;
-
-using static GraphicIDE.BrushesAndPens;
-using static GraphicIDE.Tabs;
-
-
 namespace GraphicIDE;
 
 public static class Helpers {
@@ -73,7 +67,6 @@ public static class Helpers {
         PythonOperator.TrueDivide => "???? what is true divide???",
         _ => "??I missed one???"
     };
-    // public static string ReplaceTabs(string st) => st.Replace("\t", "    ");
     public static BM_Middle MakeTxtBM(string txt, Brush? brush = null) {
         var width = MeasureWidth(txt, Form1.boldFont);
         var height = MeasureHeight(txt, Form1.boldFont);

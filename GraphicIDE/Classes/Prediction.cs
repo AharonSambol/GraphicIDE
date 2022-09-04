@@ -1,13 +1,3 @@
-using System.Text.RegularExpressions;
-using System.Text;
-
-using static GraphicIDE.Form1;
-using static GraphicIDE.Start;
-using static GraphicIDE.MyMath;
-using static GraphicIDE.Helpers;
-using static GraphicIDE.MyImages;
-using static GraphicIDE.BrushesAndPens;
-
 namespace GraphicIDE;
 
 /*
@@ -165,7 +155,7 @@ public static class Prediction {
     }
 
     public static string[]? GetPredictions(){
-        if(CursorPos.line == 0 && CursorPos.col == -1){ return null; }
+        if(CursorPos.col == -1 && (CursorPos.line == 0 || linesText[CursorPos.line-1].Length == 0)){ return null; }
         var letter = CursorPos.col == -1 
             ? linesText[CursorPos.line-1][^1] 
             : linesText[CursorPos.line][CursorPos.col];
