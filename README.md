@@ -63,6 +63,16 @@ Please keep these things in mind while looking at the project.
 
 I found that having it turn your code into pictures as you're typing was confusing and annoying (also hard to program) so instead I opted for a simpler solution - Each function will go in it's own tab, the tab you're editing will be displayed normally but the other tabs will be displayed as pictures (you can also toggle the current tab between text and picture by pressing the *insert*).
 
+
+
+# Using it
+
+In GraphicIDE/bin/Release/net6.0-windows there should be an exe which you can run
+
+
+
+# The Rest of the IDE
+
 Now that you've seen most of the graphics let's move on to the rest of the IDE.
 I decided to not use the built in textbox but rather make my own from scratch. You might wonder - Why??
     
@@ -136,6 +146,8 @@ Comment out chunk [Ctrl + /]
 # Missing Features (coming soon?)
 
 In no praticular order:
+
+Make it work on linux\mac cuz as of now it only works on windows (I think)
 
 Auto save
 
