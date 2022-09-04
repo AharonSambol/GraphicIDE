@@ -1,0 +1,24 @@
+name: "Deploy GraphicIDE"
+
+on:
+  push:
+    tags:
+      - "GraphicIDE/v*"
+
+env: 
+ PROJECT_PATH: GraphicIDE/GraphicIDE/GraphicIDE.csproj
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    setup:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+
+      - run: dotnet restore ${{ env.PROJEC_PATH }}
+      - run: dotnet build ${{ env.PROJEC_PATH }} -c Release --no-restore
+      - run: dotnet publish ${{ env.PROJEC_PATH }} -C Release --self-contained -r win-x64 -p:PublishSingleFile=true
+      
+

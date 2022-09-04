@@ -70,7 +70,7 @@ Please keep these things in mind while looking at the project.
 ### Break Continue
 ![plot](./Pics/break-continue.png)
 
-The color before the break\continue indicates which loop corresponds to
+The color before the break\continue indicates which loop it corresponds to
 
 ### Short If Else
 ![plot](./Pics/short-if-else.png)
@@ -123,6 +123,7 @@ So I had to program everything - typing, moving the caret, cut/copy/paste, ctrl 
 I know this probably has never happened to you but sometimes when you run your code, you are greeted with an exception, such as ```ZeroDivisionError: division by zero```
 
 Now the obvious next step is to Google the exception, to make this *agonizing* task simpler I've made a button which will do just that for you.
+
 ![plot](./Pics/Search.png)
 
 
