@@ -65,7 +65,7 @@ Please keep these things in mind while looking at the project.
 ![plot](./Pics/imports.png)
 
 ### Iterables
-![plot](./Pics/Iterables.png)
+![plot](./Pics/iterables.png)
 
 ### Break Continue
 ![plot](./Pics/break-continue.png)
