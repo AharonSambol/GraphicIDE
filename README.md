@@ -173,7 +173,8 @@ Make Font Smaller [Ctrl + -]
 Comment out chunk [Ctrl + /]
 
 
-
+# Download 
+Download the latest release from the releases tab and run the exe.
 
 
 
