@@ -1249,15 +1249,17 @@ public static class AST {
             h1 += img.Height;
             w1 = Max(w1, img.Width);
         }
-        Bitmap valueName = MakeImg(ast.Right).Img;
-        var (h2, w2) = (valueName.Height, valueName.Width);
+        Bitmap value = MakeImg(ast.Right).Img;
+        var (h2, w2) = (value.Height, value.Width);
 
         var height = Max(h1, h2) + lineWidth * 2 + gap * 2;
         var width = w1 + w2 + lineWidth * 3 + gap * 4;
         Bitmap res = new(width, height);
 
         using(var g = Graphics.FromImage(res)){
-            var end = (int)((height - lineWidth) / 2f - h1 / 2f);
+            Pen pen = new(Color.WhiteSmoke, lineWidth);
+            int pW = (int)(pen.Width/2);
+            var end = (height) / 2 - lineWidth - h1 / 2 + pW;
             foreach(var item in assignmentNames) {
                 g.DrawImage(
                     item,
@@ -1269,13 +1271,12 @@ public static class AST {
             }
 
             g.DrawImage(
-                image: valueName,
+                image: value,
                 x: w1 + lineWidth * 2 + gap * 3,
-                y: (height - h2) / 2 - lineWidth,
-                valueName.Width, valueName.Height
+                y: (height - h2) / 2 - lineWidth + pW,
+                value.Width, value.Height
             );
-            Pen pen = new(Color.WhiteSmoke, lineWidth);
-            int pW = (int)(pen.Width/2);
+            
             g.DrawRectangle(
                 pen, pW, pW,
                 width: w1 + gap * 2 + lineWidth * 2,

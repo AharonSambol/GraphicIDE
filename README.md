@@ -26,17 +26,18 @@ Better?:
 ![plot](./Pics/PicEx1.png)
 
 
-So I made an IDE which transforms your code into pictures for it to be easier to read at a glance.
+So I made a Python IDE which transforms your code into pictures for it to be easier to read at a glance (and some other features I feel are missing in other IDEs).
 
 Why?
 
 * It's a fun and interesting project
 * I wanted to open this door and see where it might lead, maybe there is some in between sweet spot
 * I think this might be good for making visualizations or maybe teaching?
+* I like pictures more than colorful text
 * I was bored...
 
 
-I've decided to make this project mainly as a proof of concept and to see if it's actually plausible. So as of now, in my opinion, it's a bit over the top. Since it's a proof of concept, many of the things are not completely polished and it's missing a bunch of important features. For now it only works in Python.
+I've decided to make this project mainly as a proof of concept and to see if it's actually plausible. So as of now, in my opinion, it's a bit over the top. Since it's a proof of concept, many of the things are not completely polished.
 
 Please keep these things in mind while looking at the project.
 
@@ -45,14 +46,52 @@ Please keep these things in mind while looking at the project.
 
 # Examples
 
+### Assignment
+![plot](./Pics/Assignment.png)
+
+### Math
+![plot](./Pics/math.png)
+
+### If Elif Else
+![plot](./Pics/if-else-elif.png)
+
+### While
+![plot](./Pics/while.png)
+
+### For
+![plot](./Pics/for.png)
+
+### Imports
+![plot](./Pics/imports.png)
+
+### Iterables
+![plot](./Pics/Iterables.png)
+
+### Break Continue
+![plot](./Pics/break-continue.png)
+
+The color before the break\continue indicates which loop corresponds to
+
+### Short If Else
+![plot](./Pics/short-if-else.png)
+
+### Print, Return, None
+![plot](./Pics/print-return-None.png)
+
+### Comprehension
+![plot](./Pics/comprehension.png)
+
+### Lambda
+![plot](./Pics/lambda.png)
+
+### Some Built-in Functions
+![plot](./Pics/funcs.png)
+
+
 
 ## Guessing game
 ![plot](./Pics/GuessingGameText.png)
 ![plot](./Pics/GuessingGamePic.png)
-
-
-## Print a TicTacToe board
-![plot](./Pics/TicTacToe.png)
 
 
 ## Random (just to show the graphics)
@@ -61,13 +100,8 @@ Please keep these things in mind while looking at the project.
 
 
 
-I found that having it turn your code into pictures as you're typing was confusing and annoying (also hard to program) so instead I opted for a simpler solution - Each function will go in it's own tab, the tab you're editing will be displayed normally but the other tabs will be displayed as pictures (you can also toggle the current tab between text and picture by pressing the *insert*).
+I found that having it turn your code into pictures as you're typing was confusing and annoying (also hard to program) so instead I opted for a simpler solution - Each function will go in it's own tab, the tab you're editing will be displayed normally but the other tabs will be displayed as pictures (you can also toggle the current tab between text and picture by pressing *insert*).
 
-
-
-# Using it
-
-In GraphicIDE/bin/Release/net6.0-windows there should be an exe which you can run
 
 
 
@@ -79,19 +113,9 @@ I decided to not use the built in textbox but rather make my own from scratch. Y
 * At the start I was making it display the pictures as you typed, and since you can't have both text and pictures in a text box I needed to make my own.
     
 * I was always interested in how textboxes work, so instead of researching it like a normal person I just made my own.
-    
-* I'm an idiot :)
+
 
 So I had to program everything - typing, moving the caret, cut/copy/paste, ctrl z/y, selecting with the mouse, scrolling, and much much more. Or in other words, don't be too surprised if something doesn't work properly...
-
-
-
-## Basic functionalities
-Iv'e also added the basic features of any IDE, which you can access with the buttons at the top right:
-
-![plot](./Pics/ButtonsTop.png)
-
-open file [ctrl + O], save [ctrl + S], delete tab (and the function), rename function [ctrl + R], add function [ctrl + N], settings (right now only has lightmode), run [ctrl + Space or middleMouseButton] 
 
 
 
@@ -100,6 +124,15 @@ I know this probably has never happened to you but sometimes when you run your c
 
 Now the obvious next step is to Google the exception, to make this *agonizing* task simpler I've made a button which will do just that for you.
 ![plot](./Pics/Search.png)
+
+
+
+## Basic functionalities
+I've also added the basic features of any IDE, which you can access with the buttons at the top right:
+
+![plot](./Pics/ButtonsTop.png)
+
+open file [ctrl + O], save [ctrl + S], delete tab (and the function), rename function [ctrl + R], add function [ctrl + N], settings (right now only has lightmode), run [ctrl + Space or middleMouseButton] 
 
 
 
@@ -145,7 +178,7 @@ Comment out chunk [Ctrl + /]
 
 # Missing Features (coming soon?)
 
-In no praticular order:
+In no particular order:
 
 Make it work on linux\mac cuz as of now it only works on windows (I think)
 

@@ -192,7 +192,6 @@ public static class Prediction {
         return letter switch {
             '[' => new[]{"x for x in"},
             '{' => new[]{"x for x in"},
-            ')' => new[]{ ":" },
             '+' => new[]{ "= 1" },
             '-' => new[]{ "= 1" },
             _ => null

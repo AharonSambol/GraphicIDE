@@ -55,16 +55,12 @@ public static class PythonFuncs{
                 RedirectStandardError = true,
             };
 
-            Stopwatch sw = new();
-            sw.Start();
             Process? p = Process.Start(psi);
-            sw.Stop();
-
             string output = p!.StandardOutput.ReadToEnd();
             string err = p!.StandardError.ReadToEnd();
-
             p.WaitForExit();
-            var exec = $"Execute Time: { sw.ElapsedMilliseconds} ms";
+            
+            var exec = $"Execute Time: { (int)((p.ExitTime - p.StartTime).TotalMilliseconds) } ms";
             Func<string, string> MakeLink = (str) => @"https://www.google.com/search?q=Python" + WebUtility.UrlEncode(" " + str.TrimEnd().Split('\n')[^1]);
             if(!output.Equals("") && !err.Equals("")){
                 return (new[]{ 
