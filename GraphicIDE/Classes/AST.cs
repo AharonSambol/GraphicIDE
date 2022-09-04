@@ -1257,7 +1257,7 @@ public static class AST {
         Bitmap res = new(width, height);
 
         using(var g = Graphics.FromImage(res)){
-            var end = (height - lineWidth) / 2 - h1 / 2;
+            var end = (int)((height - lineWidth) / 2f - h1 / 2f);
             foreach(var item in assignmentNames) {
                 g.DrawImage(
                     item,
@@ -1315,8 +1315,8 @@ public static class AST {
             );
 
             int opX = w1 + gap * 2 + lineWidth;
-            int opY = res.Height / 2 - opHeight / 2;
-            g.FillRectangle(blackBrush, opX, opY, opWidth, opHeight);
+            int opY = (res.Height- lineWidth) / 2 - opHeight / 2;
+            g.FillRectangle(blackBrush, opX + 1, opY + 1, opWidth - 4, opHeight - 4);
             g.DrawString(op, boldFont, mathPurpleB, opX, opY);
 
             g.DrawRectangle(
