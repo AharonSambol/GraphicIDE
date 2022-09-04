@@ -42,6 +42,7 @@ Please keep these things in mind while looking at the project.
 
 
 
+
 # Examples
 
 
@@ -74,12 +75,14 @@ I decided to not use the built in textbox but rather make my own from scratch. Y
 So I had to program everything - typing, moving the caret, cut/copy/paste, ctrl z/y, selecting with the mouse, scrolling, and much much more. Or in other words, don't be too surprised if something doesn't work properly...
 
 
+
 ## Basic functionalities
 Iv'e also added the basic features of any IDE, which you can access with the buttons at the top right:
 
 ![plot](./Pics/ButtonsTop.png)
 
 open file [ctrl + O], save [ctrl + S], delete tab (and the function), rename function [ctrl + R], add function [ctrl + N], settings (right now only has lightmode), run [ctrl + Space or middleMouseButton] 
+
 
 
 ## Exceptions
@@ -89,8 +92,10 @@ Now the obvious next step is to Google the exception, to make this *agonizing* t
 ![plot](./Pics/Search.png)
 
 
+
 ## Timer
 There is a nice little timer at the bottom which will tell you how long your code took to execute. If this bothers you you can simply click on it to hide it.
+
 
 
 ## Right Click
@@ -103,11 +108,13 @@ If you right click you will find this little menu:
 To close it just click anywhere else
 
 
+
 ## Predictions
 As you code you will be offered predictions (which as of now are pretty terrible).
 To accept them press Tab.
 To select a different one use up/down arrow keys.
 To ignore just keep typing or use left/right arrow keys.
+
 
 
 ## Other Shortcuts
@@ -122,16 +129,28 @@ Make Font Smaller [Ctrl + -]
 Comment out chunk [Ctrl + /]
 
 
+
+
+
+
 # Missing Features (coming soon?)
+
 In no praticular order:
 
 Auto save
+
 Scroll horizontal
+
 Refactoring
+
 Being able to stop execution
+
 Debugger
+
 Comments, and even letting you make little drawings in the comments
+
 A file system 
+
 Syntax Highlighting for the text
 
 ### missing python features
