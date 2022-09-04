@@ -6,7 +6,7 @@ on:
       - "GraphicIDE/v*"
 
 env: 
-  PROJECT_PATH: GraphicIDE/GraphicIDE/GraphicIDE.csproj
+  PROJECT_PATH: GraphicIDE/GraphicIDE.csproj
 
 jobs:
   deploy:
@@ -16,7 +16,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 6.0
 
       - run: dotnet restore ${{ env.PROJECT_PATH }}
 
