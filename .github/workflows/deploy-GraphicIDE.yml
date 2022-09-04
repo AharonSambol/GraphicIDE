@@ -6,7 +6,7 @@ on:
       - "GraphicIDE/v*"
 
 env: 
-  PROJECT_PATH: GraphicIDE/GraphicIDE.csproj
+  PROJECT_PATH: GraphicIDE/GraphicIDE/GraphicIDE.csproj
 
 jobs:
   deploy:
