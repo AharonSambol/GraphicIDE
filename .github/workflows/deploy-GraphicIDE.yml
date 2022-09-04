@@ -6,7 +6,7 @@ on:
       - "GraphicIDE/v*"
 
 env: 
- PROJECT_PATH: GraphicIDE/GraphicIDE/GraphicIDE.csproj
+  PROJECT_PATH: GraphicIDE/GraphicIDE/GraphicIDE.csproj
 
 jobs:
   deploy:
@@ -20,5 +20,5 @@ jobs:
       - run: dotnet restore ${{ env.PROJEC_PATH }}
       - run: dotnet build ${{ env.PROJEC_PATH }} -c Release --no-restore
       - run: dotnet publish ${{ env.PROJEC_PATH }} -C Release --self-contained -r win-x64 -p:PublishSingleFile=true
-      
+
 
