@@ -146,7 +146,7 @@ public partial class Form1: Form {
 
         var mainFunc = NewFunc(".Main", isfirst: true);
         var mainWindow = MakeNewWindow(mainFunc, size: (windowWidth, windowHeight), pos: (0, 0));
-        var func2 = NewFunc("Main2()", isfirst: true);
+        var func2 = NewFunc("func()", isfirst: true);
         var window2 = MakeNewWindow(func2, size: (windowWidth, windowHeight), pos: (windowWidth, 0));
         curWindow = mainWindow;
         curFunc = mainFunc;

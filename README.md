@@ -173,9 +173,19 @@ Make Font Smaller [Ctrl + -]
 Comment out chunk [Ctrl + /]
 
 
-# Download 
+# Usage
 Download the latest release from the releases tab and run the exe.
 
+Make sure you have Python installed on your computer.
+
+The screen should be split into two, on the left is .Main this is the part of your program which will be run, on the right side there is func() this is an example function you can write. No need to write:
+```python
+def func():
+```
+or indent in the functions.
+You can now write your program in .Main and for any function just make a new Tab and write it there.
+
+Finally run the program, it might ask you to save it first.
 
 
 # Missing Features (coming soon?)
