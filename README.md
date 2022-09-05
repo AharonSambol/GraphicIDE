@@ -185,6 +185,8 @@ def func():
 or indent in the functions.
 You can now write your program in .Main and for any function just make a new Tab and write it there.
 
+The reason you aren't seeing pictures but rather just normal text is because the tab you are focused on shows text as to not be annoying to write. To get it to display pictures either click on a different tab (the one on the right) or press `insert`
+
 Finally run the program, it might ask you to save it first.
 
 
